@@ -41,7 +41,7 @@ export class UserResponseDto {
     id: string;
     name: string;
     email: string;
-    sectorId: string | null;
+    sectorId: string;
     role: string;
     createdAt: Date;
   }) {

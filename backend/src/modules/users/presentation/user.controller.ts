@@ -41,7 +41,7 @@ export class UserController {
       id: user.getId().toString(),
       name: user.getName(),
       email: user.getEmail(),
-      sectorId: user.getSectorId()?.toString() ?? null,
+      sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),
     });
