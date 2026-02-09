@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export class User {
   @ApiProperty({
@@ -49,26 +50,19 @@ export class User {
   private createdAt: Date;
 
   constructor(
-    id: string,
     name: string,
     email: string,
     sectorId: string,
     role: UserRole,
-    createdAt: Date,
+    id?: string,
+    createdAt?: Date,
   ) {
-    this.id = id;
+    this.id = id || uuidv4();
     this.name = name;
     this.email = email;
     this.sectorId = sectorId;
     this.role = role;
-    this.createdAt = createdAt;
-  }
-
-  changeName(name: string): void {
-    if (name === this.name) {
-      return;
-    }
-    this.name = name;
+    this.createdAt = createdAt || new Date();
   }
 
   getId(): string {
@@ -93,5 +87,12 @@ export class User {
 
   getCreatedAt(): Date {
     return this.createdAt;
+  }
+
+  changeName(name: string): void {
+    if (name === this.name) {
+      return;
+    }
+    this.name = name;
   }
 }
