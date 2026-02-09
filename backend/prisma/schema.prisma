@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+
+}
+
+//////////////////////////////////////
+// ENUMS
+//////////////////////////////////////
+
+enum UserRole {
+  EMPLOYEE
+  SUPERVISOR
+}
+
+enum AlertLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+//////////////////////////////////////
+// MODELS
+//////////////////////////////////////
+
+model Sector {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  users         User[]
+  notifications Notification[]
+  createdAt     DateTime      @default(now())
+}
+
+model User {
+  id               Int           @id @default(autoincrement())
+  name             String
+  email            String        @unique
+  sector           Sector?       @relation(fields: [sectorId], references: [id])
+  sectorId         Int?
+  role             UserRole      @default(EMPLOYEE)
+  notificationsRead ReadReceipt[]
+  createdAt        DateTime      @default(now())
+}
+
+model Notification {
+  id             Int           @id @default(autoincrement())
+  title          String
+  message        String
+  level          AlertLevel
+  targetSector   Sector?       @relation(fields: [targetSectorId], references: [id])
+  targetSectorId Int?
+  readReceipts   ReadReceipt[]
+  createdAt      DateTime      @default(now())
+}
+
+model ReadReceipt {
+  id             Int           @id @default(autoincrement())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         Int
+  notification   Notification  @relation(fields: [notificationId], references: [id])
+  notificationId Int
+  readAt         DateTime?
+  acknowledged   Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+
+  @@unique([userId, notificationId])
+}
