@@ -1,5 +1,6 @@
 import type { User } from './user.entity';
 
 export interface IUserRepository {
-  getAll(): Promise<User[]>;
+  findAll(): Promise<User[]>;
+  findById(id: string): Promise<User | null>;
 }

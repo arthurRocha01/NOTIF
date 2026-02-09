@@ -35,44 +35,54 @@ enum AlertLevel {
 //////////////////////////////////////
 
 model Sector {
-  id            Int           @id @default(autoincrement())
-  name          String        @unique
+  id            String         @id @default(uuid())
+  name          String         @unique
   users         User[]
   notifications Notification[]
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime       @default(now())
 }
 
 model User {
-  id               Int           @id @default(autoincrement())
-  name             String
-  email            String        @unique
-  sector           Sector?       @relation(fields: [sectorId], references: [id])
-  sectorId         Int?
-  role             UserRole      @default(EMPLOYEE)
+  id                String        @id @default(uuid())
+  name              String
+  email             String        @unique
+  role              UserRole      @default(EMPLOYEE)
+  
+  // Relacionamento Obrigatório (Sem '?')
+  sector            Sector        @relation(fields: [sectorId], references: [id])
+  sectorId          String
+  
   notificationsRead ReadReceipt[]
-  createdAt        DateTime      @default(now())
+  createdAt         DateTime      @default(now())
 }
 
 model Notification {
-  id             Int           @id @default(autoincrement())
+  id             String        @id @default(uuid())
   title          String
-  message        String
+  message        String        @db.Text // @db.Text permite mensagens longas
   level          AlertLevel
+  
+  // Setor Alvo (Pode ser nulo se for uma notificação para TODOS os setores)
   targetSector   Sector?       @relation(fields: [targetSectorId], references: [id])
-  targetSectorId Int?
+  targetSectorId String?
+  
   readReceipts   ReadReceipt[]
   createdAt      DateTime      @default(now())
 }
 
 model ReadReceipt {
-  id             Int           @id @default(autoincrement())
-  user           User          @relation(fields: [userId], references: [id])
-  userId         Int
-  notification   Notification  @relation(fields: [notificationId], references: [id])
-  notificationId Int
+  id             String       @id @default(uuid())
+  
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  notificationId String
+  
   readAt         DateTime?
-  acknowledged   Boolean       @default(false)
-  createdAt      DateTime      @default(now())
+  acknowledged   Boolean      @default(false)
+  createdAt      DateTime     @default(now())
 
+  // Garante que um usuário não tenha dois recibos para a mesma notificação
   @@unique([userId, notificationId])
 }

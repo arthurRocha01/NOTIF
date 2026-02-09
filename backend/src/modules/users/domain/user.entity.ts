@@ -4,10 +4,10 @@ import { UserRole } from '@prisma/client';
 export class User {
   @ApiProperty({
     example: 1,
-    description: 'ID único do usuário',
-    type: Number,
+    description: '',
+    type: String,
   })
-  private readonly id: number;
+  private readonly id: string;
 
   @ApiProperty({
     example: 'John Doe',
@@ -25,13 +25,13 @@ export class User {
   private email: string;
 
   @ApiProperty({
-    example: 3,
+    example: '',
     description:
       'ID do setor ao qual o usuário pertence. Pode ser nulo caso não esteja vinculado.',
-    type: Number,
+    type: String,
     nullable: true,
   })
-  private sectorId: number | null;
+  private readonly sectorId: string;
 
   @ApiProperty({
     description: 'Papel do usuário no sistema',
@@ -49,10 +49,10 @@ export class User {
   private createdAt: Date;
 
   constructor(
-    id: number,
+    id: string,
     name: string,
     email: string,
-    sectorId: number | null,
+    sectorId: string,
     role: UserRole,
     createdAt: Date,
   ) {
@@ -71,7 +71,7 @@ export class User {
     this.name = name;
   }
 
-  getId(): number {
+  getId(): string {
     return this.id;
   }
 
@@ -83,7 +83,7 @@ export class User {
     return this.email;
   }
 
-  getSectorId(): number | null {
+  getSectorId(): string {
     return this.sectorId;
   }
 
