@@ -45,14 +45,15 @@ export class UserController {
           id: user.getId().toString(),
           name: user.getName(),
           email: user.getEmail(),
-          sectorId: user.getSectorId()?.toString() ?? null,
+          password: user.getPassword(),
+          sectorId: user.getSectorId().toString(),
           role: user.getRole(),
           createdAt: user.getCreatedAt(),
         }),
     );
   }
 
-  @Get(':id')
+  @Get('id/:id')
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   @ApiParam({
     name: 'id',
@@ -77,6 +78,40 @@ export class UserController {
       id: user.getId().toString(),
       name: user.getName(),
       email: user.getEmail(),
+      password: user.getPassword(),
+      sectorId: user.getSectorId(),
+      role: user.getRole(),
+      createdAt: user.getCreatedAt(),
+    });
+  }
+
+  @Get('email/:email')
+  @ApiOperation({ summary: 'Buscar usuário por Email' })
+  @ApiParam({
+    name: 'email',
+    description: 'Identificador único do usuário (Email)',
+    example: 'exemplo@gmail.com',
+  })
+  @ApiOkResponse({
+    description: 'Usuário encontrado com sucesso',
+    type: UserResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  async getUserByEmail(
+    @Param('email') email: string,
+  ): Promise<UserResponseDto> {
+    const user = await this.userService.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    return new UserResponseDto({
+      id: user.getId().toString(),
+      name: user.getName(),
+      email: user.getEmail(),
+      password: user.getPassword(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),
@@ -102,6 +137,7 @@ export class UserController {
       id: user.getId().toString(),
       name: user.getName(),
       email: user.getEmail(),
+      password: user.getPassword(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),
@@ -137,6 +173,7 @@ export class UserController {
       id: user.getId().toString(),
       name: user.getName(),
       email: user.getEmail(),
+      password: user.getPassword(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),

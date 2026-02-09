@@ -26,9 +26,15 @@ export class User {
   private email: string;
 
   @ApiProperty({
+    example: 'password123',
+    description: 'Senha do usuário',
+    type: String,
+  })
+  private password: string;
+
+  @ApiProperty({
     example: '',
-    description:
-      'ID do setor ao qual o usuário pertence. Pode ser nulo caso não esteja vinculado.',
+    description: 'ID do setor ao qual o usuário pertence.',
     type: String,
     nullable: true,
   })
@@ -52,6 +58,7 @@ export class User {
   constructor(
     name: string,
     email: string,
+    password: string,
     sectorId: string,
     role: UserRole,
     id?: string,
@@ -60,6 +67,7 @@ export class User {
     this.id = id || uuidv4();
     this.name = name;
     this.email = email;
+    this.password = password;
     this.sectorId = sectorId;
     this.role = role;
     this.createdAt = createdAt || new Date();
@@ -75,6 +83,10 @@ export class User {
 
   getEmail(): string {
     return this.email;
+  }
+
+  getPassword(): string {
+    return this.password;
   }
 
   getSectorId(): string {

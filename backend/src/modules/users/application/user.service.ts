@@ -16,8 +16,19 @@ export class UserService {
     return this.userRepo.findOne(id);
   }
 
+  async getUserByEmail(email: string): Promise<User | null> {
+    console.log(email);
+    return this.userRepo.findByEmail(email);
+  }
+
   async registerUser(dto: CreateUserDto): Promise<User> {
-    const newUser = new User(dto.name, dto.email, dto.sectorId, dto.role);
+    const newUser = new User(
+      dto.name,
+      dto.email,
+      dto.password,
+      dto.sectorId,
+      dto.role,
+    );
 
     try {
       await this.userRepo.create(newUser);

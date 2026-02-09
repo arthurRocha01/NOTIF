@@ -6,6 +6,7 @@ export class UserMapper {
     return new User(
       raw.name,
       raw.email,
+      raw.password,
       raw.sectorId,
       raw.role,
       raw.id,
@@ -18,6 +19,7 @@ export class UserMapper {
       id: user.getId(),
       name: user.getName(),
       email: user.getEmail(),
+      password: user.getPassword(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),

@@ -20,6 +20,12 @@ export class UserResponseDto {
   public readonly email: string;
 
   @ApiProperty({
+    example: 'password123',
+    description: 'Senha do usuário',
+  })
+  public readonly password: string;
+
+  @ApiProperty({
     example: 'd3f9c2e1-8a7b-4c6d-9e1f-123456789abc',
     description: 'Identificador do setor',
   })
@@ -41,6 +47,7 @@ export class UserResponseDto {
     id: string;
     name: string;
     email: string;
+    password: string;
     sectorId: string;
     role: string;
     createdAt: Date;
@@ -48,6 +55,7 @@ export class UserResponseDto {
     this.id = props.id;
     this.name = props.name;
     this.email = props.email;
+    this.password = props.password;
     this.sectorId = props.sectorId;
     this.role = props.role;
     this.createdAt = props.createdAt;

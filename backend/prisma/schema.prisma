@@ -46,6 +46,7 @@ model User {
   id                String        @id @default(uuid())
   name              String
   email             String        @unique
+  password          String        @db.Text
   role              UserRole      @default(EMPLOYEE)
   
   // Relacionamento Obrigatório (Sem '?')

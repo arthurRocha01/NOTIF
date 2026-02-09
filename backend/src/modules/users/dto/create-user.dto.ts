@@ -27,6 +27,14 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
+    description: 'Senha do usuário',
+    example: 'senha123',
+  })
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @ApiProperty({
     description: 'ID do setor (UUID)',
     example: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0',
   })
