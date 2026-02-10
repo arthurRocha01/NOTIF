@@ -3,6 +3,7 @@ import { User } from '../domain/user.entity';
 import { UserRepository } from '../infrastructure/user.repository.impl';
 import type { CreateUserDto } from '../dto/create-user.dto';
 import type { UpdateUserDto } from '../dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -17,15 +18,17 @@ export class UserService {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    console.log(email);
     return this.userRepo.findByEmail(email);
   }
 
   async registerUser(dto: CreateUserDto): Promise<User> {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+
     const newUser = new User(
       dto.name,
       dto.email,
-      dto.password,
+      hashedPassword,
       dto.sectorId,
       dto.role,
     );
