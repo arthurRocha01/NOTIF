@@ -4,24 +4,25 @@ import { Notification } from '../domain/notification.entity';
 export class NotificationMapper {
   // Converte do Banco (Prisma) para o Domínio
   static toDomain(raw: PrismaNotification): Notification {
-    return new Notification({
-      id: raw.id,
-      title: raw.title,
-      message: raw.message,
-      level: raw.level,
-      targetSectorId: raw.targetSectorId,
-      createdAt: raw.createdAt,
-    });
+    return new Notification(
+      raw.id,
+      raw.title,
+      raw.message,
+      raw.level,
+      raw.targetSectorId,
+      raw.createdAt,
+    );
   }
 
   // Converte do Domínio para o Banco (Prisma)
   static toPersistence(entity: Notification): any {
     return {
-      id: entity.id,
-      title: entity.title,
-      message: entity.message,
-      level: entity.level,
-      targetSectorId: entity.targetSectorId,
+      id: entity.getId(),
+      title: entity.getTitle(),
+      message: entity.getMessage(),
+      level: entity.getLevel(),
+      targetSectorId: entity.getTargetSectorId(),
+      createdAt: entity.getCreatedAt(),
     };
   }
 }

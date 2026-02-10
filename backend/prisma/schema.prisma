@@ -63,8 +63,8 @@ model Notification {
   level          AlertLevel
   
   // Setor Alvo (Pode ser nulo se for uma notificação para TODOS os setores)
-  targetSector   Sector?       @relation(fields: [targetSectorId], references: [id])
-  targetSectorId String?
+  targetSector   Sector       @relation(fields: [targetSectorId], references: [id])
+  targetSectorId String
   
   readReceipts   ReadReceipt[]
   createdAt      DateTime      @default(now())
@@ -79,7 +79,7 @@ model ReadReceipt {
   notification   Notification @relation(fields: [notificationId], references: [id])
   notificationId String
   
-  readAt         DateTime?
+  readAt         DateTime
   acknowledged   Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
