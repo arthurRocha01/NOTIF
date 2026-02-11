@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { AlertLevel } from '@prisma/client';
 
 export class CreateNotificationDto {
@@ -19,7 +13,7 @@ export class CreateNotificationDto {
   @IsEnum(AlertLevel)
   level: AlertLevel;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsUUID()
   targetSectorId: string;
 }

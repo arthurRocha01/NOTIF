@@ -1,4 +1,5 @@
 import { AlertLevel } from '@prisma/client'; // Usamos o Enum gerado, mas a classe é pura
+import { v4 as uuidv4 } from 'uuid';
 
 export class Notification {
   private readonly id: string;
@@ -24,6 +25,25 @@ export class Notification {
     this.createdAt = createdAt;
   }
 
+  static create(
+    title: string,
+    message: string,
+    level: AlertLevel,
+    targetSectorId: string,
+  ) {
+    const id = uuidv4();
+    const createdAt = new Date();
+
+    return new Notification(
+      id,
+      title,
+      message,
+      level,
+      targetSectorId,
+      createdAt,
+    );
+  }
+
   getId() {
     return this.id;
   }
@@ -46,5 +66,13 @@ export class Notification {
 
   getCreatedAt() {
     return this.createdAt;
+  }
+
+  public changeTitle(title: string): void {
+    if (this.title === title) {
+      return;
+    }
+
+    this.title = title;
   }
 }

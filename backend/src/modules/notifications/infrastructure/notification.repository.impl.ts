@@ -14,4 +14,33 @@ export class NotificationRepository implements INotificarionRepository {
       NotificationMapper.toDomain(notification),
     );
   }
+
+  async findById(id: string): Promise<Notification | null> {
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
+
+    if (!notification) {
+      return null;
+    }
+
+    return NotificationMapper.toDomain(notification);
+  }
+
+  async create(notification: Notification): Promise<void> {
+    const data = NotificationMapper.toPersistence(notification);
+    await this.prisma.notification.create({ data });
+  }
+
+  async update(notification: Notification): Promise<void> {
+    const data = NotificationMapper.toPersistence(notification);
+    await this.prisma.notification.update({
+      where: { id: notification.getId() },
+      data,
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.notification.delete({ where: { id } });
+  }
 }
