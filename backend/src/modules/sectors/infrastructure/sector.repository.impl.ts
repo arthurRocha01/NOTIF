@@ -15,17 +15,22 @@ export class SectorRepository implements ISectorRepository {
 
   async findById(id: string): Promise<Sector> {
     const sector = await this.prisma.sector.findUnique({ where: { id } });
+
+    if (!sector) {
+      return null;
+    }
+
     return SectorMapper.toDomain(sector);
   }
 
-  async create(sector: Sector): Promise<void> {
+  async save(sector: Sector): Promise<void> {
     const data = SectorMapper.toPersistence(sector);
     await this.prisma.sector.create({ data });
   }
 
-  async update(id: string, sector: Sector): Promise<void> {
+  async update(sector: Sector): Promise<void> {
     const data = SectorMapper.toPersistence(sector);
-    await this.prisma.sector.update({ where: { id }, data });
+    await this.prisma.sector.update({ where: { id: sector.getId() }, data });
   }
 
   async delete(id: string): Promise<void> {

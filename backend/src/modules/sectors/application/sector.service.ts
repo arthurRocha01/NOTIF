@@ -8,39 +8,32 @@ import type { UpdateSectorDto } from '../dto/update-sector';
 export class SectorService {
   constructor(private readonly sectorRepo: SectorRepository) {}
 
-  async findAll() {
+  async listSectors() {
     return await this.sectorRepo.findAll();
   }
 
-  async findById(id: string) {
+  async getSectorById(id: string) {
     return await this.sectorRepo.findById(id);
   }
 
   async createSector(dto: CreateSectorDto) {
-    const newSector = Sector.create(dto.name);
+    const sector = Sector.create(dto.name);
 
-    try {
-      await this.sectorRepo.create(newSector);
-    } catch {
-      throw new NotFoundException('Erro ao criar usuário');
-    }
+    await this.sectorRepo.save(sector);
 
-    return newSector;
+    return sector;
   }
 
   async updateSector(id: string, dto: UpdateSectorDto) {
     const sector = await this.sectorRepo.findById(id);
+
     if (!sector) {
       throw new NotFoundException('Usuário não encontrado');
     }
 
     sector.changeName(dto.name);
 
-    try {
-      await this.sectorRepo.update(id, sector);
-    } catch {
-      throw new NotFoundException('Erro ao atualizar usuário');
-    }
+    await this.sectorRepo.update(sector);
 
     return sector;
   }

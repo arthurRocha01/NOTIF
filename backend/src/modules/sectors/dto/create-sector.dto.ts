@@ -1,7 +1,13 @@
-export class CreateSectorDto {
-  name: string;
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, Length } from 'class-validator';
 
-  constructor(name: string) {
-    this.name = name;
-  }
+export class CreateSectorDto {
+  @ApiProperty({
+    description: 'Nome do setor',
+    example: 'Financeiro',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(2, 100)
+  name: string;
 }
