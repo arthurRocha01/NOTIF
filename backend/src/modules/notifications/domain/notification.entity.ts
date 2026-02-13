@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { NotificationLevel } from './type';
 
 export class Notification {
-  constructor(
+  private constructor(
     private readonly id: string,
     private title: string,
     private message: string,
