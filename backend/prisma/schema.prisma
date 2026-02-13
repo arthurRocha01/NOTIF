@@ -114,7 +114,7 @@ model NotificationAssignment {
 
   // Timestamps do Ciclo de Vida (Seção 4)
   createdAt DateTime @default(now())
-  dueAt     DateTime // Calculado na criação (now + slaMinutes)
+  dueAt     DateTime? // Calculado na entrega
 
   deliveredAt    DateTime? // Sync com App
   viewedAt       DateTime? // Abertura
