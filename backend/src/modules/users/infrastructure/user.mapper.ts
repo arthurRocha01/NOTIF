@@ -33,7 +33,7 @@ export class UserMapper {
       id: user.getId(),
       name: user.getName(),
       email: user.getEmail(),
-      password: user.getPassword(),
+      passwordHash: user.getPasswordHash(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
       createdAt: user.getCreatedAt(),

@@ -59,7 +59,7 @@ export class User {
     return this.email;
   }
 
-  getPassword(): string {
+  getPasswordHash(): string {
     return this.passwordHash;
   }
 

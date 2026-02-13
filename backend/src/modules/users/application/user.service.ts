@@ -30,7 +30,7 @@ export class UserService {
 
     const existing = await this.userRepo.findByEmail(dto.email);
 
-    if (!existing) {
+    if (existing) {
       throw new ConflictException('Email já cadastrado');
     }
 
@@ -56,7 +56,7 @@ export class UserService {
 
     if (dto.name) user.changeName(dto.name);
 
-    await this.userRepo.save(user);
+    await this.userRepo.update(user);
 
     return user;
   }

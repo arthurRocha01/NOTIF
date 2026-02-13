@@ -88,7 +88,7 @@ model Notification {
 
   // Auditoria de Criação
   authorId String
-  author   User   @relation("Author", fields: [authorId], references: [id])
+  author   User   @relation("Author", fields: [authorId], references: [id], onDelete: Cascade)
 
   // Relação 1:N com as Obrigações Individuais
   assignments NotificationAssignment[]
