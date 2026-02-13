@@ -18,7 +18,6 @@ export class NotificationAssignmentMapper {
       raw.userId,
       raw.notificationId,
       this.mapLevel(notification.level),
-      notification.slaMinutes,
       this.mapStatus(raw.status),
       raw.createdAt,
       raw.dueAt,

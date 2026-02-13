@@ -8,7 +8,6 @@ export class NotificationAssignment {
     private readonly userId: string,
     private readonly notificationId: string,
     private notificationLevel: NotificationLevel,
-    private readonly slaMinutes: number,
     private status: AssignmentStatus,
     private readonly createdAt: Date,
     private dueAt: Date | null,
@@ -21,7 +20,6 @@ export class NotificationAssignment {
     userId: string,
     notificationId: string,
     notificationLevel: NotificationLevel,
-    slaMinutes: number,
   ) {
     const id = uuidv4();
     const createdat = new Date();
@@ -32,7 +30,6 @@ export class NotificationAssignment {
       userId,
       notificationId,
       notificationLevel,
-      slaMinutes,
       status,
       createdat,
       null,
@@ -47,7 +44,6 @@ export class NotificationAssignment {
     userId: string,
     notificationId: string,
     notificationLevel: NotificationLevel,
-    slaMinutes: number,
     status: AssignmentStatus,
     createdAt: Date,
     dueAt: Date | null,
@@ -60,7 +56,6 @@ export class NotificationAssignment {
       userId,
       notificationId,
       notificationLevel,
-      slaMinutes,
       status,
       createdAt,
       dueAt,
@@ -111,13 +106,15 @@ export class NotificationAssignment {
   }
 
   // Entrega
-  public markAsDelivered(): void {
+  public markAsDelivered(notificationSlaMinutes: number): void {
     if (this.deliveredAt) {
       return;
     }
 
     this.deliveredAt = new Date();
-    this.dueAt = new Date(this.deliveredAt.getTime() + this.slaMinutes * 60000);
+    this.dueAt = new Date(
+      this.deliveredAt.getTime() + notificationSlaMinutes * 60000,
+    );
   }
 
   // Visualização
