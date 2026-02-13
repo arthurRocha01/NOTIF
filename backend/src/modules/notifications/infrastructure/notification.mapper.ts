@@ -5,7 +5,7 @@ import { NotificationLevel as PrismaNotificationLevel } from '@prisma/client';
 
 export class NotificationMapper {
   public static toDomain(raw: PrismaNotification): Notification {
-    return new Notification(
+    return Notification.reconstitute(
       raw.id,
       raw.title,
       raw.message,

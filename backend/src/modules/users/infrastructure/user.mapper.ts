@@ -4,12 +4,14 @@ import { User as PrismaUser, UserRole as PrismaUserRole } from '@prisma/client';
 
 export class UserMapper {
   public static toDomain(raw: PrismaUser): User {
-    return User.create(
+    return User.reconstitute(
+      raw.id,
       raw.name,
       raw.email,
       raw.passwordHash,
       raw.sectorId,
       this.mapRole(raw.role),
+      raw.createdAt,
     );
   }
 
