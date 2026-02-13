@@ -1,125 +1,205 @@
-import { PrismaClient, AlertLevel, UserRole } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import {
+  PrismaClient,
+  UserRole,
+  NotificationLevel,
+  AssignmentStatus,
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Limpando o banco (ordem importa, relaxa)...');
+  console.log('🌱 Iniciando Seed do Banco de Dados...');
 
-  await prisma.readReceipt.deleteMany();
+  // 1. Limpeza (Opcional: remove dados antigos para evitar erros de unique)
+  // A ordem importa por causa das chaves estrangeiras (Deletar filhos -> pais)
+  await prisma.notificationAssignment.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.user.deleteMany();
   await prisma.sector.deleteMany();
 
-  console.log('🏗️ Criando setores...');
+  console.log('🧹 Banco limpo.');
 
-  const sectors = await prisma.sector.createMany({
-    data: [
-      { id: randomUUID(), name: 'TI' },
-      { id: randomUUID(), name: 'RH' },
-      { id: randomUUID(), name: 'Financeiro' },
-      { id: randomUUID(), name: 'Operações' },
-    ],
+  // --------------------------------------------------------
+  // 2. Criar Setores (Unidades Organizacionais)
+  // --------------------------------------------------------
+  const sectorTI = await prisma.sector.create({
+    data: { name: 'Tecnologia da Informação' },
   });
 
-  const allSectors = await prisma.sector.findMany();
+  const sectorRH = await prisma.sector.create({
+    data: { name: 'Recursos Humanos' },
+  });
 
-  console.log('👤 Criando usuários...');
+  console.log(`🏢 Setores criados: TI (${sectorTI.id}) e RH (${sectorRH.id})`);
 
-  const users = [];
+  // --------------------------------------------------------
+  // 3. Criar Usuários (Hierarquia)
+  // --------------------------------------------------------
 
-  for (const sector of allSectors) {
-    // Supervisor
-    users.push(
-      prisma.user.create({
-        data: {
-          name: `Supervisor ${sector.name}`,
-          email: `supervisor.${sector.name.toLowerCase()}@empresa.com`,
-          password: 'hashed-password-fake',
-          role: UserRole.SUPERVISOR,
-          sectorId: sector.id,
-        },
-      }),
-    );
+  // ADMIN (Global) - Alocado no TI, mas tem poder total
+  const adminUser = await prisma.user.create({
+    data: {
+      name: 'Alice Admin',
+      email: 'admin@corp.com',
+      passwordHash: 'hash_simulado_123', // Em prod, use bcrypt
+      role: UserRole.ADMIN,
+      sectorId: sectorTI.id,
+    },
+  });
 
-    // Funcionários
-    for (let i = 1; i <= 3; i++) {
-      users.push(
-        prisma.user.create({
-          data: {
-            name: `Funcionário ${i} - ${sector.name}`,
-            email: `func${i}.${sector.name.toLowerCase()}@empresa.com`,
-            password: 'hashed-password-fake',
-            role: UserRole.EMPLOYEE,
-            sectorId: sector.id,
-          },
-        }),
-      );
+  // SUPERVISOR (TI) - Só manda para TI
+  const supervisorTI = await prisma.user.create({
+    data: {
+      name: 'Bob Supervisor',
+      email: 'bob@corp.com',
+      passwordHash: 'hash_simulado_123',
+      role: UserRole.SUPERVISOR,
+      sectorId: sectorTI.id,
+    },
+  });
+
+  // EMPLOYEE (TI) - Recebe de TI e Globais
+  const devUser = await prisma.user.create({
+    data: {
+      name: 'Charlie Dev',
+      email: 'charlie@corp.com',
+      passwordHash: 'hash_simulado_123',
+      role: UserRole.EMPLOYEE,
+      sectorId: sectorTI.id,
+    },
+  });
+
+  // EMPLOYEE (RH) - Isolado do TI
+  const rhUser = await prisma.user.create({
+    data: {
+      name: 'Diana RH',
+      email: 'diana@corp.com',
+      passwordHash: 'hash_simulado_123',
+      role: UserRole.EMPLOYEE,
+      sectorId: sectorRH.id,
+    },
+  });
+
+  console.log('👥 Usuários criados: Admin, Supervisor TI, Dev TI, Diana RH.');
+
+  // --------------------------------------------------------
+  // 4. Criar Notificações (Eventos)
+  // --------------------------------------------------------
+
+  // CENÁRIO A: Notificação GLOBAL Crítica (Criada pelo Admin)
+  // Exemplo: "Servidor caiu" ou "Feriado"
+  const globalNotif = await prisma.notification.create({
+    data: {
+      title: '🚨 Manutenção Urgente nos Servidores',
+      message:
+        'Todos os sistemas ficarão instáveis nas próximas 2 horas. Salvem seus trabalhos.',
+      level: NotificationLevel.CRITICAL,
+      slaMinutes: 60, // 1 hora para dar ciência
+      requiresAcknowledgment: true,
+      sectorId: null, // GLOBAL
+      authorId: adminUser.id,
+    },
+  });
+
+  // CENÁRIO B: Notificação SETORIAL (Criada pelo Supervisor TI)
+  // Apenas para o setor de TI
+  const sectorNotif = await prisma.notification.create({
+    data: {
+      title: 'Deploy de Sexta-feira',
+      message: 'Lembrem-se de não subir código em produção após as 16h.',
+      level: NotificationLevel.HIGH,
+      slaMinutes: 120,
+      requiresAcknowledgment: true,
+      sectorId: sectorTI.id, // Apenas TI
+      authorId: supervisorTI.id,
+    },
+  });
+
+  // CENÁRIO C: Notificação PASSADA (Para simular Atraso/Overdue)
+  const oldNotif = await prisma.notification.create({
+    data: {
+      title: 'Atualização de Segurança (Antiga)',
+      message: 'Esta notificação venceu ontem.',
+      level: NotificationLevel.MEDIUM,
+      slaMinutes: 30,
+      sectorId: null, // Global
+      authorId: adminUser.id,
+      createdAt: new Date(new Date().setDate(new Date().getDate() - 2)), // Criada 2 dias atrás
+    },
+  });
+
+  console.log('🔔 Notificações criadas.');
+
+  // --------------------------------------------------------
+  // 5. Criar Assignments (Obrigações/Auditoria)
+  // --------------------------------------------------------
+  // Nota: Na aplicação real, o Service faria isso automaticamente.
+  // No Seed, fazemos manualmente.
+
+  // 5.1 Distribuir a Global (Para todos)
+  const users = [adminUser, supervisorTI, devUser, rhUser];
+
+  for (const user of users) {
+    let status: AssignmentStatus = AssignmentStatus.PENDING;
+    let viewedAt = null;
+    let acknowledgedAt = null;
+
+    // Simular que o Admin já viu e confirmou a própria mensagem
+    if (user.id === adminUser.id) {
+      status = AssignmentStatus.ACKNOWLEDGED;
+      viewedAt = new Date();
+      acknowledgedAt = new Date();
     }
-  }
-
-  const createdUsers = await Promise.all(users);
-
-  console.log('🔔 Criando notificações...');
-
-  const notifications = [];
-
-  for (const sector of allSectors) {
-    notifications.push(
-      prisma.notification.create({
-        data: {
-          title: `Aviso importante - ${sector.name}`,
-          message: `Mensagem crítica para o setor ${sector.name}. Leia ou finja surpresa depois.`,
-          level: AlertLevel.CRITICAL,
-          targetSectorId: sector.id,
-        },
-      }),
-    );
-
-    notifications.push(
-      prisma.notification.create({
-        data: {
-          title: `Info geral - ${sector.name}`,
-          message: `Mensagem informativa para ${sector.name}. Nada explode hoje.`,
-          level: AlertLevel.LOW,
-          targetSectorId: sector.id,
-        },
-      }),
-    );
-  }
-
-  const createdNotifications = await Promise.all(notifications);
-
-  console.log('📖 Criando recibos de leitura...');
-
-  const receipts = [];
-
-  for (const user of createdUsers) {
-    for (const notification of createdNotifications) {
-      // Só cria recibo se a notificação for do setor do usuário
-      if (notification.targetSectorId === user.sectorId) {
-        receipts.push(
-          prisma.readReceipt.create({
-            data: {
-              userId: user.id,
-              notificationId: notification.id,
-              readAt: new Date(),
-              acknowledged: Math.random() > 0.5,
-            },
-          }),
-        );
-      }
+    // Simular que o Dev apenas visualizou mas não confirmou
+    else if (user.id === devUser.id) {
+      status = AssignmentStatus.VIEWED;
+      viewedAt = new Date();
     }
+
+    await prisma.notificationAssignment.create({
+      data: {
+        userId: user.id,
+        notificationId: globalNotif.id,
+        status: status,
+        dueAt: new Date(Date.now() + globalNotif.slaMinutes * 60000), // Calcula Data futura
+        viewedAt,
+        acknowledgedAt,
+      },
+    });
   }
 
-  await Promise.all(receipts);
+  // 5.2 Distribuir a Setorial (Apenas TI: Admin, Supervisor, Dev)
+  // Diana do RH NÃO recebe esta.
+  const tiUsers = [adminUser, supervisorTI, devUser];
 
-  console.log('✅ Banco populado com sucesso.');
+  for (const user of tiUsers) {
+    await prisma.notificationAssignment.create({
+      data: {
+        userId: user.id,
+        notificationId: sectorNotif.id,
+        status: AssignmentStatus.PENDING, // Ninguém viu ainda
+        dueAt: new Date(Date.now() + sectorNotif.slaMinutes * 60000),
+      },
+    });
+  }
+
+  // 5.3 Simular Bloqueio/Atraso (Overdue) para o Dev
+  await prisma.notificationAssignment.create({
+    data: {
+      userId: devUser.id,
+      notificationId: oldNotif.id,
+      status: AssignmentStatus.OVERDUE, // Forçando status vencido
+      dueAt: new Date(Date.now() - 10000), // Prazo venceu há 10 segundos
+      createdAt: new Date(Date.now() - 100000),
+    },
+  });
+
+  console.log('✅ Seed finalizado com sucesso!');
 }
 
 main()
   .catch((e) => {
-    console.error('💥 Seed falhou:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

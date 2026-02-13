@@ -40,7 +40,7 @@ export class NotificationMapper {
       title: entity.getTitle(),
       message: entity.getMessage(),
       level: entity.getLevel(),
-      targetSectorId: entity.getTargetSectorId(),
+      targetSectorId: entity.getSectorId(),
       createdAt: entity.getCreatedAt(),
     };
   }
