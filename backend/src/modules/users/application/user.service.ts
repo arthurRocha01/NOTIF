@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from '../domain/user.entity';
 import { UserRepository } from '../infrastructure/user.repository.impl';
 import type { CreateUserDto } from '../dto/create-user.dto';
@@ -9,23 +13,28 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private readonly userRepo: UserRepository) {}
 
-  async getAllUsers(): Promise<User[]> {
+  async listUsers(): Promise<User[]> {
     return this.userRepo.findAll();
   }
 
-  async getUserById(id: string): Promise<User | null> {
-    return this.userRepo.findOne(id);
+  async getUserById(id: string): Promise<User> {
+    return this.userRepo.findById(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<User> {
     return this.userRepo.findByEmail(email);
   }
 
-  async registerUser(dto: CreateUserDto): Promise<User> {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(dto.password, salt);
+  async createUser(dto: CreateUserDto): Promise<User> {
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const newUser = new User(
+    const existing = await this.userRepo.findByEmail(dto.email);
+
+    if (!existing) {
+      throw new ConflictException('Email já cadastrado');
+    }
+
+    const user = User.create(
       dto.name,
       dto.email,
       hashedPassword,
@@ -33,31 +42,32 @@ export class UserService {
       dto.role,
     );
 
-    try {
-      await this.userRepo.create(newUser);
-    } catch {
-      throw new NotFoundException('Erro ao criar usuário');
-    }
+    await this.userRepo.save(user);
 
-    return newUser;
+    return user;
   }
 
   async updateUser(id: string, dto: UpdateUserDto): Promise<User> {
-    const user = await this.userRepo.findOne(id);
+    const user = await this.userRepo.findById(id);
+
     if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
 
     if (dto.name) user.changeName(dto.name);
 
+    await this.userRepo.save(user);
+
     return user;
   }
 
   async deleteUser(id: string): Promise<void> {
-    try {
-      await this.userRepo.delete(id);
-    } catch {
-      throw new Error('Erro ao deletar usuário');
+    const user = await this.userRepo.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
+
+    await this.userRepo.delete(id);
   }
 }

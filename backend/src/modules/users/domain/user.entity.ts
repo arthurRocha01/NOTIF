@@ -1,76 +1,50 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from './types';
 
 export class User {
-  @ApiProperty({
-    example: 1,
-    description: '',
-    type: String,
-  })
-  private readonly id: string;
-
-  @ApiProperty({
-    example: 'John Doe',
-    description: 'Nome completo do usuário',
-    type: String,
-  })
-  private name: string;
-
-  @ApiProperty({
-    example: 'john.doe@email.com',
-    description: 'E-mail do usuário',
-    type: String,
-    format: 'email',
-  })
-  private email: string;
-
-  @ApiProperty({
-    example: 'password123',
-    description: 'Senha do usuário',
-    type: String,
-  })
-  private password: string;
-
-  @ApiProperty({
-    example: '',
-    description: 'ID do setor ao qual o usuário pertence.',
-    type: String,
-    nullable: true,
-  })
-  private readonly sectorId: string;
-
-  @ApiProperty({
-    description: 'Papel do usuário no sistema',
-    enum: UserRole,
-    example: UserRole.EMPLOYEE,
-  })
-  private role: UserRole;
-
-  @ApiProperty({
-    description: 'Data de criação do usuário',
-    type: String,
-    format: 'date-time',
-    example: '2026-02-09T12:00:00.000Z',
-  })
-  private createdAt: Date;
-
-  constructor(
-    name: string,
-    email: string,
-    password: string,
-    sectorId: string,
-    role: UserRole,
-    id?: string,
-    createdAt?: Date,
+  private constructor(
+    private readonly id: string,
+    private name: string,
+    private email: string,
+    private passwordHash: string,
+    private sectorId: string,
+    private role: UserRole,
+    private createdAt: Date,
   ) {
     this.id = id || uuidv4();
     this.name = name;
     this.email = email;
-    this.password = password;
+    this.passwordHash = passwordHash;
     this.sectorId = sectorId;
     this.role = role;
     this.createdAt = createdAt || new Date();
+  }
+
+  public static create(
+    name: string,
+    email: string,
+    passwordHash: string,
+    sectorId: string,
+    role: UserRole,
+  ) {
+    const id = uuidv4();
+    const createdAt = new Date();
+
+    // Validações
+
+    return new User(id, name, email, passwordHash, sectorId, role, createdAt);
+  }
+
+  public static reconstitute(
+    id: string,
+    name: string,
+    email: string,
+    passwordHash: string,
+    sectorId: string,
+    role: UserRole,
+    createdAt: Date,
+  ): User {
+    return new User(id, name, email, passwordHash, sectorId, role, createdAt);
   }
 
   getId(): string {
@@ -86,7 +60,7 @@ export class User {
   }
 
   getPassword(): string {
-    return this.password;
+    return this.passwordHash;
   }
 
   getSectorId(): string {
@@ -105,6 +79,7 @@ export class User {
     if (name === this.name) {
       return;
     }
+
     this.name = name;
   }
 }

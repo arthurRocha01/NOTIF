@@ -13,7 +13,7 @@ export class UserRepository implements IUserRepository {
     return users.map((user) => UserMapper.toDomain(user));
   }
 
-  async findOne(id: string): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       return null;
@@ -31,7 +31,7 @@ export class UserRepository implements IUserRepository {
     return UserMapper.toDomain(user);
   }
 
-  async create(user: User): Promise<void> {
+  async save(user: User): Promise<void> {
     const data = UserMapper.toPersistence(user);
     await this.prisma.user.create({ data });
   }

@@ -1,20 +1,32 @@
-import { User as PrismaUser } from '@prisma/client';
 import { User } from '../domain/user.entity';
+import { UserRole as DomainUserRole } from '../domain/types';
+import { User as PrismaUser, UserRole as PrismaUserRole } from '@prisma/client';
 
 export class UserMapper {
-  static toDomain(raw: PrismaUser): User {
-    return new User(
+  public static toDomain(raw: PrismaUser): User {
+    return User.create(
       raw.name,
       raw.email,
-      raw.password,
+      raw.passwordHash,
       raw.sectorId,
-      raw.role,
-      raw.id,
-      raw.createdAt,
+      this.mapRole(raw.role),
     );
   }
 
-  static toPersistence(user: User) {
+  private static mapRole(role: PrismaUserRole): DomainUserRole {
+    switch (role) {
+      case 'SUPERVISOR':
+        return DomainUserRole.SUPERVISOR;
+      case 'EMPLOYEE':
+        return DomainUserRole.EMPLOYEE;
+      case 'ADMIN':
+        return DomainUserRole.ADMIN;
+      default:
+        throw new Error('Invalid role');
+    }
+  }
+
+  public static toPersistence(user: User) {
     return {
       id: user.getId(),
       name: user.getName(),

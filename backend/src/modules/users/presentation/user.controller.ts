@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,6 +17,9 @@ import {
   ApiParam,
   ApiBody,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
+  ApiConflictResponse,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { UserService } from '../application/user.service';
 import { UserResponseDto } from '../dto/user-response.dto';
@@ -36,24 +38,12 @@ export class UserController {
     type: UserResponseDto,
     isArray: true,
   })
-  async getAllUsers(): Promise<UserResponseDto[]> {
-    const users = await this.userService.getAllUsers();
-
-    return users.map(
-      (user) =>
-        new UserResponseDto({
-          id: user.getId().toString(),
-          name: user.getName(),
-          email: user.getEmail(),
-          password: user.getPassword(),
-          sectorId: user.getSectorId().toString(),
-          role: user.getRole(),
-          createdAt: user.getCreatedAt(),
-        }),
-    );
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.userService.listUsers();
+    return users.map((user) => UserResponseDto.fromDomain(user));
   }
 
-  @Get('id/:id')
+  @Get(':id')
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   @ApiParam({
     name: 'id',
@@ -67,30 +57,17 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
   })
-  async getUserById(@Param('id') id: string): Promise<UserResponseDto> {
+  async findById(@Param('id') id: string): Promise<UserResponseDto> {
     const user = await this.userService.getUserById(id);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return new UserResponseDto({
-      id: user.getId().toString(),
-      name: user.getName(),
-      email: user.getEmail(),
-      password: user.getPassword(),
-      sectorId: user.getSectorId(),
-      role: user.getRole(),
-      createdAt: user.getCreatedAt(),
-    });
+    return UserResponseDto.fromDomain(user);
   }
 
-  @Get('email/:email')
-  @ApiOperation({ summary: 'Buscar usuário por Email' })
+  @Get('by-email/:email')
+  @ApiOperation({ summary: 'Buscar usuário por e-mail' })
   @ApiParam({
     name: 'email',
-    description: 'Identificador único do usuário (Email)',
-    example: 'exemplo@gmail.com',
+    description: 'Endereço de e-mail do usuário',
+    example: 'exemplo@empresa.com',
   })
   @ApiOkResponse({
     description: 'Usuário encontrado com sucesso',
@@ -99,23 +76,9 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
   })
-  async getUserByEmail(
-    @Param('email') email: string,
-  ): Promise<UserResponseDto> {
+  async findByEmail(@Param('email') email: string): Promise<UserResponseDto> {
     const user = await this.userService.getUserByEmail(email);
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado');
-    }
-
-    return new UserResponseDto({
-      id: user.getId().toString(),
-      name: user.getName(),
-      email: user.getEmail(),
-      password: user.getPassword(),
-      sectorId: user.getSectorId(),
-      role: user.getRole(),
-      createdAt: user.getCreatedAt(),
-    });
+    return UserResponseDto.fromDomain(user);
   }
 
   @Post()
@@ -126,26 +89,19 @@ export class UserController {
     description: 'Usuário criado com sucesso',
     type: UserResponseDto,
   })
-  @ApiResponse({
-    status: 400,
+  @ApiBadRequestResponse({
     description: 'Dados inválidos enviados na requisição',
   })
+  @ApiConflictResponse({
+    description: 'Conflito: e-mail já cadastrado',
+  })
   async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    const user = await this.userService.registerUser(createUserDto);
-
-    return new UserResponseDto({
-      id: user.getId().toString(),
-      name: user.getName(),
-      email: user.getEmail(),
-      password: user.getPassword(),
-      sectorId: user.getSectorId(),
-      role: user.getRole(),
-      createdAt: user.getCreatedAt(),
-    });
+    const user = await this.userService.createUser(createUserDto);
+    return UserResponseDto.fromDomain(user);
   }
 
   @Patch(':id')
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Atualizar dados do usuário' })
   @ApiParam({
     name: 'id',
@@ -159,44 +115,35 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'Usuário não encontrado',
   })
+  @ApiBadRequestResponse({
+    description: 'Dados inválidos enviados na requisição',
+  })
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     const user = await this.userService.updateUser(id, updateUserDto);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return new UserResponseDto({
-      id: user.getId().toString(),
-      name: user.getName(),
-      email: user.getEmail(),
-      password: user.getPassword(),
-      sectorId: user.getSectorId(),
-      role: user.getRole(),
-      createdAt: user.getCreatedAt(),
-    });
+    return UserResponseDto.fromDomain(user);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 (Sucesso sem conteúdo)
-  @ApiOperation({ summary: 'Remove um usuário do sistema' })
-  @ApiResponse({
-    status: 204,
-    description: 'Usuário removido com sucesso.',
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remover usuário' })
+  @ApiParam({
+    name: 'id',
+    description: 'Identificador único do usuário (UUID)',
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Usuário não encontrado.',
+  @ApiNoContentResponse({
+    description: 'Usuário removido com sucesso',
   })
-  @ApiResponse({
-    status: 409,
+  @ApiNotFoundResponse({
+    description: 'Usuário não encontrado',
+  })
+  @ApiConflictResponse({
     description:
-      'Conflito: Usuário tem registros vinculados e não pode ser apagado.',
+      'Conflito: usuário possui registros vinculados e não pode ser removido',
   })
-  async remove(@Param('id') id: string) {
-    return this.userService.deleteUser(id);
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.userService.deleteUser(id);
   }
 }
