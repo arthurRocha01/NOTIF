@@ -10,79 +10,122 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
-
-//////////////////////////////////////
-// ENUMS
-//////////////////////////////////////
 
 enum UserRole {
   EMPLOYEE
   SUPERVISOR
+  ADMIN
 }
 
-enum AlertLevel {
+enum NotificationLevel {
   LOW
   MEDIUM
   HIGH
   CRITICAL
 }
 
-//////////////////////////////////////
-// MODELS
-//////////////////////////////////////
+enum AssignmentStatus {
+  PENDING // Criado, aguardando entrega ou visualização
+  VIEWED // Usuário abriu o detalhe
+  ACKNOWLEDGED // Usuário clicou em "Estou ciente"
+  OVERDUE // Prazo (dueAt) vencido sem confirmação
+}
 
+// --------------------------------------
+// Models
+// --------------------------------------
+
+// Unidade Organizacional (Seção 3.1)
 model Sector {
-  id            String         @id @default(uuid())
-  name          String         @unique
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
   users         User[]
   notifications Notification[]
-  createdAt     DateTime       @default(now())
+
+  @@map("sectors")
 }
 
+// Usuário do Sistema (Seção 3.2)
 model User {
-  id                String        @id @default(uuid())
-  name              String
-  email             String        @unique
-  password          String        @db.Text
-  role              UserRole      @default(EMPLOYEE)
-  
-  // Relacionamento Obrigatório (Sem '?')
-  sector            Sector        @relation(fields: [sectorId], references: [id])
-  sectorId          String
-  
-  notificationsRead ReadReceipt[]
-  createdAt         DateTime      @default(now())
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String? // Opcional: Permite uso híbrido (Firebase Auth ou Senha Local)
+  role         UserRole @default(EMPLOYEE)
+
+  // FK: Vínculo obrigatório com Setor
+  sectorId String
+  sector   Sector @relation(fields: [sectorId], references: [id])
+
+  // Relações
+  createdNotifications Notification[]           @relation("Author")
+  assignments          NotificationAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
 }
 
+// O Evento da Notificação (Seção 3.3)
 model Notification {
-  id             String        @id @default(uuid())
-  title          String
-  message        String        @db.Text // @db.Text permite mensagens longas
-  level          AlertLevel
-  
-  // Setor Alvo (Pode ser nulo se for uma notificação para TODOS os setores)
-  targetSector   Sector       @relation(fields: [targetSectorId], references: [id])
-  targetSectorId String
-  
-  readReceipts   ReadReceipt[]
-  createdAt      DateTime      @default(now())
+  id                     String            @id @default(uuid())
+  title                  String
+  message                String            @db.Text
+  level                  NotificationLevel
+  slaMinutes             Int // Usado para calcular o dueAt
+  requiresAcknowledgment Boolean           @default(true)
+
+  // Escopo: Se null = Global. Se preenchido = Setorial.
+  sectorId String?
+  sector   Sector? @relation(fields: [sectorId], references: [id])
+
+  // Auditoria de Criação
+  authorId String
+  author   User   @relation("Author", fields: [authorId], references: [id])
+
+  // Relação 1:N com as Obrigações Individuais
+  assignments NotificationAssignment[]
+
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
 }
 
-model ReadReceipt {
-  id             String       @id @default(uuid())
-  
-  user           User         @relation(fields: [userId], references: [id])
-  userId         String
-  
-  notification   Notification @relation(fields: [notificationId], references: [id])
-  notificationId String
-  
-  readAt         DateTime
-  acknowledged   Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+// A Obrigação Individual / Auditoria (Seção 3.4 e 7)
+model NotificationAssignment {
+  id String @id @default(uuid())
 
-  // Garante que um usuário não tenha dois recibos para a mesma notificação
+  // FKs
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  // Máquina de Estados
+  status AssignmentStatus @default(PENDING)
+
+  // Timestamps do Ciclo de Vida (Seção 4)
+  createdAt DateTime @default(now())
+  dueAt     DateTime // Calculado na criação (now + slaMinutes)
+
+  deliveredAt    DateTime? // Sync com App
+  viewedAt       DateTime? // Abertura
+  acknowledgedAt DateTime? // Confirmação
+
+  // Restrição de Unicidade: Um usuário não recebe a mesma notificação duas vezes
   @@unique([userId, notificationId])
+  // Índices de Performance Obrigatórios (Seção 7)
+  @@index([userId])
+  @@index([notificationId])
+  @@index([status])
+  @@index([dueAt])
+  @@map("notification_assignments")
 }
