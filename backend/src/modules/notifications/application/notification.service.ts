@@ -8,12 +8,12 @@ import type { UpdateNotificationDto } from '../dto/update-notification.dto';
 export class NotificationService {
   constructor(private readonly notificationRepo: NotificationRepository) {}
 
-  listNotifications(): Promise<Notification[]> {
-    return this.notificationRepo.findAll();
+  async listNotifications(): Promise<Notification[]> {
+    return await this.notificationRepo.findAll();
   }
 
-  findUserById(id: string): Promise<Notification | null> {
-    return this.notificationRepo.findById(id);
+  async getNotificationById(id: string): Promise<Notification | null> {
+    return await this.notificationRepo.findById(id);
   }
 
   async createNotification(dto: CreateNotificationDto) {
@@ -21,44 +21,35 @@ export class NotificationService {
       dto.title,
       dto.message,
       dto.level,
-      dto.targetSectorId,
+      dto.slaMinutes,
+      dto.sectorId,
+      dto.authorId,
     );
 
-    try {
-      await this.notificationRepo.create(newNotification);
-    } catch {
-      throw new NotFoundException('Erro ao criar usuário');
-    }
+    await this.notificationRepo.save(newNotification);
 
     return newNotification;
   }
 
-  async updateNotification(
-    id: string,
-    dto: UpdateNotificationDto,
-  ): Promise<Notification> {
+  async updateNotification(id: string, dto: UpdateNotificationDto) {
     const notification = await this.notificationRepo.findById(id);
 
     if (!notification) {
-      throw new NotFoundException('Usuário não encontrado');
+      throw new NotFoundException('Usuário já cadastrado');
     }
 
     if (dto.title) notification.changeTitle(dto.title);
-
-    try {
-      await this.notificationRepo.update(notification);
-    } catch {
-      throw new NotFoundException('Erro ao atualizar usuário');
-    }
 
     return notification;
   }
 
   async deleteNotification(id: string): Promise<void> {
-    try {
-      await this.notificationRepo.delete(id);
-    } catch {
-      throw new NotFoundException('Erro ao deletar usuário');
+    const user = await this.notificationRepo.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuário já cadastrado');
     }
+
+    await this.notificationRepo.delete(id);
   }
 }

@@ -1,35 +1,34 @@
-import { AlertLevel } from '@prisma/client'; // Usamos o Enum gerado, mas a classe é pura
 import { v4 as uuidv4 } from 'uuid';
+import type { NotificationLevel } from './type';
 
 export class Notification {
-  private readonly id: string;
-  private title: string;
-  private message: string;
-  private level: AlertLevel;
-  private readonly targetSectorId: string;
-  private createdAt: Date;
-
   constructor(
-    id: string,
-    title: string,
-    message: string,
-    level: AlertLevel,
-    targetSectorId: string,
-    createdAt: Date,
+    private readonly id: string,
+    private title: string,
+    private message: string,
+    private level: NotificationLevel,
+    private slaMinutes: number,
+    private readonly targetSectorId: string,
+    private readonly authorId: string,
+    private createdAt: Date,
   ) {
     this.id = id;
     this.title = title;
     this.message = message;
     this.level = level;
+    this.slaMinutes = slaMinutes;
     this.targetSectorId = targetSectorId;
+    this.authorId = authorId;
     this.createdAt = createdAt;
   }
 
-  static create(
+  public static create(
     title: string,
     message: string,
-    level: AlertLevel,
+    level: NotificationLevel,
+    slaMinutes: number,
     targetSectorId: string,
+    authorId: string,
   ) {
     const id = uuidv4();
     const createdAt = new Date();
@@ -39,32 +38,64 @@ export class Notification {
       title,
       message,
       level,
+      slaMinutes,
       targetSectorId,
+      authorId,
       createdAt,
     );
   }
 
-  getId() {
+  public static reconstitute(
+    id: string,
+    titile: string,
+    message: string,
+    level: NotificationLevel,
+    slaMinutes: number,
+    targetSectorId: string,
+    authorId: string,
+    createdAt: Date,
+  ) {
+    return new Notification(
+      id,
+      titile,
+      message,
+      level,
+      slaMinutes,
+      targetSectorId,
+      authorId,
+      createdAt,
+    );
+  }
+
+  public getId() {
     return this.id;
   }
 
-  getTitle() {
+  public getTitle() {
     return this.title;
   }
 
-  getMessage() {
+  public getMessage() {
     return this.message;
   }
 
-  getLevel() {
+  public getLevel() {
     return this.level;
   }
 
-  getTargetSectorId() {
+  public getSlaMinutes() {
+    return this.slaMinutes;
+  }
+
+  public getSectorId() {
     return this.targetSectorId;
   }
 
-  getCreatedAt() {
+  public getAuthorId() {
+    return this.authorId;
+  }
+
+  public getCreatedAt() {
     return this.createdAt;
   }
 

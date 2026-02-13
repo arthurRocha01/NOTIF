@@ -27,7 +27,7 @@ export class NotificationRepository implements INotificarionRepository {
     return NotificationMapper.toDomain(notification);
   }
 
-  async create(notification: Notification): Promise<void> {
+  async save(notification: Notification): Promise<void> {
     const data = NotificationMapper.toPersistence(notification);
     await this.prisma.notification.create({ data });
   }

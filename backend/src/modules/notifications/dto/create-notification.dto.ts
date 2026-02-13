@@ -1,6 +1,6 @@
+import { NotificationLevel } from '../domain/type';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
-import { AlertLevel } from '@prisma/client';
 
 export class CreateNotificationDto {
   @ApiProperty({
@@ -21,11 +21,13 @@ export class CreateNotificationDto {
 
   @ApiProperty({
     description: 'Nível de alerta da notificação',
-    enum: AlertLevel,
-    example: AlertLevel,
+    enum: NotificationLevel,
+    example: NotificationLevel,
   })
-  @IsEnum(AlertLevel)
-  level: AlertLevel;
+  @IsEnum(NotificationLevel)
+  level: NotificationLevel;
+
+  slaMinutes: number;
 
   @ApiProperty({
     description: 'ID do setor que receberá a notificação',
@@ -33,5 +35,7 @@ export class CreateNotificationDto {
   })
   @IsNotEmpty()
   @IsUUID()
-  targetSectorId: string;
+  sectorId: string;
+
+  authorId: string;
 }
