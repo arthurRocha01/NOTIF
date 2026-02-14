@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { INotificationAssignment } from '../domain/assigment.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
-import type { NotificationAssignment } from '../domain/notification-assignment.entity';
+import { NotificationAssignment } from '../domain/notification-assignment.entity';
 import { NotificationAssignmentMapper } from './assignment.mapper';
 
 @Injectable()
@@ -56,6 +56,6 @@ export class NotificationAssignmentRepository implements INotificationAssignment
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.notification.delete({ where: { id } });
+    await this.prisma.notificationAssignment.delete({ where: { id } });
   }
 }
