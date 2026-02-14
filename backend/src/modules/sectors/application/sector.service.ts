@@ -37,4 +37,14 @@ export class SectorService {
 
     return sector;
   }
+
+  async deleteSector(id: string) {
+    const sector = await this.sectorRepo.findById(id);
+
+    if (!sector) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    await this.sectorRepo.delete(id);
+  }
 }

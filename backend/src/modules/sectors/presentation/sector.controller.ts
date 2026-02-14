@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -81,5 +89,10 @@ export class SectorController {
   ): Promise<SectorResponseDto> {
     const sector = await this.sectorService.updateSector(id, dto);
     return SectorResponseDto.fromDomain(sector);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<void> {
+    await this.sectorService.deleteSector(id);
   }
 }
