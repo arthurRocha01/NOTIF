@@ -11,6 +11,7 @@ export class NotificationMapper {
       raw.message,
       this.mapLevel(raw.level),
       raw.slaMinutes,
+      raw.requiresAcknowledgment,
       raw.sectorId,
       raw.authorId,
       raw.createdAt,
@@ -34,13 +35,16 @@ export class NotificationMapper {
     }
   }
 
-  public static toPersistence(entity: Notification): any {
+  public static toPersistence(entity: Notification): PrismaNotification {
     return {
       id: entity.getId(),
       title: entity.getTitle(),
       message: entity.getMessage(),
       level: entity.getLevel(),
-      targetSectorId: entity.getSectorId(),
+      slaMinutes: entity.getSlaMinutes(),
+      requiresAcknowledgment: entity.getRequiresAcknowledgment(),
+      sectorId: entity.getSectorId(),
+      authorId: entity.getAuthorId(),
       createdAt: entity.getCreatedAt(),
     };
   }

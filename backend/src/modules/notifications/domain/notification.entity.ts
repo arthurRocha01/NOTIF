@@ -8,6 +8,7 @@ export class Notification {
     private message: string,
     private level: NotificationLevel,
     private slaMinutes: number,
+    private requiresAcknowledgment: boolean,
     private readonly targetSectorId: string,
     private readonly authorId: string,
     private createdAt: Date,
@@ -17,6 +18,7 @@ export class Notification {
     this.message = message;
     this.level = level;
     this.slaMinutes = slaMinutes;
+    this.requiresAcknowledgment = requiresAcknowledgment;
     this.targetSectorId = targetSectorId;
     this.authorId = authorId;
     this.createdAt = createdAt;
@@ -32,6 +34,7 @@ export class Notification {
   ) {
     const id = uuidv4();
     const createdAt = new Date();
+    const requiresAcknowledgment = true;
 
     return new Notification(
       id,
@@ -39,6 +42,7 @@ export class Notification {
       message,
       level,
       slaMinutes,
+      requiresAcknowledgment,
       targetSectorId,
       authorId,
       createdAt,
@@ -51,6 +55,7 @@ export class Notification {
     message: string,
     level: NotificationLevel,
     slaMinutes: number,
+    requiresAcknowledgment: boolean,
     targetSectorId: string,
     authorId: string,
     createdAt: Date,
@@ -61,6 +66,7 @@ export class Notification {
       message,
       level,
       slaMinutes,
+      requiresAcknowledgment,
       targetSectorId,
       authorId,
       createdAt,
@@ -87,6 +93,10 @@ export class Notification {
     return this.slaMinutes;
   }
 
+  public getRequiresAcknowledgment() {
+    return this.requiresAcknowledgment;
+  }
+
   public getSectorId() {
     return this.targetSectorId;
   }
@@ -105,5 +115,13 @@ export class Notification {
     }
 
     this.title = title;
+  }
+
+  public changeRequiresAcknowledgment(requiresAcknowledgment: boolean): void {
+    if (this.requiresAcknowledgment === requiresAcknowledgment) {
+      return;
+    }
+
+    this.requiresAcknowledgment = requiresAcknowledgment;
   }
 }

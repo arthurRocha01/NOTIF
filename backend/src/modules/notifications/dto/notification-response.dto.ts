@@ -34,6 +34,8 @@ export class NotificationResponseDto {
   })
   public readonly slaMinutes: number;
 
+  public readonly requiresAcknowledgment: boolean;
+
   @ApiProperty({
     description:
       'ID do setor que recebeu a notificação. Nulo indica notificação global.',
@@ -62,6 +64,7 @@ export class NotificationResponseDto {
     message: string;
     level: NotificationLevel;
     slaMinutes: number;
+    requiresAcknowledgment: boolean;
     sectorId: string | null;
     authorId: string;
     createdAt: Date;
@@ -71,6 +74,7 @@ export class NotificationResponseDto {
     this.message = props.message;
     this.level = props.level;
     this.slaMinutes = props.slaMinutes;
+    this.requiresAcknowledgment = props.requiresAcknowledgment;
     this.sectorId = props.sectorId;
     this.authorId = props.authorId;
     this.createdAt = props.createdAt;
@@ -83,6 +87,7 @@ export class NotificationResponseDto {
       message: notification.getMessage(),
       level: notification.getLevel(),
       slaMinutes: notification.getSlaMinutes(),
+      requiresAcknowledgment: notification.getRequiresAcknowledgment(),
       sectorId: notification.getSectorId(),
       authorId: notification.getAuthorId(),
       createdAt: notification.getCreatedAt(),

@@ -39,6 +39,11 @@ export class NotificationService {
     }
 
     if (dto.title) notification.changeTitle(dto.title);
+    if (dto.requiresAcknowledgment !== undefined) {
+      notification.changeRequiresAcknowledgment(dto.requiresAcknowledgment);
+    }
+
+    await this.notificationRepo.update(notification);
 
     return notification;
   }

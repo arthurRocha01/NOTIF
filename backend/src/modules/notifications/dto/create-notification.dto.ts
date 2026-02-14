@@ -29,6 +29,8 @@ export class CreateNotificationDto {
 
   slaMinutes: number;
 
+  requiresAcknowledgment?: boolean;
+
   @ApiProperty({
     description: 'ID do setor que receberá a notificação',
     example: 'a3f1e5c2-7d1a-4c92-b9ef-2d7c5a8b9e11',
