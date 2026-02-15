@@ -10,7 +10,15 @@ import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { FirebaseModule } from './modules/firebase/firebase.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, AuthModule, NotificationsModule, SectorsModule, AssignmentsModule, FirebaseModule],
+  imports: [
+    UsersModule,
+    PrismaModule,
+    AuthModule,
+    NotificationsModule,
+    SectorsModule,
+    AssignmentsModule,
+    FirebaseModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

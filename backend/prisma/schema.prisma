@@ -59,6 +59,9 @@ model User {
   passwordHash String? // Opcional: Permite uso híbrido (Firebase Auth ou Senha Local)
   role         UserRole @default(EMPLOYEE)
 
+  fcmToken     String?
+
+
   // FK: Vínculo obrigatório com Setor
   sectorId String
   sector   Sector @relation(fields: [sectorId], references: [id])
