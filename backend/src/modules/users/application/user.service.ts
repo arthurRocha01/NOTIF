@@ -70,4 +70,22 @@ export class UserService {
 
     await this.userRepo.delete(id);
   }
+
+  async updateFcmToken(id: string, fcmToken: string): Promise<User> {
+    const user = await this.userRepo.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
+    }
+
+    if (!fcmToken) {
+      throw new NotFoundException('Token FCM não encontrado.');
+    }
+
+    user.updateFcmToken(fcmToken);
+
+    await this.userRepo.update(user);
+
+    return user;
+  }
 }

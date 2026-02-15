@@ -37,6 +37,8 @@ export class UserResponseDto {
   })
   public readonly role: UserRole;
 
+  public readonly fcmToken: string | null;
+
   @ApiProperty({
     example: '2026-02-09T12:00:00.000Z',
     description: 'Data de criação',
@@ -51,6 +53,7 @@ export class UserResponseDto {
     email: string;
     sectorId: string | null;
     role: UserRole;
+    fcmToken: string | null;
     createdAt: string;
   }) {
     this.id = props.id;
@@ -58,6 +61,7 @@ export class UserResponseDto {
     this.email = props.email;
     this.sectorId = props.sectorId;
     this.role = props.role;
+    this.fcmToken = props.fcmToken;
     this.createdAt = props.createdAt;
   }
 
@@ -68,6 +72,7 @@ export class UserResponseDto {
       email: user.getEmail(),
       sectorId: user.getSectorId()?.toString() ?? null,
       role: user.getRole(),
+      fcmToken: user.getFcmToken(),
       createdAt: user.getCreatedAt().toISOString(),
     });
   }
