@@ -7,9 +7,10 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuthModule } from './modules/auth/auth.module';
 import { SectorsModule } from './modules/sectors/sectors.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
+import { FirebaseModule } from './modules/firebase/firebase.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, AuthModule, NotificationsModule, SectorsModule, AssignmentsModule],
+  imports: [UsersModule, PrismaModule, AuthModule, NotificationsModule, SectorsModule, AssignmentsModule, FirebaseModule],
   controllers: [AppController],
   providers: [AppService],
 })
