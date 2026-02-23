@@ -19,9 +19,19 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Scaffold.of(context).openDrawer(),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(LucideIcons.messageCircle, color: Colors.white),
-          onPressed: () {},
+        // Foto de perfil 
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0), // Dá um pequeno respiro da borda da tela
+          child: GestureDetector(
+            onTap: () {
+            },
+            child: const CircleAvatar(
+              radius: 16, // Tamanho ideal para não estourar a AppBar
+              backgroundColor: Color.fromARGB(255, 255, 254, 254), // Fundo caso a imagem demore a carregar
+              // Imagem de teste (você pode trocar por AssetImage se tiver a foto local)
+              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=47'), 
+            ),
+          ),
         ),
       ],
     );
