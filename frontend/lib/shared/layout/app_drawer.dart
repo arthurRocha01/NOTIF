@@ -42,7 +42,7 @@ class AppDrawer extends StatelessWidget {
           _buildMenuItem(LucideIcons.book, 'Manuais & Políticas', onTap: () {
             // Fecha o drawer e navega (H7)
             Navigator.pop(context);
-            // Navigator.pushNamed(context, '/manuais'); // Exemplo de rota
+            _mostrarDialogoManuais(context);
           }),
           _buildMenuItem(LucideIcons.shieldCheck, 'Políticas de Segurança', onTap: () {
             Navigator.pop(context);
@@ -53,8 +53,16 @@ class AppDrawer extends StatelessWidget {
           
           // Seção Sistema
           _buildSectionTitle('Sistema'),
-          _buildMenuItem(LucideIcons.settings, 'Configurações'),
-          _buildMenuItem(LucideIcons.headphones, 'Suporte'),
+
+          _buildMenuItem(LucideIcons.settings, 'Configurações', onTap: () {
+            Navigator.pop(context); 
+            _mostrarDialogoConfiguracoes(context);
+          }),
+
+          _buildMenuItem(LucideIcons.headphones, 'Suporte', onTap: () {
+            Navigator.pop(context);
+            _mostrarDialogoSuporte(context);
+          }),
           
           const Spacer(), // Empurra o "Encerrar" para o fundo
           
@@ -123,6 +131,38 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
+  void _mostrarDialogoManuais(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        expand: false,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
+          children: [
+            // Ícone alterado para livro (bookOpen)
+            const Icon(LucideIcons.bookOpen, size: 48, color: Color(0xFF0F172A)), 
+            const SizedBox(height: 10),
+            // Título alterado
+            Text('Manuais & Políticas', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Divider(),
+            // Textos alterados
+            const Text(
+              '1. Manual de Integração: Conheça nossa cultura, missão e valores institucionais.\n\n'
+              '2. Código de Conduta: Diretrizes de comportamento ético e profissional esperadas.\n\n'
+              '3. Guia de Benefícios: Informações sobre plano de saúde, VR, VA e auxílios corporativos.\n\n'
+              '4. Política de Home Office: Regras, horários e boas práticas para o trabalho remoto.',
+              style: TextStyle(height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Exemplo de funcionalidade imediata para "Políticas"
   void _mostrarDialogoSeguranca(BuildContext context) {
     showModalBottomSheet(
@@ -146,6 +186,159 @@ class AppDrawer extends StatelessWidget {
               '3. Notificações: Fique atento a alertas de acessos desconhecidos.\n\n'
               '4. Dados: Tratamos seus dados conforme a LGPD vigente.',
               style: TextStyle(height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _mostrarDialogoConfiguracoes(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5, // Começa ocupando metade da tela
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Icon(LucideIcons.settings, size: 48, color: Color(0xFF0F172A)),
+            const SizedBox(height: 10),
+            Text(
+              'Configurações', 
+              textAlign: TextAlign.center, 
+              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)
+            ),
+            const SizedBox(height: 20),
+            
+            // Item 1: Perfil e Dados Pessoais
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFF1F5F9),
+                child: Icon(LucideIcons.user, color: Color(0xFF0F172A)),
+              ),
+              title: Text('Dados Pessoais e Perfil', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              subtitle: Text('Alterar foto e nome', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+              trailing: const Icon(LucideIcons.chevronRight, size: 20),
+              onTap: () {
+                // Aqui chamaremos a tela/modal de edição de perfil no futuro
+              },
+            ),
+            const Divider(),
+
+            // Item 2: Alterar Senha
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFF1F5F9),
+                child: Icon(LucideIcons.key, color: Color(0xFF0F172A)),
+              ),
+              title: Text('Segurança e Senha', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              subtitle: Text('Atualize sua senha de acesso', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+              trailing: const Icon(LucideIcons.chevronRight, size: 20),
+              onTap: () {
+                // Aqui chamaremos a tela/modal de alteração de senha no futuro
+              },
+            ),
+            const Divider(),
+
+            // Item 3: Notificações (Um extra legal já que seu app se chama NOTIF)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFF1F5F9),
+                child: Icon(LucideIcons.bellRing, color: Color(0xFF0F172A)),
+              ),
+              title: Text('Preferências de Notificação', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              trailing: const Icon(LucideIcons.chevronRight, size: 20),
+              onTap: () {
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  void _mostrarDialogoSuporte(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Icon(LucideIcons.headphones, size: 48, color: Color(0xFF0F172A)),
+            const SizedBox(height: 10),
+            Text(
+              'Suporte', 
+              textAlign: TextAlign.center, 
+              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)
+            ),
+            const SizedBox(height: 5),
+            Text(
+              'Como podemos ajudar?', 
+              textAlign: TextAlign.center, 
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.black54)
+            ),
+            const SizedBox(height: 20),
+            
+            // Opção 1: WhatsApp (Chat ao vivo)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE8F5E9), // Fundo verde claro
+                child: Icon(LucideIcons.messageCircle, color: Colors.green), // Ícone verde
+              ),
+              title: Text('WhatsApp', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              subtitle: Text('Atendimento rápido', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+              trailing: const Icon(LucideIcons.externalLink, size: 20),
+              onTap: () {
+                // Futuramente pode colocar aqui um url_launcher para abrir o WhatsApp
+              },
+            ),
+            const Divider(),
+
+            // Opção 2: E-mail
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFF1F5F9),
+                child: Icon(LucideIcons.mail, color: Color(0xFF0F172A)),
+              ),
+              title: Text('E-mail', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              subtitle: Text('suporte@notif.com', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+              trailing: const Icon(LucideIcons.externalLink, size: 20),
+              onTap: () {
+                // Futuramente pode colocar aqui para abrir o cliente de e-mail
+              },
+            ),
+            const Divider(),
+
+            // Opção 3: Perguntas Frequentes (FAQ)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFF1F5F9),
+                child: Icon(LucideIcons.helpCircle, color: Color(0xFF0F172A)),
+              ),
+              title: Text('Perguntas Frequentes', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              subtitle: Text('Dúvidas comuns resolvidas', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
+              trailing: const Icon(LucideIcons.chevronRight, size: 20),
+              onTap: () {
+                // Futuramente abre uma nova tela ou modal com as FAQs
+              },
             ),
           ],
         ),
