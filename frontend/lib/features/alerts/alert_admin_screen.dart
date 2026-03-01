@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/features/dashboard/dashboard_screen.dart';
 
 class AlertsAdminScreen extends StatefulWidget {
   const AlertsAdminScreen({super.key});
@@ -233,7 +234,7 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
             controller: _tabController,
             children: [
               _buildAlertsContent(),
-              const Center(child: Text("Painel de Controle")),
+              const DashboardScreen(),
             ],
           ),
         ),
