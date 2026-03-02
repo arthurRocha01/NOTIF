@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/dashboard/dashboard_screen.dart';
 import 'package:notif_app/features/comunicado/notice_screen.dart';
 
+enum NivelAlerta { normal, critico }
+
 class AlertsAdminScreen extends StatefulWidget {
   const AlertsAdminScreen({super.key});
 
@@ -11,11 +13,11 @@ class AlertsAdminScreen extends StatefulWidget {
   State<AlertsAdminScreen> createState() => _AlertsAdminScreenState();
 }
 
-class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProviderStateMixin {
+class _AlertsAdminScreenState extends State<AlertsAdminScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
-  
-  // Estados para o Modal
-  bool _isCritico = true; 
+
+  NivelAlerta _nivelSelecionado = NivelAlerta.critico;
   bool _exigirConfirmacao = true;
 
   @override
@@ -30,7 +32,6 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
     super.dispose();
   }
 
-  /// Abre o modal de criação conforme a imagem fornecida
   void _abrirModalCriacao() {
     showModalBottomSheet(
       context: context,
@@ -44,157 +45,183 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
           builder: (context, setModalState) {
             return Container(
               padding: EdgeInsets.only(
-                top: 20, left: 20, right: 20,
+                top: 20,
+                left: 20,
+                right: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 28),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const Text(
-                        "Novo Alerta",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text("Limpar", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 15),
-
-                  // Classificação
-                  const Text("Classificação", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                  const Text("Nível de Urgência", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(height: 15),
-                  
-                  // Seletor de Urgência (Pill design)
-                  Center(
-                    child: Container(
-                      height: 45,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildUrgencyOption("Normal", !_isCritico, Colors.white, const Color(0xFF1E3A8A), () {
-                            setModalState(() => _isCritico = false);
-                          }),
-                          _buildUrgencyOption("Critico", _isCritico, Colors.red, Colors.white, () {
-                            setModalState(() => _isCritico = true);
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Campos de Texto
-                  const Text("Conteúdo", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                  const TextField(
-                    decoration: InputDecoration(
-                      labelText: "Título do Alerta*",
-                      labelStyle: TextStyle(fontSize: 13),
-                      floatingLabelStyle: TextStyle(color: Color(0xFF1E3A8A)),
-                    ),
-                  ),
-                  const TextField(
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: "Descrição e Instruções",
-                      labelStyle: TextStyle(fontSize: 13),
-                      floatingLabelStyle: TextStyle(color: Color(0xFF1E3A8A)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Destinatários
-                  const Text("Destinarios", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                  const Text("Enviar para:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// HEADER
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Chip(
-                          label: const Text("Todos os Setores", style: TextStyle(fontSize: 12)),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                          onDeleted: () {},
-                          backgroundColor: Colors.grey.shade200,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 28),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        const Spacer(),
-                        const Text("+ Adicionar", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                        const Text(
+                          "Novo Alerta",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            "Limpar",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
+                    const Divider(),
+                    const SizedBox(height: 15),
 
-                  const SizedBox(height: 25),
+                    /// CLASSIFICAÇÃO
+                    const Text("Classificação",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A))),
+                    const Text("Nível de Urgência",
+                        style:
+                            TextStyle(fontSize: 12, color: Colors.grey)),
+                    const SizedBox(height: 15),
 
-                  // Toggle de Confirmação
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    Center(
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text("Exigir confirmação de leitura?", style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(
-                              "Usuários deverão clicar em \"ciente\" para ter acesso ao app.",
-                              style: TextStyle(fontSize: 11, color: Colors.grey),
+                            _buildUrgencyOption(
+                              "Normal",
+                              _nivelSelecionado ==
+                                  NivelAlerta.normal,
+                              Colors.white,
+                              const Color(0xFF1E3A8A),
+                              () {
+                                setModalState(() {
+                                  _nivelSelecionado =
+                                      NivelAlerta.normal;
+                                });
+                              },
+                            ),
+                            _buildUrgencyOption(
+                              "Crítico",
+                              _nivelSelecionado ==
+                                  NivelAlerta.critico,
+                              Colors.red,
+                              Colors.white,
+                              () {
+                                setModalState(() {
+                                  _nivelSelecionado =
+                                      NivelAlerta.critico;
+                                });
+                              },
                             ),
                           ],
                         ),
                       ),
-                      Switch(
-                        value: _exigirConfirmacao,
-                        activeColor: const Color(0xFF1E3A8A),
-                        onChanged: (val) => setModalState(() => _exigirConfirmacao = val),
-                      ),
-                    ],
-                  ),
+                    ),
 
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 25),
 
-                  // Botão Final
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1E3A8A),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      onPressed: () {
-                        // Lógica de envio aqui futuramente
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        "ENVIAR ALERTA",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    /// CONTEÚDO
+                    const Text("Conteúdo",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A))),
+                    const TextField(
+                      decoration: InputDecoration(
+                        labelText: "Título do Alerta*",
                       ),
                     ),
-                  ),
-                ],
+                    const TextField(
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: "Descrição e Instruções",
+                      ),
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    /// SWITCH CONDICIONAL
+                    if (_nivelSelecionado == NivelAlerta.normal)
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Exigir confirmação de leitura?",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  "Usuários deverão clicar em \"ciente\" para ter acesso ao app.",
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: _exigirConfirmacao,
+                            activeColor:
+                                const Color(0xFF1E3A8A),
+                            onChanged: (val) =>
+                                setModalState(() =>
+                                    _exigirConfirmacao = val),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 30),
+
+                    /// BOTÃO
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xFF1E3A8A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          "ENVIAR ALERTA",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -203,12 +230,13 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
     );
   }
 
-  /// Helper para o seletor de urgência
-  Widget _buildUrgencyOption(String label, bool isSelected, Color activeBg, Color activeText, VoidCallback onTap) {
+  Widget _buildUrgencyOption(String label, bool isSelected,
+      Color activeBg, Color activeText, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 35, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -217,7 +245,8 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
           label,
           style: TextStyle(
             color: isSelected ? activeText : Colors.grey,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight:
+                isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -259,7 +288,10 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
         ),
         labelColor: Colors.white,
         unselectedLabelColor: const Color(0xFF64748B),
-        tabs: const [Tab(text: "Alertas"), Tab(text: "Painel")],
+        tabs: const [
+          Tab(text: "Alertas"),
+          Tab(text: "Painel")
+        ],
       ),
     );
   }
@@ -270,30 +302,38 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
       children: [
         Text(
           "Olá Roberta.\n(Gestora de operações)",
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, height: 1.2),
+          style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              height: 1.2),
         ),
         const SizedBox(height: 25),
         Row(
           children: [
-            _buildActionCard("Novo Alerta", LucideIcons.bell, const Color(0xFFDC2626), _abrirModalCriacao),
+            _buildActionCard("Novo Alerta",
+                LucideIcons.bell, const Color(0xFFDC2626),
+                _abrirModalCriacao),
             const SizedBox(width: 15),
+<<<<<<< HEAD
             _buildActionCard("Novo Comunicado", LucideIcons.megaphone, const Color(0xFF2D4689), () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const NoticeScreen()),
               );
             }),
+=======
+            _buildActionCard("Novo Comunicado",
+                LucideIcons.megaphone,
+                const Color(0xFF2D4689), () {}),
+>>>>>>> 0ff9792 (Adiciona funcionalidade alerta)
           ],
         ),
-        const SizedBox(height: 30),
-        const Text("Monitoramento Ativo", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
-        const SizedBox(height: 15),
-        _buildMiniStatusCard("Protocolo Incêndio", "85% Lido", Colors.orange),
       ],
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(String title, IconData icon,
+      Color color, VoidCallback onTap) {
     return Expanded(
       child: Material(
         color: color,
@@ -305,37 +345,24 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
             height: 150,
             padding: const EdgeInsets.all(16),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 40),
+                Icon(icon,
+                    color: Colors.white, size: 40),
                 const SizedBox(height: 12),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMiniStatusCard(String title, String status, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border(left: BorderSide(color: color, width: 4)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-        ],
       ),
     );
   }
