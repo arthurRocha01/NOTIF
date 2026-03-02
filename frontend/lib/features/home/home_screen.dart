@@ -1,4 +1,5 @@
 // lib/features/home/screens/home_screen.dart
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../shared/layout/app_drawer.dart';
 import 'package:notif_app/features/alerts/alert_admin_screen.dart';
@@ -42,14 +43,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _addPost(String text) {
+  void _addPost(String text, List<PlatformFile> archives) {
     setState(() {
+      // Pega o primeiro arquivo da lista caso o usuário tenha anexado algo
+      // Isso é útil se você quiser usar aquele campo 'image' que já existia no seu Map
+      PlatformFile? firstArchive = archives.isNotEmpty ? archives.first : null;
       _posts.insert(0, {
         'id': DateTime.now().toString(),
         'user': 'Usuário Administrador',
         'role': 'Especialista de Sistemas',
         'content': text,
-        'image': null,
+        // Adicionando os arquivos na estrutura do seu post
+        'arquivos': archives, 
+        // Se você exibe apenas uma imagem por post, podemos usar o campo antigo:
+        'image': firstArchive, 
         'avatar': 'https://i.pravatar.cc/150?u=admin',
         'likes': 0,
         'isLiked': false,
@@ -98,6 +105,20 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) => PostCard(
                 key: ValueKey(_posts[index]['id']),
                 post: _posts[index],
+                onDelete: () {
+                  setState(() {
+                    _posts.removeWhere(
+                      (post) => post['id'] == _posts[index]['id'],
+                    );
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Post excluído com sucesso'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
               ),
             ),
           ),
