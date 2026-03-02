@@ -275,22 +275,74 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
   Widget _buildCustomTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFE2E8F0),
+            Color(0xFFCBD5E1),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
+        isScrollable: false,
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+
+        //  INDICADOR MODERNO COM GRADIENTE
         indicator: BoxDecoration(
-          color: const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF1E293B),
+              Color(0xFF334155),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF1E293B).withOpacity(0.4),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
+
+        //  HOVER ESTILO DASHBOARD
+        overlayColor: MaterialStateProperty.resolveWith<Color?>(
+          (states) {
+            if (states.contains(MaterialState.hovered)) {
+              return const Color(0xFF1E293B).withOpacity(0.07);
+            }
+            if (states.contains(MaterialState.pressed)) {
+              return const Color(0xFF1E293B).withOpacity(0.15);
+            }
+            return null;
+          },
+        ),
+
+        mouseCursor: SystemMouseCursors.click,
+
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+          letterSpacing: 0.5,
+        ),
+
         labelColor: Colors.white,
-        unselectedLabelColor: const Color(0xFF64748B),
+        unselectedLabelColor: const Color(0xFF475569),
+
         tabs: const [
           Tab(text: "Alertas"),
-          Tab(text: "Painel")
+          Tab(text: "Painel"),
         ],
       ),
     );
@@ -314,18 +366,9 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
                 LucideIcons.bell, const Color(0xFFDC2626),
                 _abrirModalCriacao),
             const SizedBox(width: 15),
-<<<<<<< HEAD
-            _buildActionCard("Novo Comunicado", LucideIcons.megaphone, const Color(0xFF2D4689), () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NoticeScreen()),
-              );
-            }),
-=======
             _buildActionCard("Novo Comunicado",
                 LucideIcons.megaphone,
-                const Color(0xFF2D4689), () {}),
->>>>>>> 0ff9792 (Adiciona funcionalidade alerta)
+                const Color(0xFF2D4689), () {})
           ],
         ),
       ],
