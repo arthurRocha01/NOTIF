@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/dashboard/dashboard_screen.dart';
+import 'package:notif_app/features/comunicado/notice_screen.dart';
 
 class AlertsAdminScreen extends StatefulWidget {
   const AlertsAdminScreen({super.key});
@@ -276,7 +277,12 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen> with TickerProvid
           children: [
             _buildActionCard("Novo Alerta", LucideIcons.bell, const Color(0xFFDC2626), _abrirModalCriacao),
             const SizedBox(width: 15),
-            _buildActionCard("Novo Comunicado", LucideIcons.megaphone, const Color(0xFF2D4689), () {}),
+            _buildActionCard("Novo Comunicado", LucideIcons.megaphone, const Color(0xFF2D4689), () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NoticeScreen()),
+              );
+            }),
           ],
         ),
         const SizedBox(height: 30),
