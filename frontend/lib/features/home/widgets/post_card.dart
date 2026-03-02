@@ -1,4 +1,5 @@
 // lib/features/home/widgets/post_card.dart
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -6,8 +7,13 @@ import 'post_action_button.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
+  final VoidCallback? onDelete;
   
-  const PostCard({super.key, required this.post});
+  const PostCard({
+    super.key,
+    required this.post,
+    this.onDelete,
+  });
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -40,7 +46,20 @@ class _PostCardState extends State<PostCard> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: const Icon(LucideIcons.moreHorizontal, size: 20),
+            trailing: PopupMenuButton<String>(
+              icon: const Icon(LucideIcons.moreHorizontal, size: 20),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _confirmDelete();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Excluir'),
+                ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -50,12 +69,57 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
           if (widget.post['image'] != null)
-            Image.network(widget.post['image'], width: double.infinity, fit: BoxFit.fitWidth),
+            Builder(
+              builder: (context) {
+                final midiaVal = widget.post['image'];
+
+                if (midiaVal is String) {
+                  // Post mockado antigo
+                  return Image.network(midiaVal, width: double.infinity, fit: BoxFit.fitWidth);
+                } 
+                else if (midiaVal is PlatformFile && midiaVal.bytes != null) {
+                  return Image.memory(
+                    midiaVal.bytes!,
+                    width: double.infinity,
+                    fit: BoxFit.fitWidth,
+                  );
+                }
+                else {
+                  return const SizedBox.shrink(); 
+                }
+              },
+            ),
           
           _buildPostStats(),
           const Divider(height: 1, indent: 12, endIndent: 12),
           _buildActionButtons(),
           if (_showComments) _buildCommentSection(),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Post'),
+        content: const Text('Tem certeza que deseja excluir este post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onDelete?.call();
+            },
+            child: const Text(
+              'Excluir',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
         ],
       ),
     );
@@ -86,7 +150,7 @@ class _PostCardState extends State<PostCard> {
       children: [
         PostActionButton(
           icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
-          label: 'Curti',
+          label: 'Curtir',
           color: _isLiked ? Colors.blue : Colors.grey.shade700,
           onTap: () => setState(() => _isLiked = !_isLiked),
         ),
@@ -95,8 +159,7 @@ class _PostCardState extends State<PostCard> {
           label: 'Comentar',
           onTap: () => setState(() => _showComments = !_showComments),
         ),
-        PostActionButton(icon: LucideIcons.share2, label: 'Partilhar', onTap: () {}),
-        PostActionButton(icon: LucideIcons.send, label: 'Enviar', onTap: () {}),
+        PostActionButton(icon: LucideIcons.share2, label: 'Compartilhar', onTap: () {}),
       ],
     );
   }

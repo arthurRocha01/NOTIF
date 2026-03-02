@@ -1,11 +1,12 @@
-// lib/features/home/widgets/publish_modal.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:file_picker/file_picker.dart'; // <-- Adicionado
 import '../../../core/theme/app_colors.dart';
 
 class PublishModal extends StatefulWidget {
-  final Function(String) onPublish;
+  // Atualizado para receber também a lista de arquivos
+  final Function(String, List<PlatformFile>) onPublish;
 
   const PublishModal({super.key, required this.onPublish});
 
@@ -15,6 +16,9 @@ class PublishModal extends StatefulWidget {
 
 class _PublishModalState extends State<PublishModal> {
   final TextEditingController _postController = TextEditingController();
+  
+  // Lista para armazenar os arquivos selecionados
+  final List<PlatformFile> _arquivosSelecionados = [];
 
   @override
   void dispose() {
@@ -22,9 +26,37 @@ class _PublishModalState extends State<PublishModal> {
     super.dispose();
   }
 
+  // Função para chamar o File Picker nativo
+  Future<void> _selecionarArquivo({required FileType tipo, List<String>? extensoes}) async {
+    try {
+      FilePickerResult? resultado = await FilePicker.platform.pickFiles(
+        type: tipo,
+        allowedExtensions: extensoes,
+        allowMultiple: true,
+      );
+
+      if (resultado != null) {
+        setState(() {
+          _arquivosSelecionados.addAll(resultado.files);
+        });
+      }
+    } catch (e) {
+      debugPrint("Erro ao selecionar arquivo: $e");
+    }
+  }
+
+  // Função para remover um arquivo selecionado
+  void _removerArquivo(int index) {
+    setState(() {
+      _arquivosSelecionados.removeAt(index);
+    });
+  }
+
   void _handlePublish() {
-    if (_postController.text.trim().isEmpty) return;
-    widget.onPublish(_postController.text);
+    // Agora permite publicar se houver texto OU arquivo
+    if (_postController.text.trim().isEmpty && _arquivosSelecionados.isEmpty) return; 
+    
+    widget.onPublish(_postController.text, _arquivosSelecionados);
   }
 
   @override
@@ -73,22 +105,29 @@ class _PublishModalState extends State<PublishModal> {
                   children: [
                     Text('Usuário Administrador',
                         style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16)),
-                    _buildPrivacyTag(),
                   ],
                 ),
               ],
             ),
             Expanded(
-              child: TextField(
-                controller: _postController,
-                maxLines: null,
-                autofocus: true,
-                style: GoogleFonts.inter(fontSize: 18),
-                decoration: const InputDecoration(
-                  hintText: 'Sobre o que você quer falar?',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
-                ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _postController,
+                      maxLines: null,
+                      autofocus: true,
+                      style: GoogleFonts.inter(fontSize: 18),
+                      decoration: const InputDecoration(
+                        hintText: 'Sobre o que você quer falar?',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                  // Prévia dos arquivos selecionados
+                  if (_arquivosSelecionados.isNotEmpty) _buildFilesPreview(),
+                ],
               ),
             ),
             const Divider(),
@@ -99,21 +138,30 @@ class _PublishModalState extends State<PublishModal> {
     );
   }
 
-  Widget _buildPrivacyTag() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Icon(LucideIcons.globe, size: 12, color: Colors.grey.shade700),
-          const SizedBox(width: 4),
-          Text('Qualquer pessoa',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w600)),
-          const Icon(Icons.arrow_drop_down, size: 16),
-        ],
+  // Widget para mostrar a lista de arquivos selecionados antes de postar
+  Widget _buildFilesPreview() {
+    return SizedBox(
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _arquivosSelecionados.length,
+        itemBuilder: (context, index) {
+          final arquivo = _arquivosSelecionados[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+            child: Chip(
+              label: Text(
+                arquivo.name,
+                style: GoogleFonts.inter(fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+              onDeleted: () => _removerArquivo(index),
+              deleteIcon: const Icon(LucideIcons.x, size: 16),
+              backgroundColor: Colors.grey.shade100,
+              side: BorderSide.none,
+            ),
+          );
+        },
       ),
     );
   }
@@ -121,11 +169,12 @@ class _PublishModalState extends State<PublishModal> {
   Widget _buildModalActions() {
     return Row(
       children: [
-        IconButton(icon: const Icon(LucideIcons.image, color: Colors.blue), onPressed: () {}),
-        IconButton(icon: const Icon(LucideIcons.video, color: Colors.green), onPressed: () {}),
-        IconButton(icon: const Icon(LucideIcons.fileText, color: Colors.orange), onPressed: () {}),
-        const Spacer(),
-        IconButton(icon: const Icon(LucideIcons.moreHorizontal), onPressed: () {}),
+        IconButton(
+          icon: const Icon(LucideIcons.image, color: Colors.blue),
+          onPressed: () => _selecionarArquivo(
+            tipo: FileType.image, // Mudamos para custom
+          ),
+        ),
       ],
     );
   }
