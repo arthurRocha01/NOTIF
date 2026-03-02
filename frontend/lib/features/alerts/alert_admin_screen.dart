@@ -366,9 +366,12 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
                 LucideIcons.bell, const Color(0xFFDC2626),
                 _abrirModalCriacao),
             const SizedBox(width: 15),
-            _buildActionCard("Novo Comunicado",
-                LucideIcons.megaphone,
-                const Color(0xFF2D4689), () {})
+            _buildActionCard("Novo Comunicado", LucideIcons.megaphone, const Color(0xFF2D4689), () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NoticeScreen()),
+              );
+            }),
           ],
         ),
       ],

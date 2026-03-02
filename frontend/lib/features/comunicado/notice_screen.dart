@@ -43,7 +43,6 @@ class _NoticeScreenState extends State<NoticeScreen> {
             _buildSectionTitle("Informações Gerais"),
             const SizedBox(height: 16),
             
-            // Campo de Título
             _buildTextField(
               label: "Título do Comunicado",
               hint: "Ex: Atualização do Código de Conduta",
