@@ -17,6 +17,10 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
 
+  // 1. Controladores criados
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
+
   NivelAlerta _nivelSelecionado = NivelAlerta.critico;
   bool _exigirConfirmacao = true;
 
@@ -29,10 +33,19 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    // 2. Dispose dos controladores adicionado
+    _tituloController.dispose();
+    _descricaoController.dispose();
     super.dispose();
   }
 
   void _abrirModalCriacao() {
+    // Resetar os campos toda vez que o modal for aberto do zero (opcional, mas recomendado)
+    _tituloController.clear();
+    _descricaoController.clear();
+    _nivelSelecionado = NivelAlerta.critico;
+    _exigirConfirmacao = true;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -72,7 +85,15 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
                           ),
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // 3. Lógica do botão Limpar implementada aqui
+                            setModalState(() {
+                              _tituloController.clear();
+                              _descricaoController.clear();
+                              _nivelSelecionado = NivelAlerta.critico; // Voltando pro padrão
+                              _exigirConfirmacao = true; // Voltando pro padrão
+                            });
+                          },
                           child: const Text(
                             "Limpar",
                             style: TextStyle(
@@ -144,14 +165,17 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1E3A8A))),
-                    const TextField(
-                      decoration: InputDecoration(
+                    // 4. Controladores adicionados aos TextFields
+                    TextField(
+                      controller: _tituloController,
+                      decoration: const InputDecoration(
                         labelText: "Título do Alerta*",
                       ),
                     ),
-                    const TextField(
+                    TextField(
+                      controller: _descricaoController,
                       maxLines: 2,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Descrição e Instruções",
                       ),
                     ),
@@ -208,6 +232,11 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
                           ),
                         ),
                         onPressed: () {
+                          // AQUI VOCÊ PODE PEGAR OS VALORES PARA ENVIAR PARA API
+                          // print(_tituloController.text);
+                          // print(_descricaoController.text);
+                          // print(_nivelSelecionado);
+                          
                           Navigator.pop(context);
                         },
                         child: const Text(
@@ -309,9 +338,9 @@ class _AlertsAdminScreenState extends State<AlertsAdminScreen>
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF1E293B).withOpacity(0.4),
+              color: const Color(0xFF1E293B).withOpacity(0.4),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
