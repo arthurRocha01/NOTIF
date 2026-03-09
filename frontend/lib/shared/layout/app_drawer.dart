@@ -2,8 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class AppDrawer extends StatelessWidget {
+// Transformamos em StatefulWidget para lidar com dados dinâmicos
+class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
+
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
+  // Variáveis de estado para guardar os dados do backend
+  String _userName = '';
+  String _userRole = '';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Método que simula a busca dos dados do usuário logado
+  Future<void> _loadUserData() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // ---------------------------------------------------------
+      // AQUI ENTRA A INTEGRAÇÃO COM SEU BACKEND REAL
+      // Exemplo: final user = await authService.getCurrentUser();
+      // ---------------------------------------------------------
+      
+      // Simulando o tempo de resposta da internet (1.5 segundos)
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      if (!mounted) return;
+
+      setState(() {
+        // Substitua estas strings pelas variáveis do seu backend (ex: user.name)
+        _userName = 'João Thales'; 
+        _userRole = 'Desenvolvedor Flutter';
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _userName = 'Usuário';
+        _userRole = 'Erro ao carregar dados';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +63,7 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabeçalho idêntico à imagem (H4: Consistência)
+          // Cabeçalho com dados dinâmicos
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 60, left: 20, bottom: 30),
@@ -25,14 +73,23 @@ class AppDrawer extends StatelessWidget {
               children: [
                 _buildLogo(),
                 const SizedBox(height: 40),
-                Text(
-                  'Lorena paixão',
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Gestora de Operações',
-                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
-                ),
+                
+                // Mostra um loading enquanto busca, ou os dados quando pronto
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                else ...[
+                  Text(
+                    _userName,
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _userRole,
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
               ],
             ),
           ),
@@ -40,7 +97,6 @@ class AppDrawer extends StatelessWidget {
           // Seção Biblioteca
           _buildSectionTitle('BIBLIOTECA'),
           _buildMenuItem(LucideIcons.book, 'Manuais & Políticas', onTap: () {
-            // Fecha o drawer e navega (H7)
             Navigator.pop(context);
             _mostrarDialogoManuais(context);
           }),
@@ -71,7 +127,7 @@ class AppDrawer extends StatelessWidget {
             LucideIcons.logOut, 
             'Encerrar', 
             color: Colors.red,
-            onTap: () => _confirmarSaida(context), // H5: Prevenção de erro
+            onTap: () => _confirmarSaida(context),
           ),
           const SizedBox(height: 20),
         ],
@@ -79,7 +135,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // --- MÉTODOS AUXILIARES ---
+  // --- MÉTODOS AUXILIARES MANTIDOS ---
 
   Widget _buildLogo() {
     return Row(
@@ -113,7 +169,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // H5: Diálogo de Confirmação de Saída
   void _confirmarSaida(BuildContext context) {
     showDialog(
       context: context,
@@ -143,13 +198,10 @@ class AppDrawer extends StatelessWidget {
           controller: scrollController,
           padding: const EdgeInsets.all(20),
           children: [
-            // Ícone alterado para livro (bookOpen)
             const Icon(LucideIcons.bookOpen, size: 48, color: Color(0xFF0F172A)), 
             const SizedBox(height: 10),
-            // Título alterado
             Text('Manuais & Políticas', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
             const Divider(),
-            // Textos alterados
             const Text(
               '1. Manual de Integração: Conheça nossa cultura, missão e valores institucionais.\n\n'
               '2. Código de Conduta: Diretrizes de comportamento ético e profissional esperadas.\n\n'
@@ -163,7 +215,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // Exemplo de funcionalidade imediata para "Políticas"
   void _mostrarDialogoSeguranca(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -199,7 +250,7 @@ class AppDrawer extends StatelessWidget {
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5, // Começa ocupando metade da tela
+        initialChildSize: 0.5,
         minChildSize: 0.4,
         maxChildSize: 0.9,
         expand: false,
@@ -209,62 +260,39 @@ class AppDrawer extends StatelessWidget {
           children: [
             const Icon(LucideIcons.settings, size: 48, color: Color(0xFF0F172A)),
             const SizedBox(height: 10),
-            Text(
-              'Configurações', 
-              textAlign: TextAlign.center, 
-              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)
-            ),
+            Text('Configurações', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            
-            // Item 1: Perfil e Dados Pessoais
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFF1F5F9),
-                child: Icon(LucideIcons.user, color: Color(0xFF0F172A)),
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.user, color: Color(0xFF0F172A))),
               title: Text('Dados Pessoais e Perfil', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               subtitle: Text('Alterar foto e nome', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
               trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {
-                // Aqui chamaremos a tela/modal de edição de perfil no futuro
-              },
+              onTap: () {},
             ),
             const Divider(),
-
-            // Item 2: Alterar Senha
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFF1F5F9),
-                child: Icon(LucideIcons.key, color: Color(0xFF0F172A)),
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.key, color: Color(0xFF0F172A))),
               title: Text('Segurança e Senha', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               subtitle: Text('Atualize sua senha de acesso', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
               trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {
-                // Aqui chamaremos a tela/modal de alteração de senha no futuro
-              },
+              onTap: () {},
             ),
             const Divider(),
-
-            // Item 3: Notificações (Um extra legal já que seu app se chama NOTIF)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFF1F5F9),
-                child: Icon(LucideIcons.bellRing, color: Color(0xFF0F172A)),
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.bellRing, color: Color(0xFF0F172A))),
               title: Text('Preferências de Notificação', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {
-              },
+              onTap: () {},
             ),
           ],
         ),
       ),
     );
   }
+
   void _mostrarDialogoSuporte(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -281,64 +309,35 @@ class AppDrawer extends StatelessWidget {
           children: [
             const Icon(LucideIcons.headphones, size: 48, color: Color(0xFF0F172A)),
             const SizedBox(height: 10),
-            Text(
-              'Suporte', 
-              textAlign: TextAlign.center, 
-              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)
-            ),
+            Text('Suporte', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
-            Text(
-              'Como podemos ajudar?', 
-              textAlign: TextAlign.center, 
-              style: GoogleFonts.inter(fontSize: 14, color: Colors.black54)
-            ),
+            Text('Como podemos ajudar?', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, color: Colors.black54)),
             const SizedBox(height: 20),
-            
-            // Opção 1: WhatsApp (Chat ao vivo)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFE8F5E9), // Fundo verde claro
-                child: Icon(LucideIcons.messageCircle, color: Colors.green), // Ícone verde
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFE8F5E9), child: Icon(LucideIcons.messageCircle, color: Colors.green)),
               title: Text('WhatsApp', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               subtitle: Text('Atendimento rápido', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
               trailing: const Icon(LucideIcons.externalLink, size: 20),
-              onTap: () {
-                // Futuramente pode colocar aqui um url_launcher para abrir o WhatsApp
-              },
+              onTap: () {},
             ),
             const Divider(),
-
-            // Opção 2: E-mail
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFF1F5F9),
-                child: Icon(LucideIcons.mail, color: Color(0xFF0F172A)),
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.mail, color: Color(0xFF0F172A))),
               title: Text('E-mail', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               subtitle: Text('suporte@notif.com', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
               trailing: const Icon(LucideIcons.externalLink, size: 20),
-              onTap: () {
-                // Futuramente pode colocar aqui para abrir o cliente de e-mail
-              },
+              onTap: () {},
             ),
             const Divider(),
-
-            // Opção 3: Perguntas Frequentes (FAQ)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFF1F5F9),
-                child: Icon(LucideIcons.helpCircle, color: Color(0xFF0F172A)),
-              ),
+              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.helpCircle, color: Color(0xFF0F172A))),
               title: Text('Perguntas Frequentes', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
               subtitle: Text('Dúvidas comuns resolvidas', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
               trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {
-                // Futuramente abre uma nova tela ou modal com as FAQs
-              },
+              onTap: () {},
             ),
           ],
         ),

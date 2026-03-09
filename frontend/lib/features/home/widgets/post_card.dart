@@ -1,197 +1,213 @@
 // lib/features/home/widgets/post_card.dart
-import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/features/home/model/post_model.dart';
+import 'post_header.dart';
 import 'post_action_button.dart';
+import 'post_image.dart';
 
 class PostCard extends StatefulWidget {
-  final Map<String, dynamic> post;
-  final VoidCallback? onDelete;
-  
+  final PostModel post;
+  final VoidCallback onLike;
+  final VoidCallback onComment;
+  final VoidCallback onShare;
+  final VoidCallback onDelete;
+  final ValueChanged<String> onFollowToggle;
+
   const PostCard({
     super.key,
     required this.post,
-    this.onDelete,
+    required this.onLike,
+    required this.onComment,
+    required this.onShare,
+    required this.onDelete,
+    required this.onFollowToggle,
   });
 
   @override
   State<PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends State<PostCard> {
-  bool _isLiked = false;
-  bool _showComments = false;
+class _PostCardState extends State<PostCard>
+    with SingleTickerProviderStateMixin {
+
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(milliseconds: 350),
+    vsync: this,
+  )..forward();
+
+  late final Animation<double> _fade =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+
+  late final Animation<Offset> _slide =
+      Tween(begin: const Offset(0, 0.04), end: Offset.zero).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+      );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(widget.post['avatar']),
-            ),
-            title: Text(
-              widget.post['user'],
-              style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
-            ),
-            subtitle: Text(
-              widget.post['role'],
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: PopupMenuButton<String>(
-              icon: const Icon(LucideIcons.moreHorizontal, size: 20),
-              onSelected: (value) {
-                if (value == 'delete') {
-                  _confirmDelete();
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Excluir'),
-                ),
+    final post = widget.post;
+
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: _fade,
+        child: SlideTransition(
+          position: _slide,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  blurRadius: 12,
+                  offset: Offset(0, 2),
+                  color: Color(0x14000000),
+                )
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              widget.post['content'],
-              style: GoogleFonts.inter(fontSize: 14, height: 1.4, color: Colors.black87),
-            ),
-          ),
-          if (widget.post['image'] != null)
-            Builder(
-              builder: (context) {
-                final midiaVal = widget.post['image'];
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-                if (midiaVal is String) {
-                  // Post mockado antigo
-                  return Image.network(midiaVal, width: double.infinity, fit: BoxFit.fitWidth);
-                } 
-                else if (midiaVal is PlatformFile && midiaVal.bytes != null) {
-                  return Image.memory(
-                    midiaVal.bytes!,
-                    width: double.infinity,
-                    fit: BoxFit.fitWidth,
-                  );
-                }
-                else {
-                  return const SizedBox.shrink(); 
-                }
-              },
-            ),
-          
-          _buildPostStats(),
-          const Divider(height: 1, indent: 12, endIndent: 12),
-          _buildActionButtons(),
-          if (_showComments) _buildCommentSection(),
-        ],
-      ),
-    );
-  }
+                  /// HEADER
+                  PostHeader(
+                    post: post,
+                    onFollowToggle: () =>
+                        widget.onFollowToggle(post.userId),
+                    onDelete: widget.onDelete,
+                  ),
 
-  void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Post'),
-        content: const Text('Tem certeza que deseja excluir este post?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onDelete?.call();
-            },
-            child: const Text(
-              'Excluir',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                  /// CONTENT
+                  if (post.content.isNotEmpty)
+                    Padding(
+                      padding:
+                          const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(
+                        post.content,
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          height: 1.55,
+                          color: Color(0xFF1A1A2E),
+                        ),
+                      ),
+                    ),
 
-  Widget _buildPostStats() {
-    int totalLikes = _isLiked ? widget.post['likes'] + 1 : widget.post['likes'];
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.thumbsUp, size: 12, color: Colors.blue),
-          const SizedBox(width: 4),
-          Text('$totalLikes', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-          const Spacer(),
-          Text(
-            '${widget.post['comments'].length} comentários',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-        ],
-      ),
-    );
-  }
+                  /// IMAGE
+                  if (post.image != null)
+                    PostImage(image: post.image!),
 
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        PostActionButton(
-          icon: _isLiked ? Icons.thumb_up : LucideIcons.thumbsUp,
-          label: 'Curtir',
-          color: _isLiked ? Colors.blue : Colors.grey.shade700,
-          onTap: () => setState(() => _isLiked = !_isLiked),
-        ),
-        PostActionButton(
-          icon: LucideIcons.messageSquare,
-          label: 'Comentar',
-          onTap: () => setState(() => _showComments = !_showComments),
-        ),
-        PostActionButton(icon: LucideIcons.share2, label: 'Compartilhar', onTap: () {}),
-      ],
-    );
-  }
+                  /// STATS
+                  _PostStats(
+                    likes: post.likesCount,
+                    comments: post.commentsCount,
+                  ),
 
-  Widget _buildCommentSection() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 16,
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=admin'),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Adicione um comentário...',
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                filled: true,
-                fillColor: Colors.white,
+                  const Divider(
+                    height: 1,
+                    thickness: .8,
+                    color: Color(0xFFF0F2F5),
+                  ),
+
+                  /// ACTIONS
+                Row(
+  mainAxisAlignment: MainAxisAlignment.spaceAround,
+  children: [
+    PostActionButton(
+      icon: Icons.thumb_up_alt_outlined,
+      label: 'Curtir',
+      color: post.isLiked ? Colors.blue : Colors.grey,
+      onTap: widget.onLike,
+    ),
+    PostActionButton(
+      icon: Icons.mode_comment_outlined,
+      label: 'Comentar',
+      color: Colors.grey,
+      onTap: widget.onComment,
+    ),
+    PostActionButton(
+      icon: Icons.share_outlined,
+      label: 'Compartilhar',
+      color: Colors.grey,
+      onTap: widget.onShare,
+    ),
+  ],
+),
+                ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PostStats extends StatelessWidget {
+  final int likes;
+  final int comments;
+
+  const _PostStats({
+    required this.likes,
+    required this.comments,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (likes == 0 && comments == 0) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          if (likes > 0) ...[
+            Container(
+              width: 20,
+              height: 20,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF1D4ED8),
+                  ],
+                ),
+              ),
+              child: const Icon(
+                Icons.thumb_up,
+                size: 12,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$likes',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ],
+          const Spacer(),
+          if (comments > 0)
+            Text(
+              '$comments comentários',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+              ),
+            ),
         ],
       ),
     );
