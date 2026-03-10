@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/features/dashboard/dashboard_screen.dart';
+import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:notif_app/features/comunicado/notice_screen.dart';
 
 enum NivelAlerta { normal, critico }

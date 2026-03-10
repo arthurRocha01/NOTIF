@@ -26,7 +26,7 @@ CREATE TABLE `Notification` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `message` TEXT NOT NULL,
-    `level` ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL') NOT NULL,
+    `level` ENUM('NORMAL', 'CRITICAL') NOT NULL,
     `targetSectorId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
