@@ -5,7 +5,7 @@ import '../providers/alert_provider.dart';
 import '../widgets/alert_status_chip.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_spacing.dart';
 
 class CreateAlertModal extends StatefulWidget {
   const CreateAlertModal({super.key});

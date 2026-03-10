@@ -8,7 +8,8 @@ import '../modals/resolve_alert_modal.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_radius.dart';
 
 class AlertsAdminScreen extends StatefulWidget {
   const AlertsAdminScreen({super.key});

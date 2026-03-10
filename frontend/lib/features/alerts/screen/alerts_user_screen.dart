@@ -6,7 +6,9 @@ import '../widgets/alert_history_card.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_radius.dart';
+
 
 class AlertsUserScreen extends StatefulWidget {
   const AlertsUserScreen({super.key});

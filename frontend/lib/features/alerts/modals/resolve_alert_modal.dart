@@ -4,7 +4,8 @@ import '../models/alert_model.dart';
 import '../providers/alert_provider.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_radius.dart';
 
 class ResolveAlertModal extends StatefulWidget {
   final AlertModel alert;
