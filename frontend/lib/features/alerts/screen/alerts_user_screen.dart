@@ -1,28 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-
-enum NivelAlerta { normal, critico }
-
-class AlertModel {
-  final String setorDestinado;
-  final String setorResponsavel;
-  final String titulo;
-  final String descricao;
-  final DateTime data;
-  final NivelAlerta nivel;
-  bool lido;
-
-  AlertModel({
-    required this.setorDestinado,
-    required this.setorResponsavel,
-    required this.titulo,
-    required this.descricao,
-    required this.data,
-    required this.nivel,
-    this.lido = false,
-  });
-}
+import 'package:provider/provider.dart';
+import '../providers/alert_provider.dart';
+import '../widgets/alert_card.dart';
+import '../widgets/alert_history_card.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../../../shared/widgets/loading_indicator.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 
 class AlertsUserScreen extends StatefulWidget {
   const AlertsUserScreen({super.key});
@@ -32,180 +16,258 @@ class AlertsUserScreen extends StatefulWidget {
 }
 
 class _AlertsUserScreenState extends State<AlertsUserScreen> {
-
-  List<AlertModel> alertas = [
-    AlertModel(
-      setorDestinado: "TI",
-      setorResponsavel: "Infraestrutura",
-      titulo: "Falha no Servidor Central",
-      descricao: "Reiniciar os serviços imediatamente e verificar logs do sistema.",
-      data: DateTime.now().subtract(const Duration(hours: 1)),
-      nivel: NivelAlerta.critico,
-    ),
-    AlertModel(
-      setorDestinado: "Financeiro",
-      setorResponsavel: "Contabilidade",
-      titulo: "Atualização de Sistema",
-      descricao: "Executar atualização obrigatória até 23h59.",
-      data: DateTime(2026, 1, 11, 23, 59),
-      nivel: NivelAlerta.normal,
-      lido: true,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final p = context.read<AlertProvider>();
+      p.loadActiveAlerts();
+      p.loadAlertHistory();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF0F172A),
-        title: Text(
-          "Alertas",
-          style: GoogleFonts.inter(
-            color: const Color.fromARGB(221, 255, 255, 255),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: alertas.length,
-        itemBuilder: (context, index) {
-          return _buildEnterpriseCard(alertas[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildEnterpriseCard(AlertModel alert) {
-    final bool isCritico = alert.nivel == NivelAlerta.critico;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border(
-          left: BorderSide(
-            color: isCritico ? Colors.red : Colors.blueGrey,
-            width: 5,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-          /// HEADER INSTITUCIONAL
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _badgeNivel(alert.nivel),
-              Text(
-                DateFormat("dd/MM/yyyy • HH:mm").format(alert.data),
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.grey,
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.primary,
+            expandedHeight: 120,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Olá, ${user?.name.split(' ').first ?? 'usuário'}! 👋',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          user?.displayTitle ?? '',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          /// TÍTULO
-          Text(
-            alert.titulo,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+            ),
+            title: const Text(
+              'N🔔TIF',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1),
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          /// INSTRUÇÕES
-          Text(
-            alert.descricao,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: Colors.black87,
-              height: 1.5,
+          SliverToBoxAdapter(
+            child: Consumer<AlertProvider>(
+              builder: (_, provider, __) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ActiveSection(provider: provider),
+                    _HistorySection(provider: provider),
+                    const SizedBox(height: AppSpacing.huge),
+                  ],
+                );
+              },
             ),
-          ),
-
-          const SizedBox(height: 18),
-
-          const Divider(),
-
-          const SizedBox(height: 12),
-
-          /// INFORMAÇÕES ORGANIZACIONAIS
-          Row(
-            children: [
-              Expanded(
-                child: _infoBlock("Setor Destinado", alert.setorDestinado),
-              ),
-              Expanded(
-                child: _infoBlock("Responsável", alert.setorResponsavel),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _badgeNivel(NivelAlerta nivel) {
-    final bool isCritico = nivel == NivelAlerta.critico;
+class _ActiveSection extends StatelessWidget {
+  final AlertProvider provider;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isCritico ? Colors.red.shade50 : Colors.blueGrey.shade50,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isCritico ? "CRÍTICO" : "NORMAL",
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isCritico ? Colors.red : Colors.blueGrey,
-        ),
-      ),
-    );
-  }
+  const _ActiveSection({required this.provider});
 
-  Widget _infoBlock(String label, String value) {
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.md),
+          child: Row(
+            children: [
+              const Text(
+                'Alertas Ativos',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              if (provider.activeAlerts.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.criticalLight,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                  child: Text(
+                    '${provider.activeAlerts.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.critical,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+        if (provider.isLoadingActive)
+          const LoadingIndicator(message: 'Carregando alertas...')
+        else if (provider.activeAlerts.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+            child: _NoAlertsCard(),
+          )
+        else
+          ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: provider.activeAlerts.length,
+            separatorBuilder: (_, __) =>
+                const SizedBox(height: AppSpacing.md),
+            itemBuilder: (ctx, i) {
+              final alert = provider.activeAlerts[i];
+              return AlertCard(
+                alert: alert,
+                onTap: () => Navigator.pushNamed(ctx, '/alerts/details',
+                    arguments: alert),
+                onAcknowledge: () async {
+                  await provider.markAsRead(alert.id);
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        content: Text('Confirmação registrada!'),
+                        backgroundColor: AppColors.resolved,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
           ),
+      ],
+    );
+  }
+}
+
+class _HistorySection extends StatelessWidget {
+  final AlertProvider provider;
+
+  const _HistorySection({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    if (provider.alertHistory.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.md),
+          child: Text(
+            'Histórico',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ),
+        ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: provider.alertHistory.length,
+          separatorBuilder: (_, __) =>
+              const SizedBox(height: AppSpacing.md),
+          itemBuilder: (_, i) =>
+              AlertHistoryCard(alert: provider.alertHistory[i]),
         ),
       ],
+    );
+  }
+}
+
+class _NoAlertsCard extends StatelessWidget {
+  const _NoAlertsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.check_circle_outline,
+              color: AppColors.resolved, size: 28),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tudo em ordem!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Não há alertas ativos no momento.',
+                  style: TextStyle(
+                      fontSize: 13, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

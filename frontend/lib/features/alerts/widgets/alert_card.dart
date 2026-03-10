@@ -1,241 +1,180 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../models/alert_model.dart';
+import 'alert_status_chip.dart';
+import '../../../shared/widgets/hover_card.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_radius.dart';
+import '../../../core/utils/date_formatter.dart';
 
-class NoticeScreen extends StatefulWidget {
-  const NoticeScreen({super.key});
+/// Card de alerta para a visão do [USER].
+///
+/// Exibe ícone, título, descrição, nível, status e botão "Ciente"
+/// quando [AlertModel.requiresConfirmation] é true.
+class AlertCard extends StatelessWidget {
+  final AlertModel alert;
+  final VoidCallback? onTap;
+  final VoidCallback? onAcknowledge;
 
-  @override
-  State<NoticeScreen> createState() => _NoticeScreenState();
-}
-
-class _NoticeScreenState extends State<NoticeScreen> {
-  // Controladores para os campos de texto
-  final TextEditingController _tituloController = TextEditingController();
-  final TextEditingController _conteudoController = TextEditingController();
-
-  // NOVO: Variável para armazenar o arquivo selecionado
-  PlatformFile? _selectedFile;
-
-  // NOVO: Função para selecionar o arquivo
-  Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-    );
-
-    if (result != null) {
-      setState(() {
-        _selectedFile = result.files.first;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _tituloController.dispose();
-    _conteudoController.dispose();
-    super.dispose();
-  }
+  const AlertCard({
+    super.key,
+    required this.alert,
+    this.onTap,
+    this.onAcknowledge,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Novo Comunicado',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF1E293B),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+    return HoverCard(
+      onTap: onTap,
+      border: Border(
+        left: BorderSide(color: alert.level.color, width: 4),
+        top: const BorderSide(color: AppColors.border),
+        right: const BorderSide(color: AppColors.border),
+        bottom: const BorderSide(color: AppColors.border),
+      ),
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _AlertCardHeader(alert: alert),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            alert.description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle("Informações Gerais"),
-            const SizedBox(height: 16),
-
-            _buildTextField(
-              label: "Título do Comunicado",
-              hint: "Ex: Atualização do Código de Conduta",
-              controller: _tituloController,
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Campo de Conteúdo (Maior)
-            _buildTextField(
-              label: "Conteúdo do Texto",
-              hint: "Escreva aqui a mensagem detalhada...",
-              controller: _conteudoController,
-              maxLines: 8,
-            ),
-            
-            const SizedBox(height: 24),
-            
-            _buildSectionTitle("Anexos e Mídia"),
-            const SizedBox(height: 12),
-            
-            // Botão de Anexo Atualizado
-            _buildAttachmentButton(),
-            
-            const SizedBox(height: 32),
-            
-            // Botão de Enviar
-            _buildSubmitButton(),
+          if (alert.sectors.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _SectorRow(sectors: alert.sectors),
           ],
-        ),
+          if (alert.requiresConfirmation && alert.isActive) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _AcknowledgeButton(
+              level: alert.level,
+              onTap: onAcknowledge,
+            ),
+          ],
+        ],
       ),
     );
   }
+}
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: const Color(0xFF1E3A8A),
-      ),
-    );
-  }
+class _AlertCardHeader extends StatelessWidget {
+  final AlertModel alert;
+  const _AlertCardHeader({required this.alert});
 
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    int maxLines = 1,
-  }) {
-    return Column(
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
+        Container(
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: alert.level.backgroundColor,
+            shape: BoxShape.circle,
           ),
+          child: Icon(alert.level.icon,
+              color: alert.level.color, size: 20),
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFFCBD5E1)),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.all(16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      alert.title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  AlertStatusChip(status: alert.status),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  AlertLevelChip(level: alert.level),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    DateFormatter.relative(alert.createdAt),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ],
     );
   }
+}
 
-  // ATUALIZADO: Lógica visual e funcional do botão de anexo
-  Widget _buildAttachmentButton() {
-    final bool hasFile = _selectedFile != null;
+class _SectorRow extends StatelessWidget {
+  final List<String> sectors;
+  const _SectorRow({required this.sectors});
 
-    return InkWell(
-      onTap: _pickFile,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: hasFile ? const Color(0xFFEFF6FF) : Colors.white, // Fica azulzinho se tiver arquivo
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hasFile ? const Color(0xFF3B82F6) : const Color(0xFFE2E8F0), 
-            style: BorderStyle.solid
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              hasFile ? LucideIcons.fileCheck : LucideIcons.paperclip, 
-              color: hasFile ? const Color(0xFF3B82F6) : const Color(0xFF64748B)
-            ),
-            const SizedBox(width: 10),
-            Expanded( // Expanded evita erro de layout se o nome do arquivo for muito grande
-              child: Text(
-                hasFile ? _selectedFile!.name : "Adicionar PDF ou Imagem",
-                style: GoogleFonts.inter(
-                  color: hasFile ? const Color(0xFF1E3A8A) : const Color(0xFF64748B),
-                  fontWeight: hasFile ? FontWeight.w600 : FontWeight.normal,
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: sectors
+          .take(3)
+          .map((s) => Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                  border: Border.all(color: AppColors.border),
                 ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            // Se tiver arquivo, mostra um botão para remover
-            if (hasFile) ...[
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedFile = null;
-                  });
-                },
-                child: const Icon(LucideIcons.xCircle, color: Colors.redAccent, size: 20),
-              )
-            ]
-          ],
-        ),
-      ),
+                child: Text(s,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary)),
+              ))
+          .toList(),
     );
   }
+}
 
-  Widget _buildSubmitButton() {
+class _AcknowledgeButton extends StatelessWidget {
+  final AlertLevel level;
+  final VoidCallback? onTap;
+
+  const _AcknowledgeButton({required this.level, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: () {
-          // Aqui você acessa os dados para enviar:
-          // _tituloController.text
-          // _conteudoController.text
-          // _selectedFile (pode ser null)
-          
-          print("Título: ${_tituloController.text}");
-          print("Conteúdo: ${_conteudoController.text}");
-          print("Arquivo: ${_selectedFile?.name}");
-
-          Navigator.pop(context);
-        },
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.check_circle_outline, size: 16),
+        label: const Text('Ciente'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E3A8A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: level.color,
+          foregroundColor: Colors.white,
           elevation: 0,
-        ),
-        child: const Text(
-          "PUBLICAR COMUNICADO",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.1,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          textStyle: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
         ),
       ),
