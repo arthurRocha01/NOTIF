@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:notif_app/core/constants/app_radius.dart';
+import 'package:notif_app/shared/widgets/hover_card.dart' show HoverCard;
+
 import '../models/alert_model.dart';
-import '../../../shared/widgets/hover_card.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/utils/date_formatter.dart';

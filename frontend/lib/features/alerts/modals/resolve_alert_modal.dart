@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:notif_app/shared/widgets/notif_button.dart';
+import 'package:notif_app/shared/widgets/notif_input.dart';
+
 import '../models/alert_model.dart';
 import '../providers/alert_provider.dart';
-import '../../../shared/widgets/shared_widgets.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';
 
-class ResolveAlertModal extends StatefulWidget {
+class ResolveAlertModal extends ConsumerStatefulWidget {
   final AlertModel alert;
 
   const ResolveAlertModal({super.key, required this.alert});
@@ -22,10 +26,10 @@ class ResolveAlertModal extends StatefulWidget {
   }
 
   @override
-  State<ResolveAlertModal> createState() => _ResolveAlertModalState();
+  ConsumerState<ResolveAlertModal> createState() => _ResolveAlertModalState();
 }
 
-class _ResolveAlertModalState extends State<ResolveAlertModal> {
+class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
   final _formKey = GlobalKey<FormState>();
   final _msgCtrl = TextEditingController();
   bool _isLoading = false;
@@ -38,27 +42,36 @@ class _ResolveAlertModalState extends State<ResolveAlertModal> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
-    final ok = await context.read<AlertProvider>().resolveAlert(
+    final ok = await ref.read(alertProvider.notifier).resolveAlert(
           id: widget.alert.id,
           resolutionMessage: _msgCtrl.text.trim(),
         );
 
     setState(() => _isLoading = false);
-    if (mounted) Navigator.pop(context, ok);
+
+    if (mounted) {
+      Navigator.pop(context, ok);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(
-          AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.xl + bottom),
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl + bottom,
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -73,8 +86,11 @@ class _ResolveAlertModalState extends State<ResolveAlertModal> {
                     color: AppColors.resolvedLight,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  child: const Icon(Icons.check_circle,
-                      color: AppColors.resolved, size: 22),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: AppColors.resolved,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -92,7 +108,9 @@ class _ResolveAlertModalState extends State<ResolveAlertModal> {
                       Text(
                         widget.alert.title,
                         style: const TextStyle(
-                            fontSize: 13, color: AppColors.textSecondary),
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -103,7 +121,8 @@ class _ResolveAlertModalState extends State<ResolveAlertModal> {
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                   style: IconButton.styleFrom(
-                      backgroundColor: AppColors.surfaceVariant),
+                    backgroundColor: AppColors.surfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -118,10 +137,12 @@ class _ResolveAlertModalState extends State<ResolveAlertModal> {
             ),
             const SizedBox(height: AppSpacing.sm),
             NotifInput(
-              hint:
-                  'Descreva as ações tomadas e o status atual...\nEx: Serviço normalizado. Sistemas restabelecidos.',
               controller: _msgCtrl,
+              label: "Mensagem de resolução",
+              hint:
+                  'Descreva as ações tomadas e o status atual...\nEx: Serviço normalizado.',
               maxLines: 4,
+              isRequired: true,
               validator: (v) => v == null || v.trim().length < 10
                   ? 'Mínimo 10 caracteres'
                   : null,

@@ -1,70 +1,26 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
-import '../repositories/alert_repository.dart';
 
-enum AlertLoadState { initial, loading, loaded, error }
+final alertProvider =
+    StateNotifierProvider<AlertNotifier, List<AlertModel>>((ref) {
+  return AlertNotifier();
+});
 
-class AlertProvider extends ChangeNotifier {
-  final AlertRepository _repository;
+class AlertNotifier extends StateNotifier<List<AlertModel>> {
+  AlertNotifier() : super([]);
 
-  AlertLoadState _activeState = AlertLoadState.initial;
-  AlertLoadState _historyState = AlertLoadState.initial;
+  bool isLoadingActive = false;
+  bool isLoadingHistory = false;
+  String? errorMessage;
 
-  List<AlertModel> _activeAlerts = [];
-  List<AlertModel> _alertHistory = [];
-  AlertModel? _selectedAlert;
-  String? _errorMessage;
+  List<AlertModel> get activeAlerts =>
+      state.where((e) => e.status == AlertStatus.active).toList();
 
-  AlertProvider({AlertRepository? repository})
-      : _repository = repository ?? AlertRepository();
+  List<AlertModel> get alertHistory =>
+      state.where((e) => e.status == AlertStatus.resolved).toList();
 
-  AlertLoadState get activeState => _activeState;
-  AlertLoadState get historyState => _historyState;
-  List<AlertModel> get activeAlerts => _activeAlerts;
-  List<AlertModel> get alertHistory => _alertHistory;
-  AlertModel? get selectedAlert => _selectedAlert;
-  String? get errorMessage => _errorMessage;
-
-  bool get isLoadingActive => _activeState == AlertLoadState.loading;
-  bool get isLoadingHistory => _historyState == AlertLoadState.loading;
-
-  Future<void> loadActiveAlerts() async {
-    _activeState = AlertLoadState.loading;
-    notifyListeners();
-    try {
-      _activeAlerts = await _repository.fetchActiveAlerts();
-      _activeState = AlertLoadState.loaded;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _activeState = AlertLoadState.error;
-    }
-    notifyListeners();
-  }
-
-  Future<void> loadAlertHistory() async {
-    _historyState = AlertLoadState.loading;
-    notifyListeners();
-    try {
-      _alertHistory = await _repository.fetchAlertHistory();
-      _historyState = AlertLoadState.loaded;
-    } catch (e) {
-      _errorMessage = e.toString();
-      _historyState = AlertLoadState.error;
-    }
-    notifyListeners();
-  }
-
-  Future<void> selectAlert(String id) async {
-    try {
-      _selectedAlert = await _repository.fetchAlertById(id);
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
-  }
-
+  /// Criar alerta
   Future<bool> createAlert({
     required String title,
     required String description,
@@ -73,68 +29,122 @@ class AlertProvider extends ChangeNotifier {
     required List<String> sectors,
   }) async {
     try {
-      final alert = await _repository.createAlert(
+      final alert = AlertModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
         description: description,
         level: level,
-        requiresConfirmation: requiresConfirmation,
+        status: AlertStatus.active,
+        createdAt: DateTime.now(),
         sectors: sectors,
+        requiresConfirmation: requiresConfirmation,
       );
-      _activeAlerts = [alert, ..._activeAlerts];
-      notifyListeners();
+
+      state = [...state, alert];
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
+      errorMessage = e.toString();
       return false;
     }
   }
 
+  /// Resolver alerta
   Future<bool> resolveAlert({
     required String id,
     required String resolutionMessage,
   }) async {
     try {
-      final resolved = await _repository.resolveAlert(
-        id: id,
+      final index = state.indexWhere((a) => a.id == id);
+
+      if (index == -1) return false;
+
+      final alert = state[index];
+
+      final updated = AlertModel(
+        id: alert.id,
+        title: alert.title,
+        description: alert.description,
+        level: alert.level,
+        status: AlertStatus.resolved,
+        createdAt: alert.createdAt,
+        resolvedAt: DateTime.now(),
         resolutionMessage: resolutionMessage,
+        sectors: alert.sectors,
+        requiresConfirmation: alert.requiresConfirmation,
+        readCount: alert.readCount,
+        totalUsers: alert.totalUsers,
+        readRate: alert.readRate,
       );
-      _activeAlerts = _activeAlerts.where((a) => a.id != id).toList();
-      _alertHistory = [resolved, ..._alertHistory];
-      notifyListeners();
+
+      final newState = [...state];
+      newState[index] = updated;
+
+      state = newState;
+
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
+      errorMessage = e.toString();
       return false;
     }
   }
 
-  Future<bool> markAsRead(String id) async {
+  /// Carregar alertas ativos
+  Future<void> loadActiveAlerts() async {
     try {
-      await _repository.markAsRead(id);
-      _activeAlerts = _activeAlerts.map((a) {
-        if (a.id == id) {
-          return a.copyWith(
-            readCount: a.readCount + 1,
-            readRate: a.totalUsers > 0
-                ? (a.readCount + 1) / a.totalUsers
-                : 0,
-          );
-        }
-        return a;
-      }).toList();
-      notifyListeners();
-      return true;
+      isLoadingActive = true;
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      isLoadingActive = false;
     } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      return false;
+      errorMessage = e.toString();
+      isLoadingActive = false;
     }
   }
 
-  void clearError() {
-    _errorMessage = null;
-    notifyListeners();
+  /// Carregar histórico
+  Future<void> loadHistory() async {
+    try {
+      isLoadingHistory = true;
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      isLoadingHistory = false;
+    } catch (e) {
+      errorMessage = e.toString();
+      isLoadingHistory = false;
+    }
+  }
+
+  /// Atualizar leitura
+  void markAsRead(String id) {
+    final index = state.indexWhere((a) => a.id == id);
+
+    if (index == -1) return;
+
+    final alert = state[index];
+
+    final updated = AlertModel(
+      id: alert.id,
+      title: alert.title,
+      description: alert.description,
+      level: alert.level,
+      status: alert.status,
+      createdAt: alert.createdAt,
+      resolvedAt: alert.resolvedAt,
+      resolutionMessage: alert.resolutionMessage,
+      sectors: alert.sectors,
+      requiresConfirmation: alert.requiresConfirmation,
+      readCount: alert.readCount + 1,
+      totalUsers: alert.totalUsers,
+      readRate: alert.totalUsers == 0
+          ? 0
+          : (alert.readCount + 1) / alert.totalUsers,
+    );
+
+    final newState = [...state];
+    newState[index] = updated;
+
+    state = newState;
   }
 }

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
+import 'package:notif_app/shared/widgets/hover_card.dart' show HoverCard;
+
 import '../models/alert_model.dart';
 import 'alert_status_chip.dart';
-import '../../../shared/widgets/hover_card.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/utils/date_formatter.dart';
 
-/// Card de alerta para a visão do [USER].
-///
-/// Exibe ícone, título, descrição, nível, status e botão "Ciente"
-/// quando [AlertModel.requiresConfirmation] é true.
 class AlertCard extends StatelessWidget {
   final AlertModel alert;
   final VoidCallback? onTap;
@@ -27,19 +26,25 @@ class AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return HoverCard(
       onTap: onTap,
-      border: Border(
-        left: BorderSide(color: alert.level.color, width: 4),
-        top: const BorderSide(color: AppColors.border),
-        right: const BorderSide(color: AppColors.border),
-        bottom: const BorderSide(color: AppColors.border),
-      ),
-      borderRadius: BorderRadius.circular(AppRadius.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
+
+      /// CORREÇÃO AQUI
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border(
+          left: BorderSide(color: alert.level.color, width: 4),
+          top: const BorderSide(color: AppColors.border),
+          right: const BorderSide(color: AppColors.border),
+          bottom: const BorderSide(color: AppColors.border),
+        ),
+      ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _AlertCardHeader(alert: alert),
           const SizedBox(height: AppSpacing.md),
+
           Text(
             alert.description,
             style: const TextStyle(
@@ -48,10 +53,12 @@ class AlertCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
+
           if (alert.sectors.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             _SectorRow(sectors: alert.sectors),
           ],
+
           if (alert.requiresConfirmation && alert.isActive) ...[
             const SizedBox(height: AppSpacing.lg),
             _AcknowledgeButton(
@@ -67,6 +74,7 @@ class AlertCard extends StatelessWidget {
 
 class _AlertCardHeader extends StatelessWidget {
   final AlertModel alert;
+
   const _AlertCardHeader({required this.alert});
 
   @override
@@ -80,10 +88,15 @@ class _AlertCardHeader extends StatelessWidget {
             color: alert.level.backgroundColor,
             shape: BoxShape.circle,
           ),
-          child: Icon(alert.level.icon,
-              color: alert.level.color, size: 20),
+          child: Icon(
+            alert.level.icon,
+            color: alert.level.color,
+            size: 20,
+          ),
         ),
+
         const SizedBox(width: AppSpacing.md),
+
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,7 +116,9 @@ class _AlertCardHeader extends StatelessWidget {
                   AlertStatusChip(status: alert.status),
                 ],
               ),
+
               const SizedBox(height: 3),
+
               Row(
                 children: [
                   AlertLevelChip(level: alert.level),
@@ -111,7 +126,9 @@ class _AlertCardHeader extends StatelessWidget {
                   Text(
                     DateFormatter.relative(alert.createdAt),
                     style: const TextStyle(
-                        fontSize: 12, color: AppColors.textTertiary),
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -125,6 +142,7 @@ class _AlertCardHeader extends StatelessWidget {
 
 class _SectorRow extends StatelessWidget {
   final List<String> sectors;
+
   const _SectorRow({required this.sectors});
 
   @override
@@ -134,19 +152,26 @@ class _SectorRow extends StatelessWidget {
       runSpacing: AppSpacing.xs,
       children: sectors
           .take(3)
-          .map((s) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(color: AppColors.border),
+          .map(
+            (s) => Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppRadius.full),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                s,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
                 ),
-                child: Text(s,
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary)),
-              ))
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -156,7 +181,10 @@ class _AcknowledgeButton extends StatelessWidget {
   final AlertLevel level;
   final VoidCallback? onTap;
 
-  const _AcknowledgeButton({required this.level, this.onTap});
+  const _AcknowledgeButton({
+    required this.level,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +200,9 @@ class _AcknowledgeButton extends StatelessWidget {
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 10),
           textStyle: const TextStyle(
-              fontSize: 14, fontWeight: FontWeight.w600),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),

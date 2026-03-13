@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:notif_app/features/home/model/post_model.dart';
-import 'package:notif_app/features/alerts/screen/alert_admin_screen.dart';//
 
+import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
+import 'package:notif_app/features/home/model/post_model.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
 import '../services/post_service.dart';
@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PostModel> _posts = [];
   bool _isLoading = true;
   bool _isPublishing = false;
+
   int _selectedTab = 0;
 
   @override
@@ -101,9 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onTabTapped(int index) {
     if (index == 1) {
       _openPublishModal();
-    } else {
-      setState(() => _selectedTab = index);
+      return;
     }
+
+    setState(() {
+      _selectedTab = index;
+    });
   }
 
   void _openPublishModal() {
@@ -143,12 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
       drawer: const AppDrawer(),
 
+      // APPBAR CORRIGIDO
       appBar: const HomeAppBar(),
 
+      // INDEXEDSTACK CORRIGIDO
       body: IndexedStack(
-        index: _selectedTab == 2 ? 1 : 0,
+        index: _selectedTab,
         children: [
           _buildFeed(),
+          const SizedBox(), // botão publicar
           const AlertsAdminScreen(),
         ],
       ),

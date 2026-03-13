@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:notif_app/shared/widgets/status_badge.dart';
 import '../models/alert_status.dart';
-import '../../../shared/widgets/shared_widgets.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';

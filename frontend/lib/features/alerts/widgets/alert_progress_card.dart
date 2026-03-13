@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:notif_app/shared/widgets/hover_card.dart' show HoverCard;
+
 import '../models/alert_model.dart';
 import 'alert_status_chip.dart';
-import '../../../shared/widgets/hover_card.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/utils/date_formatter.dart';
 
-/// Card de alerta ativo com barra de progresso de leitura.
-///
-/// Exibido na [AlertsAdminScreen] para monitoramento em andamento.
-/// Inclui botões de "Ver detalhes" e "Resolver".
 class AlertProgressCard extends StatelessWidget {
   final AlertModel alert;
   final VoidCallback? onDetails;
@@ -69,8 +67,7 @@ class _CardHeader extends StatelessWidget {
             color: alert.level.backgroundColor,
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
-          child:
-              Icon(alert.level.icon, color: alert.level.color, size: 18),
+          child: Icon(alert.level.icon, color: alert.level.color, size: 18),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -154,8 +151,8 @@ class _ReadRateBar extends StatelessWidget {
           children: [
             Text(
               'Taxa de leitura',
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary),
+              style:
+                  const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             RichText(
               text: TextSpan(
@@ -208,12 +205,10 @@ class _SectorChips extends StatelessWidget {
       children: sectors
           .take(4)
           .map((s) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant,
-                  borderRadius:
-                      BorderRadius.circular(AppRadius.full),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
@@ -249,11 +244,10 @@ class _ActionRow extends StatelessWidget {
               foregroundColor: AppColors.accent,
               side: const BorderSide(color: AppColors.accent),
               padding: const EdgeInsets.symmetric(vertical: 9),
-              textStyle: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600),
+              textStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
             ),
           ),
@@ -269,11 +263,10 @@ class _ActionRow extends StatelessWidget {
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 9),
-              textStyle: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600),
+              textStyle:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
             ),
           ),

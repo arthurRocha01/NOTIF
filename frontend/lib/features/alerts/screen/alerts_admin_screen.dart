@@ -1,187 +1,132 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
 import '../providers/alert_provider.dart';
-import '../widgets/alert_card.dart';
-import '../widgets/alert_history_card.dart';
-import '../modals/create_alert_modal.dart';
-import '../modals/resolve_alert_modal.dart';
-import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/widgets/shared_widgets.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_radius.dart';
 
-class AlertsAdminScreen extends StatefulWidget {
+class AlertsAdminScreen extends ConsumerStatefulWidget {
   const AlertsAdminScreen({super.key});
 
   @override
-  State<AlertsAdminScreen> createState() => _AlertsAdminScreenState();
+  ConsumerState<AlertsAdminScreen> createState() => _AlertsAdminScreenState();
 }
 
-class _AlertsAdminScreenState extends State<AlertsAdminScreen>
+class _AlertsAdminScreenState extends ConsumerState<AlertsAdminScreen>
     with SingleTickerProviderStateMixin {
+
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<AlertProvider>();
-      provider.loadActiveAlerts();
-      provider.loadAlertHistory();
+
+    Future.microtask(() {
+      ref.read(alertProvider.notifier).loadActiveAlerts();
+      ref.read(alertProvider.notifier).loadHistory();
     });
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+
+    final notifier = ref.watch(alertProvider.notifier);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: NestedScrollView(
-        headerSliverBuilder: (_, __) => [
-          SliverAppBar(
-            backgroundColor: AppColors.primary,
-            floating: true,
-            snap: true,
-            title: const Text('N🔔TIF',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1)),
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.white,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white60,
-              tabs: const [
-                Tab(text: 'Em andamento'),
-                Tab(text: 'Histórico'),
-              ],
-            ),
-          ),
-        ],
-        body: TabBarView(
+      appBar: AppBar(
+        title: const Text("Alertas"),
+        bottom: TabBar(
           controller: _tabController,
-          children: const [
-            _ActiveAlertsTab(),
-            _HistoryTab(),
+          tabs: const [
+            Tab(text: "Ativos"),
+            Tab(text: "Histórico"),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createAlert(context),
-        backgroundColor: AppColors.critical,
-        icon: const Icon(Icons.add_alert, color: Colors.white),
-        label: const Text('Novo Alerta',
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w600)),
+
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _activeAlerts(notifier),
+          _historyAlerts(notifier),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+
+          await ref.read(alertProvider.notifier).createAlert(
+            title: "Novo alerta",
+            description: "Teste de alerta",
+            level: AlertLevel.normal,
+            requiresConfirmation: false,
+            sectors: [],
+          );
+
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Future<void> _createAlert(BuildContext context) async {
-    final ok = await CreateAlertModal.show(context);
-    if (ok == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Alerta enviado com sucesso!'),
-          backgroundColor: AppColors.resolved,
-        ),
-      );
+  Widget _activeAlerts(AlertNotifier notifier) {
+
+    if (notifier.isLoadingActive) {
+      return const Center(child: CircularProgressIndicator());
     }
-  }
-}
 
-class _ActiveAlertsTab extends StatelessWidget {
-  const _ActiveAlertsTab();
+    if (notifier.activeAlerts.isEmpty) {
+      return const Center(child: Text("Nenhum alerta ativo"));
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AlertProvider>(
-      builder: (_, provider, __) {
-        if (provider.isLoadingActive) {
-          return const LoadingIndicator(
-              message: 'Carregando alertas...', fullScreen: true);
-        }
-        if (provider.errorMessage != null) {
-          return ErrorState(
-            message: provider.errorMessage!,
-            onRetry: () => provider.loadActiveAlerts(),
-          );
-        }
-        if (provider.activeAlerts.isEmpty) {
-          return const EmptyState(
-            icon: Icons.notifications_none,
-            title: 'Nenhum alerta ativo',
-            subtitle: 'Todos os alertas foram resolvidos.',
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () => provider.loadActiveAlerts(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            itemCount: provider.activeAlerts.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: AppSpacing.md),
-            itemBuilder: (ctx, i) {
-              final alert = provider.activeAlerts[i];
-              return AlertProgressCard(
-                alert: alert,
-                onDetails: () => Navigator.pushNamed(
-                    context, '/alerts/details',
-                    arguments: alert),
-                onResolve: () async {
-                  final ok =
-                      await ResolveAlertModal.show(context, alert);
-                  if (ok == true && ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(
-                        content: Text('Alerta resolvido!'),
-                        backgroundColor: AppColors.resolved,
-                      ),
-                    );
-                  }
-                },
-              );
-            },
+    return ListView.builder(
+      itemCount: notifier.activeAlerts.length,
+      itemBuilder: (context, index) {
+
+        final alert = notifier.activeAlerts[index];
+
+        return Card(
+          child: ListTile(
+            title: Text(alert.title),
+            subtitle: Text(alert.description),
+
+            trailing: IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: () {
+
+                ref.read(alertProvider.notifier).resolveAlert(
+                  id: alert.id,
+                  resolutionMessage: "Resolvido",
+                );
+
+              },
+            ),
           ),
         );
       },
     );
   }
-}
 
-class _HistoryTab extends StatelessWidget {
-  const _HistoryTab();
+  Widget _historyAlerts(AlertNotifier notifier) {
 
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AlertProvider>(
-      builder: (_, provider, __) {
-        if (provider.isLoadingHistory) {
-          return const LoadingIndicator(
-              message: 'Carregando histórico...', fullScreen: true);
-        }
-        if (provider.alertHistory.isEmpty) {
-          return const EmptyState(
-            icon: Icons.history,
-            title: 'Nenhum histórico',
-            subtitle: 'Os alertas resolvidos aparecerão aqui.',
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          itemCount: provider.alertHistory.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: AppSpacing.md),
-          itemBuilder: (_, i) => AlertHistoryCard(
-            alert: provider.alertHistory[i],
+    if (notifier.isLoadingHistory) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (notifier.alertHistory.isEmpty) {
+      return const Center(child: Text("Nenhum histórico"));
+    }
+
+    return ListView.builder(
+      itemCount: notifier.alertHistory.length,
+      itemBuilder: (context, index) {
+
+        final alert = notifier.alertHistory[index];
+
+        return Card(
+          child: ListTile(
+            title: Text(alert.title),
+            subtitle: Text(alert.description),
           ),
         );
       },

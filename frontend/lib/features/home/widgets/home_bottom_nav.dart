@@ -1,7 +1,8 @@
 // lib/features/home/widgets/home_bottom_nav.dart
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../core/theme/app_colors.dart';
+//import 'package:notif_app/core/constants/app_colors.dart';//
+// import '../../../core/theme/app_colors.dart';
 
 class HomeBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -25,7 +26,7 @@ class HomeBottomNav extends StatelessWidget {
         currentIndex: selectedIndex,
         onTap: onItemTapped,
         backgroundColor: Colors.white,
-        selectedItemColor: AppColors.darkNavy,
+        // selectedItemColor: AppColors.darkNavy,
         unselectedItemColor: Colors.grey.shade600,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
         unselectedLabelStyle: const TextStyle(fontSize: 11),
