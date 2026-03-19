@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:notif_app/features/alerts/screen/alert_details_screen.dart';
 
 import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
 import 'package:notif_app/features/home/model/post_model.dart';
@@ -31,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   bool _isPublishing = false;
 
+  // 0: Home, 1: Dashboard, 2: Publicar (Modal), 3: Alertas
   int _selectedTab = 0;
 
   @override
@@ -41,11 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadPosts() async {
     setState(() => _isLoading = true);
-
     final posts = await _service.fetchPosts();
-
     if (!mounted) return;
-
     setState(() {
       _posts = posts;
       _isLoading = false;
@@ -54,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onPublish(String content, List<PlatformFile> attachments) async {
     setState(() => _isPublishing = true);
-
     Navigator.pop(context);
 
     final post = await _service.createPost(
@@ -67,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _posts.insert(0, post);
       _isPublishing = false;
-      _selectedTab = 0;
+      _selectedTab = 0; // Volta para o feed após publicar
     });
 
     _showSnackbar('Publicado com sucesso! 🎉', const Color(0xFF10B981));
@@ -77,32 +75,28 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _posts.removeWhere((p) => p.id == post.id);
     });
-
     await _service.deletePost(post.id);
-
     if (!mounted) return;
-
     _showSnackbar('Post excluído', const Color(0xFF64748B));
   }
 
   Future<void> _onLike(PostModel post) async {
     final updated = await _service.toggleLike(post);
-
     if (!mounted) return;
-
     setState(() {
       final index = _posts.indexWhere((p) => p.id == post.id);
-
       if (index != -1) {
         _posts[index] = updated;
       }
     });
   }
 
+  // 🔥 LÓGICA DE NAVEGAÇÃO CORRIGIDA
   void _onTabTapped(int index) {
-    if (index == 1) {
+    // Se clicar no ícone de Publicar (Index 2 na nossa Nav)
+    if (index == 2) {
       _openPublishModal();
-      return;
+      return; // Interrompe para não mudar a aba do fundo
     }
 
     setState(() {
@@ -116,9 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => PublishModal(
         onPublish: _onPublish,
@@ -133,9 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -144,19 +134,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEEF2F7),
-
       drawer: const AppDrawer(),
-
-      // APPBAR CORRIGIDO
       appBar: const HomeAppBar(),
 
-      // INDEXEDSTACK CORRIGIDO
+      // 📟 FILHOS DO INDEXEDSTACK ALINHADOS COM O BOTTOM NAV
       body: IndexedStack(
         index: _selectedTab,
         children: [
-          _buildFeed(),
-          const SizedBox(), // botão publicar
-          const AlertsAdminScreen(),
+          _buildFeed(),              // Index 0
+          const DashboardScreen(),    // Index 1 (Adicionado aqui!)
+          const SizedBox.shrink(),   // Index 2 (Placeholder para o Modal)
+          const AlertAdminScreen(),   // Index 3
         ],
       ),
 
@@ -178,16 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
       color: const Color(0xFF2563EB),
       child: Column(
         children: [
-          QuickPublishBanner(
-            onTap: _openPublishModal,
-          ),
-
+          QuickPublishBanner(onTap: _openPublishModal),
           const FeedHeader(),
-
-          PublishingIndicator(
-            isPublishing: _isPublishing,
-          ),
-
+          PublishingIndicator(isPublishing: _isPublishing),
           Expanded(
             child: FeedList(
               posts: _posts,

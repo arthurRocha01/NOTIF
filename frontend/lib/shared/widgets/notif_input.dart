@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_spacing.dart';
+import '../../core/constants/app_radius.dart';
 
 class NotifInput extends StatelessWidget {
   final TextEditingController controller;
-  final String label;
+  final String? label;
   final String? hint;
   final int maxLines;
-  final TextInputType keyboardType;
   final bool isRequired;
-  final bool obscureText;
   final String? Function(String?)? validator;
 
   const NotifInput({
     super.key,
     required this.controller,
-    required this.label,
+    this.label,
     this.hint,
     this.maxLines = 1,
-    this.keyboardType = TextInputType.text,
     this.isRequired = false,
-    this.obscureText = false,
     this.validator,
   });
 
@@ -27,27 +26,55 @@ class NotifInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label + (isRequired ? " *" : ""),
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
+        /// LABEL
+        if (label != null) ...[
+          Text(
+            isRequired ? '$label *' : label!,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
+        ],
+
+        /// INPUT
         TextFormField(
           controller: controller,
-          obscureText: obscureText,
           maxLines: maxLines,
-          keyboardType: keyboardType,
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+            hintStyle: const TextStyle(color: AppColors.textSecondary),
+
+            filled: true,
+            fillColor: AppColors.surfaceVariant,
+
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
             ),
+
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide.none,
+            ),
+
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.blue),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
+            ),
+
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1.2,
+              ),
             ),
           ),
         ),

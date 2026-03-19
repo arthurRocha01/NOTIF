@@ -1,3 +1,4 @@
+// lib/features/alerts/services/alert_service.dart
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../../../core/api/api_client.dart';
@@ -62,4 +63,12 @@ class AlertService {
   Future<void> markAsRead(String id) async {
     await ApiClient.post('/alerts/$id/read', {});
   }
-}
+
+  // 🔹 AGORA DENTRO DA CLASSE (O Copilot vai reconhecer aqui)
+  Future<void> notifyPendingSectors(List<String> sectors) async {
+    await ApiClient.post('/alerts/notify-pending', {
+      'sectors': sectors,
+      'message': 'Reforço de leitura solicitado pelo administrador.',
+    });
+  }
+} // <--- A chave de fechamento da classe deve ser AQUI, depois de todos os métodos.

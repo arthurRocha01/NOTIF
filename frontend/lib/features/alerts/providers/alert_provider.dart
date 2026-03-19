@@ -1,150 +1,113 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/alert_model.dart';
-import '../models/alert_status.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
+import '../models/alert_status.dart'; 
+import '../models/alert_state.dart'; 
 
-final alertProvider =
-    StateNotifierProvider<AlertNotifier, List<AlertModel>>((ref) {
-  return AlertNotifier();
+final alertServiceProvider = Provider((ref) => AlertService());
+
+final alertProvider = StateNotifierProvider<AlertNotifier, AlertState>((ref) {
+  final service = ref.watch(alertServiceProvider);
+  return AlertNotifier(service);
 });
 
-class AlertNotifier extends StateNotifier<List<AlertModel>> {
-  AlertNotifier() : super([]);
+class AlertNotifier extends StateNotifier<AlertState> {
+  final AlertService _service;
 
-  bool isLoadingActive = false;
-  bool isLoadingHistory = false;
-  String? errorMessage;
+  AlertNotifier(this._service) : super(AlertState()) {
+    loadActiveAlerts();
+    loadHistory(); // Adicionado para carregar ambos ao iniciar
+  }
 
-  List<AlertModel> get activeAlerts =>
-      state.where((e) => e.status == AlertStatus.active).toList();
-
-  List<AlertModel> get alertHistory =>
-      state.where((e) => e.status == AlertStatus.resolved).toList();
-
-  /// Criar alerta
-  Future<bool> createAlert({
-    required String title,
-    required String description,
-    required AlertLevel level,
-    required bool requiresConfirmation,
-    required List<String> sectors,
-  }) async {
+  Future<void> notifyPendingSectors(List<String> sectors) async {
     try {
-      final alert = AlertModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: title,
-        description: description,
-        level: level,
-        status: AlertStatus.active,
-        createdAt: DateTime.now(),
-        sectors: sectors,
-        requiresConfirmation: requiresConfirmation,
-      );
-
-      state = [...state, alert];
-      return true;
+      await _service.notifyPendingSectors(sectors);
+      await loadActiveAlerts();
     } catch (e) {
-      errorMessage = e.toString();
-      return false;
+      print("Erro ao notificar: $e");
     }
   }
 
-  /// Resolver alerta
+ Future<bool> createAlert({
+  required String title,
+  required String description,
+  required AlertLevel level,
+  required bool requiresConfirmation,
+  required List<String> sectors,
+}) async {
+  try {
+    // 1. Chama o service
+    final newAlert = await _service.createAlert(
+      title: title,
+      description: description,
+      level: level,
+      requiresConfirmation: level == AlertLevel.critical ? true : requiresConfirmation,
+      sectors: sectors,
+    );
+
+    // 2. Atualiza o estado criando uma NOVA instância da lista
+    // Isso garante que o ref.watch perceba a mudança de referência
+    state = state.copyWith(
+      activeAlerts: List.from([newAlert, ...state.activeAlerts]), 
+    );
+
+    // Opcional: Recarregar do banco para garantir sincronia total com IDs gerados no backend
+    // await loadActiveAlerts(); 
+
+    return true;
+  } catch (e) {
+    print("Erro ao criar alerta: $e");
+    return false;
+  }
+}
+
   Future<bool> resolveAlert({
     required String id,
     required String resolutionMessage,
   }) async {
     try {
-      final index = state.indexWhere((a) => a.id == id);
-
-      if (index == -1) return false;
-
-      final alert = state[index];
-
-      final updated = AlertModel(
-        id: alert.id,
-        title: alert.title,
-        description: alert.description,
-        level: alert.level,
-        status: AlertStatus.resolved,
-        createdAt: alert.createdAt,
-        resolvedAt: DateTime.now(),
+      final updatedAlert = await _service.resolveAlert(
+        id: id,
         resolutionMessage: resolutionMessage,
-        sectors: alert.sectors,
-        requiresConfirmation: alert.requiresConfirmation,
-        readCount: alert.readCount,
-        totalUsers: alert.totalUsers,
-        readRate: alert.readRate,
       );
 
-      final newState = [...state];
-      newState[index] = updated;
+      final newActive = state.activeAlerts.where((a) => a.id != id).toList();
+      final newHistory = [updatedAlert, ...state.history];
 
-      state = newState;
-
+      state = state.copyWith(
+        activeAlerts: newActive,
+        history: newHistory,
+      );
       return true;
     } catch (e) {
-      errorMessage = e.toString();
       return false;
     }
   }
 
-  /// Carregar alertas ativos
   Future<void> loadActiveAlerts() async {
+    state = state.copyWith(isLoadingActive: true);
     try {
-      isLoadingActive = true;
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      isLoadingActive = false;
+      final alerts = await _service.getActiveAlerts();
+      state = state.copyWith(activeAlerts: alerts, isLoadingActive: false);
     } catch (e) {
-      errorMessage = e.toString();
-      isLoadingActive = false;
+      state = state.copyWith(isLoadingActive: false);
     }
   }
 
-  /// Carregar histórico
   Future<void> loadHistory() async {
+    state = state.copyWith(isLoadingHistory: true);
     try {
-      isLoadingHistory = true;
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      isLoadingHistory = false;
+      final alerts = await _service.getAlertHistory();
+      state = state.copyWith(history: alerts, isLoadingHistory: false);
     } catch (e) {
-      errorMessage = e.toString();
-      isLoadingHistory = false;
+      state = state.copyWith(isLoadingHistory: false);
     }
   }
 
-  /// Atualizar leitura
   void markAsRead(String id) {
-    final index = state.indexWhere((a) => a.id == id);
-
-    if (index == -1) return;
-
-    final alert = state[index];
-
-    final updated = AlertModel(
-      id: alert.id,
-      title: alert.title,
-      description: alert.description,
-      level: alert.level,
-      status: alert.status,
-      createdAt: alert.createdAt,
-      resolvedAt: alert.resolvedAt,
-      resolutionMessage: alert.resolutionMessage,
-      sectors: alert.sectors,
-      requiresConfirmation: alert.requiresConfirmation,
-      readCount: alert.readCount + 1,
-      totalUsers: alert.totalUsers,
-      readRate: alert.totalUsers == 0
-          ? 0
-          : (alert.readCount + 1) / alert.totalUsers,
+    state = state.copyWith(
+      // Nota: Certifique-se que seu AlertModel tem o método copyWith e o campo isRead
+      history: state.history.map((a) => a.id == id ? a.copyWith(isRead: true) : a).toList(),
+      activeAlerts: state.activeAlerts.map((a) => a.id == id ? a.copyWith(isRead: true) : a).toList(),
     );
-
-    final newState = [...state];
-    newState[index] = updated;
-
-    state = newState;
   }
 }

@@ -1,71 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/alert_model.dart';
+import '../../../core/constants/app_colors.dart';
 
-import '../providers/alert_provider.dart';
+class AlertHistoryCard extends StatelessWidget {
+  final AlertModel alert;
 
-
-class AlertHistoryScreen extends ConsumerStatefulWidget {
-  const AlertHistoryScreen({super.key});
-
-  @override
-  ConsumerState<AlertHistoryScreen> createState() => _AlertHistoryScreenState();
-}
-
-class _AlertHistoryScreenState extends ConsumerState<AlertHistoryScreen> {
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      ref.read(alertProvider.notifier).loadHistory();
-    });
-  }
+  const AlertHistoryCard({super.key, required this.alert});
 
   @override
   Widget build(BuildContext context) {
-    final alerts = ref.watch(alertProvider);
-    final notifier = ref.watch(alertProvider.notifier);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: AppColors.resolved),
 
-    final history = notifier.alertHistory;
+          const SizedBox(width: 10),
 
-    if (notifier.isLoadingHistory) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (notifier.errorMessage != null) {
-      return Center(
-        child: Text(notifier.errorMessage!),
-      );
-    }
-
-    if (history.isEmpty) {
-      return const Center(
-        child: Text("Nenhum alerta resolvido"),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: history.length,
-      itemBuilder: (context, index) {
-        final alert = history[index];
-
-        return Card(
-          child: ListTile(
-            title: Text(alert.title),
-            subtitle: Column(
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(alert.description),
-                const SizedBox(height: 4),
-                Text("Resolvido em: ${alert.resolvedAt}"),
+                Text(
+                  alert.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  alert.description,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
