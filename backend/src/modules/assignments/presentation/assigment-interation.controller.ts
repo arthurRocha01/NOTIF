@@ -6,7 +6,7 @@ export class AssigmentInterationController {
   constructor(private readonly service: AssignmentsInteractionService) {}
 
   @Get('sync/:userId')
-  async syncDeliveries(@Param('userId') userId: string) {
+  async sync(@Param('userId') userId: string) {
     const syncedCount = await this.service.syncDeliveries(userId);
 
     return {
@@ -16,7 +16,7 @@ export class AssigmentInterationController {
   }
 
   @Post(':id/view')
-  async markAsViewed(
+  async view(
     @Body('userId') userId: string,
     @Param('id') assignmentId: string,
   ) {

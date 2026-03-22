@@ -15,18 +15,18 @@ export class AssignmentController {
     );
   }
 
-  // @Get(':id')
-  // async findById(@Param('id') id: string): Promise<AssignmentResponseDto> {
-  //   const assignment = await this.assignmentService.getAssignmentById(id);
-  //   return AssignmentResponseDto.fromDomain(assignment);
-  // }
+  @Get(':id')
+  async findById(@Param('id') id: string): Promise<AssignmentResponseDto> {
+    const assignment = await this.assignmentService.getAssigmentDetails(id);
+    return AssignmentResponseDto.fromDomain(assignment);
+  }
 
-  @Get(':userId')
+  @Get('user/:userId')
   async findByUserId(
     @Param('userId') userId: string,
   ): Promise<AssignmentResponseDto[]> {
     const assignments =
-      await this.assignmentService.getAssignmentsByUserId(userId);
+      await this.assignmentService.listPeddingDeliveries(userId);
     return assignments.map((assigment) =>
       AssignmentResponseDto.fromDomain(assigment),
     );
@@ -40,17 +40,6 @@ export class AssignmentController {
     const assignment = await this.assignmentService.createAssignment(dto);
     return AssignmentResponseDto.fromDomain(assignment);
   }
-
-  // async update(
-  //   id: string,
-  //   updateAssignmentDto: UpdateAssignmentDto,
-  // ): Promise<AssignmentResponseDto> {
-  //   const assignment = await this.assignmentService.updateAssignment(
-  //     id,
-  //     updateAssignmentDto,
-  //   );
-  //   return AssignmentResponseDto.fromDomain(assignment);
-  // }
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {

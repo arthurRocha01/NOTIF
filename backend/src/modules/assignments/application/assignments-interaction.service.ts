@@ -15,13 +15,11 @@ export class AssignmentsInteractionService {
 
   async syncDeliveries(userId: string): Promise<number> {
     const peddingAssigments = await this.assignmentRepo.findByUserId(userId);
-
     if (peddingAssigments.length === 0) {
       return 0;
     }
 
     let syncedCount = 0;
-
     for (const assigment of peddingAssigments) {
       const notification = await this.notificationRepo.findById(
         assigment.getNotificationId(),
@@ -33,19 +31,12 @@ export class AssignmentsInteractionService {
         syncedCount++;
       }
     }
+
     return syncedCount;
   }
 
   async markAsViewed(userId: string, assigmentId: string): Promise<void> {
-    const assignment = await this.assignmentRepo.findById(assigmentId);
-
-    if (!assignment) {
-      throw new NotFoundException('Obrigação de notificação não encontrada');
-    }
-
-    if (assignment.getUserId() !== userId) {
-      throw new ForbiddenException('Acesso negado a esta notificação');
-    }
+    const assignment = await this.getLinkedAssignment(userId, assigmentId);
 
     assignment.markAsViewed();
 
@@ -53,7 +44,15 @@ export class AssignmentsInteractionService {
   }
 
   async acknowledge(userId: string, assigmentId: string): Promise<void> {
-    const assignment = await this.assignmentRepo.findById(assigmentId);
+    const assignment = await this.getLinkedAssignment(userId, assigmentId);
+
+    assignment.markAsRecognized();
+
+    await this.assignmentRepo.save(assignment);
+  }
+
+  private async getLinkedAssignment(userId: string, assignmentId: string) {
+    const assignment = await this.assignmentRepo.findById(assignmentId);
 
     if (!assignment) {
       throw new NotFoundException('Obrigação de notificação não encontrada');
@@ -63,8 +62,6 @@ export class AssignmentsInteractionService {
       throw new ForbiddenException('Acesso negado a esta notificação');
     }
 
-    assignment.acknowledge();
-
-    await this.assignmentRepo.save(assignment);
+    return assignment;
   }
 }
