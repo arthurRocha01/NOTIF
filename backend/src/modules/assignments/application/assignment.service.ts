@@ -17,6 +17,12 @@ export class AssignmentService {
     return await this.assignmentRepo.findById(id);
   }
 
+  async getAssignmentsByUserId(
+    userId: string,
+  ): Promise<NotificationAssignment[]> {
+    return await this.assignmentRepo.findByUserId(userId);
+  }
+
   async createAssignment(dto: CreateAssignmentDto) {
     const assignment = NotificationAssignment.create(
       dto.userId,

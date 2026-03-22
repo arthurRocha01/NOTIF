@@ -15,10 +15,21 @@ export class AssignmentController {
     );
   }
 
-  @Get(':id')
-  async findById(@Param('id') id: string): Promise<AssignmentResponseDto> {
-    const assignment = await this.assignmentService.getAssignmentById(id);
-    return AssignmentResponseDto.fromDomain(assignment);
+  // @Get(':id')
+  // async findById(@Param('id') id: string): Promise<AssignmentResponseDto> {
+  //   const assignment = await this.assignmentService.getAssignmentById(id);
+  //   return AssignmentResponseDto.fromDomain(assignment);
+  // }
+
+  @Get(':userId')
+  async findByUserId(
+    @Param('userId') userId: string,
+  ): Promise<AssignmentResponseDto[]> {
+    const assignments =
+      await this.assignmentService.getAssignmentsByUserId(userId);
+    return assignments.map((assigment) =>
+      AssignmentResponseDto.fromDomain(assigment),
+    );
   }
 
   @Post()
