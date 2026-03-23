@@ -2,12 +2,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 describe('NOTIF Flow (e2e', () => {
   let app: INestApplication;
 
+  let response: request.Response;
+  let accessToken: string;
   let sectorId: string;
   let userId: string;
+  const userPassword = 'senha123';
   let notificationId: string;
   let assignmentId: string;
 
@@ -17,81 +23,84 @@ describe('NOTIF Flow (e2e', () => {
     }).compile();
     app = moduleFixture.createNestApplication();
 
+    await prisma.user.deleteMany();
+    await prisma.sector.deleteMany();
+    await prisma.notification.deleteMany();
+    await prisma.notificationAssignment.deleteMany();
+
     await app.init();
   });
 
   afterAll(async () => {
-    const server = app.getHttpServer();
-
-    if (assignmentId)
-      await request(server).delete(`/assignments/${assignmentId}`);
-    if (notificationId)
-      await request(server).delete(`/notifications/${notificationId}`);
-    if (userId) await request(server).delete(`/users/${userId}`);
-    if (sectorId) await request(server).delete(`/sectors/${sectorId}`);
-
     await app.close();
   });
 
   it('Deve completar o ciclo de NOTIF completo', async () => {
-    const sectorsRes = await request(app.getHttpServer())
-      .post('/sectors')
-      .send({
-        name: 'Infraestrutura',
-      })
-      .expect(201);
-    sectorId = sectorsRes.body.id;
+    response = await makePostRequest('/sectors', {
+      name: 'Tecnologia',
+    });
+    sectorId = response.body.id;
 
-    const usersRes = await request(app.getHttpServer())
-      .post('/users')
-      .send({
-        name: 'Arthur Rocha',
-        email: 'arthur.rocha@empresa.com',
-        password: 'senha123',
-        sectorId: sectorId,
-        role: 'EMPLOYEE',
-      })
-      .expect(201);
-    userId = usersRes.body.id;
+    response = await makePostRequest('/users', {
+      name: 'Arthur Rocha',
+      email: 'arthur.rochaa@notif.com',
+      password: userPassword,
+      sectorId: sectorId,
+      role: 'EMPLOYEE',
+    });
+    const userEmail = response.body.email;
+    userId = response.body.id;
 
-    const notificationsRes = await request(app.getHttpServer())
-      .post('/notifications')
-      .send({
-        title: 'Teste de Notificação',
-        message: 'Esta é uma notificação de teste',
-        level: 'MEDIUM',
-        slaMinutes: 60,
-        authorId: userId,
-        sectorId: sectorId,
-      })
-      .expect(201);
-    notificationId = notificationsRes.body.id;
+    response = await makePostRequest('/auth/login', {
+      email: userEmail,
+      password: userPassword,
+    });
+    accessToken = response.body.access_token; // mudar para camelCase
 
-    const assignmentRes = await request(app.getHttpServer())
-      .post('/assignments')
-      .send({
-        userId: userId,
-        notificationId: notificationId,
-        notificationLevel: 'MEDIUM',
-      })
-      .expect(201);
-    assignmentId = assignmentRes.body.id;
+    response = await makePostRequest('/notifications', {
+      title: 'Teste de Notificação',
+      message: 'Esta é uma notificação de teste',
+      level: 'MEDIUM',
+      slaMinutes: 60,
+      authorId: userId,
+      sectorId: sectorId,
+    });
+    notificationId = response.body.id;
 
-    console.log('Assignment criado:', assignmentRes.body);
+    response = await makePostRequest('/assignments', {
+      userId: userId,
+      notificationId: notificationId,
+      notificationLevel: 'MEDIUM',
+    });
+    assignmentId = response.body.id;
 
-    await request(app.getHttpServer())
-      .get(`/assignments/sync/${assignmentId}`)
-      .send({ userId })
-      .expect(200);
+    console.log('Assignment criado:', response.body);
 
-    await request(app.getHttpServer())
-      .post(`/assignments/${assignmentId}/view`)
-      .send({ userId })
-      .expect(201);
+    await makePostRequest(`/assignments/sync/${userId}`);
+    await makePostRequest(`/assignments/${assignmentId}/view`);
+    await makePostRequest(`/assignments/${assignmentId}/acknowledge`);
 
-    await request(app.getHttpServer())
-      .post(`/assignments/${assignmentId}/acknowledge`)
-      .send({ userId })
-      .expect(201);
+    response = await makeGetRequest(`/assignments/${assignmentId}`);
+    console.log('Assignment Final: ', response.body);
   });
+
+  const makePostRequest = async (url: string, body?: any) => {
+    const response = request(app.getHttpServer())
+      .post(url)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(body);
+
+    if (url === '/auth/login' || response.method === 'GET') {
+      return response.expect(200);
+    }
+
+    return response.expect(201);
+  };
+
+  const makeGetRequest = async (url: string) => {
+    return request(app.getHttpServer())
+      .get(url)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+  };
 });
