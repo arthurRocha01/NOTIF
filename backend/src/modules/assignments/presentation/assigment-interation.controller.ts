@@ -15,10 +15,10 @@ export class AssigmentInterationController {
     };
   }
 
-  @Post(':id/view')
+  @Post(':assignmentId/view')
   async view(
     @Body('userId') userId: string,
-    @Param('id') assignmentId: string,
+    @Param('assignmentId') assignmentId: string,
   ) {
     await this.service.markAsViewed(userId, assignmentId);
 
@@ -27,9 +27,9 @@ export class AssigmentInterationController {
     };
   }
 
-  @Post(':id/acknowledge')
+  @Post(':assignmentId/acknowledge')
   async acknowledge(
-    @Param('id') assignmentId: string,
+    @Param('assignmentId') assignmentId: string,
     @Body('userId') userId: string,
   ) {
     await this.service.acknowledge(userId, assignmentId);

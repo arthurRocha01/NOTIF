@@ -40,7 +40,7 @@ export class AssignmentsInteractionService {
 
     assignment.markAsViewed();
 
-    await this.assignmentRepo.save(assignment);
+    await this.assignmentRepo.update(assignment);
   }
 
   async acknowledge(userId: string, assigmentId: string): Promise<void> {
@@ -48,7 +48,7 @@ export class AssignmentsInteractionService {
 
     assignment.markAsRecognized();
 
-    await this.assignmentRepo.save(assignment);
+    await this.assignmentRepo.update(assignment);
   }
 
   private async getLinkedAssignment(userId: string, assignmentId: string) {

@@ -131,7 +131,7 @@ export class NotificationAssignment {
   }
 
   // Confirmação
-  public acknowledge(): void {
+  public markAsRecognized(): void {
     if (this.status === AssignmentStatus.ACKNOWLEDGED) {
       return;
     }
