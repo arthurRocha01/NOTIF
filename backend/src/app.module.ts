@@ -7,7 +7,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuthModule } from './modules/auth/auth.module';
 import { SectorsModule } from './modules/sectors/sectors.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
-import { FirebaseModule } from './modules/firebase/firebase.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -17,9 +18,8 @@ import { FirebaseModule } from './modules/firebase/firebase.module';
     NotificationsModule,
     SectorsModule,
     AssignmentsModule,
-    FirebaseModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}
