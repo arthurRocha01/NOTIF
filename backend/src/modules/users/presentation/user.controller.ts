@@ -25,6 +25,7 @@ import { UserService } from '../application/user.service';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { Public } from 'src/modules/auth/infrastructure/decorators/public.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -81,6 +82,7 @@ export class UserController {
     return UserResponseDto.fromDomain(user);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Criar novo usuário' })
   @ApiBody({ type: CreateUserDto })

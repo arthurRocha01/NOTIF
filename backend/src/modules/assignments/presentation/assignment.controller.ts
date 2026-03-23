@@ -36,7 +36,6 @@ export class AssignmentController {
   async create(
     @Body() dto: CreateAssignmentDto,
   ): Promise<AssignmentResponseDto> {
-    console.log(dto);
     const assignment = await this.assignmentService.createAssignment(dto);
     return AssignmentResponseDto.fromDomain(assignment);
   }

@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Param, Post, Req } from '@nestjs/common';
 import { AssignmentsInteractionService } from '../application/assignments-interaction.service';
 
 @Controller('assignments')
 export class AssigmentInterationController {
   constructor(private readonly service: AssignmentsInteractionService) {}
 
-  @Get('sync/:userId')
+  @Post('sync/:userId')
   async sync(@Param('userId') userId: string) {
     const syncedCount = await this.service.syncDeliveries(userId);
 
@@ -16,10 +16,8 @@ export class AssigmentInterationController {
   }
 
   @Post(':assignmentId/view')
-  async view(
-    @Body('userId') userId: string,
-    @Param('assignmentId') assignmentId: string,
-  ) {
+  async view(@Param('assignmentId') assignmentId: string, @Req() req: any) {
+    const userId = req.user.userId;
     await this.service.markAsViewed(userId, assignmentId);
 
     return {
@@ -30,8 +28,9 @@ export class AssigmentInterationController {
   @Post(':assignmentId/acknowledge')
   async acknowledge(
     @Param('assignmentId') assignmentId: string,
-    @Body('userId') userId: string,
+    @Req() req: any,
   ) {
+    const userId = req.user.userId;
     await this.service.acknowledge(userId, assignmentId);
 
     return { message: 'Ciência confirmada com sucesso' };

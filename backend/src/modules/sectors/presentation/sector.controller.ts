@@ -20,6 +20,7 @@ import { SectorService } from '../application/sector.service';
 import { SectorResponseDto } from '../dto/sector-response.dto';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 import { UpdateSectorDto } from '../dto/update-sector';
+import { Public } from 'src/modules/auth/infrastructure/decorators/public.decorator';
 
 @ApiTags('Sectors')
 @Controller('sectors')
@@ -58,6 +59,7 @@ export class SectorController {
     return SectorResponseDto.fromDomain(sector);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Criar novo setor' })
   @ApiCreatedResponse({
