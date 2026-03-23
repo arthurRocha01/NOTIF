@@ -90,7 +90,7 @@ describe('NOTIF Flow (e2e', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .send(body);
 
-    if (url === '/auth/login' || response.method === 'GET') {
+    if (response.method === 'GET') {
       return response.expect(200);
     }
 
