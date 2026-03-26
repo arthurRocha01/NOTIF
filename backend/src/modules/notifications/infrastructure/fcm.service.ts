@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
-import { getMessaging } from 'firebase-admin/messaging';
+import { getMessaging, type BatchResponse } from 'firebase-admin/messaging';
 
 @Injectable()
 export class FcmService {
   constructor() {
     if (getApps().length === 0) {
       initializeApp({
-        credential: applicationDefault(), // GOOGLE_APPLICATION_CREDENTIALS
+        credential: applicationDefault(),
       });
     }
   }
@@ -31,17 +31,26 @@ export class FcmService {
         `Notificação - sucessos: ${response.successCount} falhas: ${response.failureCount} falhas`,
       );
 
-      const failedTokens: string[] = [];
-      if (response.failureCount > 0) {
-        response.responses.forEach((res, idx) => {
-          if (!res.success) {
-            failedTokens.push(tokens[idx]);
-          }
-        });
-      }
+      return this.retriveFalideTokens(response, tokens);
     } catch (error) {
       console.log('Erro de conexão ou falha crítica no Firebase', error);
       return [];
     }
+  }
+
+  private retriveFalideTokens(
+    response: BatchResponse,
+    tokenOrder: string[],
+  ): string[] | [] {
+    const failures: string[] = [];
+
+    if (response.failureCount > 0) {
+      response.responses.forEach((res, idx) => {
+        if (!res.success) {
+          failures.push(tokenOrder[idx]);
+        }
+      });
+    }
+    return [];
   }
 }

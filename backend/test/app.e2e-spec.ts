@@ -100,7 +100,6 @@ describe('NOTIF Flow (e2e', () => {
   });
 
   const makePostRequest = async (url: string, body?: any) => {
-    console.log(url);
     return request(app.getHttpServer())
       .post(url)
       .set('Authorization', `Bearer ${accessToken}`)
