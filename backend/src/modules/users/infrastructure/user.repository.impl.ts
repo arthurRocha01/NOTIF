@@ -13,6 +13,13 @@ export class UserRepository implements IUserRepository {
     return users.map((user) => UserMapper.toDomain(user));
   }
 
+  async findBySectorId(id: string): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: { sectorId: id, fcmToken: { not: null } },
+    });
+    return users.map((user) => UserMapper.toDomain(user));
+  }
+
   async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
@@ -43,5 +50,14 @@ export class UserRepository implements IUserRepository {
 
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  async removeTokens(tokens: string[]) {
+    await this.prisma.user.updateMany({
+      where: { fcmToken: { in: tokens } },
+      data: {
+        fcmToken: null,
+      },
+    });
   }
 }

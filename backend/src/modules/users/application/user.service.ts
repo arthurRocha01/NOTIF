@@ -17,6 +17,10 @@ export class UserService {
     return this.userRepo.findAll();
   }
 
+  async listUsersBySectorId(id: string): Promise<User[]> {
+    return this.userRepo.findBySectorId(id);
+  }
+
   async getUserById(id: string): Promise<User> {
     return this.userRepo.findById(id);
   }
@@ -40,6 +44,7 @@ export class UserService {
       hashedPassword,
       dto.sectorId,
       dto.role,
+      dto.fcmToken,
     );
 
     await this.userRepo.save(user);
@@ -55,6 +60,7 @@ export class UserService {
     }
 
     if (dto.name) user.changeName(dto.name);
+    if (dto.fcmToken) user.changeFcmToken(dto.fcmToken);
 
     await this.userRepo.update(user);
 
@@ -71,21 +77,7 @@ export class UserService {
     await this.userRepo.delete(id);
   }
 
-  async updateFcmToken(id: string, fcmToken: string): Promise<User> {
-    const user = await this.userRepo.findById(id);
-
-    if (!user) {
-      throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
-    }
-
-    if (!fcmToken) {
-      throw new NotFoundException('Token FCM não encontrado.');
-    }
-
-    user.updateFcmToken(fcmToken);
-
-    await this.userRepo.update(user);
-
-    return user;
+  async removeTokensByUser(tokens: string[]): Promise<void> {
+    return await this.userRepo.removeTokens(tokens);
   }
 }

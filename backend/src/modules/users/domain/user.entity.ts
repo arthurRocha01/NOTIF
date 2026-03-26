@@ -9,7 +9,7 @@ export class User {
     private passwordHash: string,
     private sectorId: string,
     private role: UserRole,
-    private fcmToken: string | null,
+    private fcmToken: string,
     private createdAt: Date,
   ) {
     this.id = id;
@@ -19,7 +19,7 @@ export class User {
     this.sectorId = sectorId;
     this.role = role;
     this.fcmToken = fcmToken;
-    this.createdAt = createdAt;
+    this.createdAt = createdAt || new Date();
   }
 
   public static create(
@@ -28,6 +28,7 @@ export class User {
     passwordHash: string,
     sectorId: string,
     role: UserRole,
+    fcmToken: string,
   ) {
     const id = uuidv4();
     const createdAt = new Date();
@@ -42,7 +43,7 @@ export class User {
       passwordHash,
       sectorId,
       role,
-      initialFcmToken,
+      fcmToken,
       createdAt,
     );
   }
@@ -54,7 +55,7 @@ export class User {
     passwordHash: string,
     sectorId: string,
     role: UserRole,
-    fcmToken: string | null,
+    fcmToken: string,
     createdAt: Date,
   ): User {
     return new User(
@@ -93,7 +94,7 @@ export class User {
     return this.role;
   }
 
-  getFcmToken(): string | null {
+  getFcmToken(): string {
     return this.fcmToken;
   }
 
@@ -109,8 +110,8 @@ export class User {
     this.name = name;
   }
 
-  updateFcmToken(fcmToken: string): void {
-    if (fcmToken === this.fcmToken) {
+  changeFcmToken(fcmToken: string): void {
+    if (this.fcmToken == fcmToken) {
       return;
     }
 

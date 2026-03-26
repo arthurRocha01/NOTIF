@@ -7,6 +7,7 @@ export class UserResponseDto {
   public readonly email: string;
   public readonly sectorId: string | null;
   public readonly role: UserRole;
+  public readonly fcmToken;
   public readonly createdAt: string;
 
   constructor(props: {
@@ -15,7 +16,7 @@ export class UserResponseDto {
     email: string;
     sectorId: string | null;
     role: UserRole;
-    fcmToken: string | null;
+    fcmToken: string;
     createdAt: string;
   }) {
     this.id = props.id;

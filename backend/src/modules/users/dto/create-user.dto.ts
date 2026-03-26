@@ -33,4 +33,7 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserRole, { message: 'O papel (role) fornecido não é válido' })
   role?: UserRole;
+
+  @IsString()
+  fcmToken: string;
 }

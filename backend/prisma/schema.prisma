@@ -58,6 +58,7 @@ model User {
   email        String   @unique
   passwordHash String? // Opcional: Permite uso híbrido (Firebase Auth ou Senha Local)
   role         UserRole @default(EMPLOYEE)
+  fcmToken     String? @db.Text 
 
   fcmToken     String?
 
