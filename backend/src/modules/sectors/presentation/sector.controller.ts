@@ -12,7 +12,7 @@ import { SectorService } from '../application/sector.service';
 import { SectorResponseDto } from '../dto/sector-response.dto';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 import { UpdateSectorDto } from '../dto/update-sector';
-import { Public } from 'src/modules/auth/infrastructure/decorators/public.decorator';
+import { Public } from '../../../modules/auth/infrastructure/decorators/public.decorator';
 
 @Controller('sectors')
 export class SectorController {

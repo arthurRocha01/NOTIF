@@ -1,4 +1,4 @@
-import { NotificationLevel } from 'src/modules/notifications/domain/type';
+import { NotificationLevel } from '../../../modules/notifications/domain/type';
 import { AssignmentStatus } from './type';
 import { randomUUID } from 'crypto';
 

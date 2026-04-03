@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { NotificationAssignmentRepository } from '../infrastructure/assignment.repository.impl';
-import { NotificationRepository } from 'src/modules/notifications/infrastructure/notification.repository.impl';
+import { NotificationRepository } from '../../../modules/notifications/infrastructure/notification.repository.impl';
 
 @Injectable()
 export class AssignmentsInteractionService {

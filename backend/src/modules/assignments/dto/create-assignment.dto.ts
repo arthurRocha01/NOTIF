@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
-import { NotificationLevel } from 'src/modules/notifications/domain/type';
+import { NotificationLevel } from '../../../modules/notifications/domain/type';
 
 export class CreateAssignmentDto {
   @IsUUID('4', { message: 'O ID do usuário é inválido' })
