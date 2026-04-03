@@ -4,29 +4,62 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+let app: any;
 
-  app.enableCors();
+export default async function handler(req: any, res: any) {
+  if (!app) {
+    app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    app.enableCoors();
 
-  const config = new DocumentBuilder()
-    .setTitle('Notif API')
-    .setDescription('Documentação do serviço de documentações')
-    .setVersion('1.0')
-    .build();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
-  const document = SwaggerModule.createDocument(app, config);
+    const config = new DocumentBuilder()
+      .setTitle('Notif API')
+      .setDescription('Documentação do serviço de documentações')
+      .setVersion('1.0')
+      .build();
 
-  SwaggerModule.setup('api', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+    await app.init();
+  }
+
+  const instance = app.getHttpAdapter().getInstance();
+  return instance(req, res);
 }
-bootstrap();
+
+// Para rodar localmente
+// async function bootstrap() {
+//   const app = await NestFactory.create(AppModule);
+
+//   app.enableCors();
+
+//   app.useGlobalPipes(
+//     new ValidationPipe({
+//       whitelist: true,
+//       forbidNonWhitelisted: true,
+//       transform: true,
+//     }),
+//   );
+
+//   const config = new DocumentBuilder()
+//     .setTitle('Notif API')
+//     .setDescription('Documentação do serviço de documentações')
+//     .setVersion('1.0')
+//     .build();
+
+//   const document = SwaggerModule.createDocument(app, config);
+
+//   SwaggerModule.setup('api', app, document);
+
+//   await app.listen(process.env.PORT ?? 3000);
+// }
+// bootstrap();
