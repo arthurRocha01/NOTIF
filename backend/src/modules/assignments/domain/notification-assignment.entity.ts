@@ -1,6 +1,6 @@
 import { NotificationLevel } from 'src/modules/notifications/domain/type';
 import { AssignmentStatus } from './type';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class NotificationAssignment {
   private constructor(
@@ -21,7 +21,7 @@ export class NotificationAssignment {
     notificationId: string,
     notificationLevel: NotificationLevel,
   ) {
-    const id = uuidv4();
+    const id = randomUUID();
     const createdat = new Date();
     const status = AssignmentStatus.PENDING;
 

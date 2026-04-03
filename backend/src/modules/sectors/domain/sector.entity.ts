@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class Sector {
   private constructor(
@@ -14,7 +14,7 @@ export class Sector {
   }
 
   public static create(name: string) {
-    const id = uuidv4();
+    const id = randomUUID();
     const createdAt = new Date();
     const updatedAt = new Date();
 

@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { UserRole } from './types';
 
 export class User {
@@ -30,9 +30,8 @@ export class User {
     role: UserRole,
     fcmToken: string,
   ) {
-    const id = uuidv4();
+    const id = randomUUID();
     const createdAt = new Date();
-    const initialFcmToken = null;
 
     // Validações
 

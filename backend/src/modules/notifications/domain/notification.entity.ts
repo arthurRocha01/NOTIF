@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import type { NotificationLevel } from './type';
 
 export class Notification {
@@ -32,7 +32,7 @@ export class Notification {
     targetSectorId: string,
     authorId: string,
   ) {
-    const id = uuidv4();
+    const id = randomUUID();
     const createdAt = new Date();
     const requiresAcknowledgment = true;
 
