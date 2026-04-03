@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { ISectorRepository } from '../domain/sector.repository';
 import { Sector } from '../domain/sector.entity';
 import { SectorMapper } from './sector.mapper';
