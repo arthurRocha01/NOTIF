@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js"
+    }
+  ],
+  "functions": {
+    "dist/main.js": {
+      "includeFiles": "notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json"
+    }
+  }
+}
