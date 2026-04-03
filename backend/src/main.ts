@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
   if (!app) {
     app = await NestFactory.create(AppModule);
 
-    app.enableCoors();
+    app.enableCors();
 
     app.useGlobalPipes(
       new ValidationPipe({
