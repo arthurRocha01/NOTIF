@@ -62,8 +62,6 @@ model User {
   role         UserRole @default(EMPLOYEE)
   fcmToken     String? @db.Text 
 
-  fcmToken     String?
-
 
   // FK: Vínculo obrigatório com Setor
   sectorId String
