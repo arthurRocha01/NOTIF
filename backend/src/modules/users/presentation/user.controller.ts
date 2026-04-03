@@ -55,9 +55,4 @@ export class UserController {
   async remove(@Param('id') id: string): Promise<void> {
     await this.userService.deleteUser(id);
   }
-
-  @Patch(':id/fcm-token')
-  updateFcmToken(@Param('id') id: string, @Body('fcmToken') fcmToken: string) {
-    return this.userService.updateFcmToken(id, fcmToken);
-  }
 }
