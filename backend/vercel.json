@@ -9,10 +9,10 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "dist/src/main.js"
+      "source": "/(.*)",
+      "destination": "/dist/src/main.js"
     }
   ]
 }
