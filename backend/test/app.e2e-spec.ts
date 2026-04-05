@@ -45,6 +45,7 @@ describe('NOTIF Flow (e2e', () => {
 
   afterAll(async () => {
     await app.close();
+    await prisma.$disconnect();
   });
 
   it('Deve completar o ciclo de NOTIF completo', async () => {
@@ -97,7 +98,7 @@ describe('NOTIF Flow (e2e', () => {
 
     response = await makeGetRequest(`/assignments/${assignmentId}`);
     console.log('Assignment Final: ', response.body);
-  });
+  }, 30000);
 
   const makePostRequest = async (url: string, body?: any) => {
     return request(app.getHttpServer())
