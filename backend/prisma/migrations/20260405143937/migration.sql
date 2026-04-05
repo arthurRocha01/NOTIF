@@ -24,6 +24,7 @@ CREATE TABLE "users" (
     "email" TEXT NOT NULL,
     "passwordHash" TEXT,
     "role" "UserRole" NOT NULL DEFAULT 'EMPLOYEE',
+    "fcmToken" TEXT,
     "sectorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
