@@ -1,13 +1,10 @@
+import 'package:file_picker/file_picker.dart'; 
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 
 class PublishModal extends StatefulWidget {
   final Function(String, List<PlatformFile>) onPublish;
-
-  const PublishModal({
-    super.key,
-    required this.onPublish,
-  });
+  const PublishModal({super.key, required this.onPublish});
 
   @override
   State<PublishModal> createState() => _PublishModalState();
@@ -15,88 +12,72 @@ class PublishModal extends StatefulWidget {
 
 class _PublishModalState extends State<PublishModal> {
   final TextEditingController _controller = TextEditingController();
-  List<PlatformFile> _files = [];
+  List<PlatformFile> _selectedFiles = [];
 
-  Future<void> _pickFiles() async {
+  void _pickFiles() async {
     final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
       type: FileType.image,
+      allowMultiple: false,
+      withData: true, // 👈 CRÍTICO: Garante que os bytes existam na Web
     );
-
-    if (result != null) {
-      setState(() {
-        _files = result.files;
-      });
-    }
-  }
-
-  void _publish() {
-    final text = _controller.text.trim();
-
-    if (text.isEmpty && _files.isEmpty) return;
-
-    widget.onPublish(text, _files);
+    if (result != null) setState(() => _selectedFiles = result.files);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
-          const Text(
-            "Nova publicação",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
           TextField(
             controller: _controller,
-            maxLines: 4,
+            maxLines: 5,
+            minLines: 1,
+            autofocus: true,
             decoration: const InputDecoration(
-              hintText: "O que você quer compartilhar?",
-              border: OutlineInputBorder(),
+              hintText: "O que está acontecendo?", 
+              border: InputBorder.none
             ),
           ),
-
-          const SizedBox(height: 10),
-
-          Row(
-            children: [
-
-              IconButton(
-                icon: const Icon(Icons.image),
-                onPressed: _pickFiles,
+          if (_selectedFiles.isNotEmpty && _selectedFiles.first.bytes != null)
+            Container(
+              height: 150,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                // Usamos Image.memory pois withData: true garante os bytes
+                child: Image.memory(
+                  _selectedFiles.first.bytes!, 
+                  fit: BoxFit.cover
+                ),
               ),
-
-              const Spacer(),
-
+            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.image_outlined, color: AppColors.primary), 
+                onPressed: _pickFiles
+              ),
               ElevatedButton(
-                onPressed: _publish,
-                child: const Text("Publicar"),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () {
+                  if (_controller.text.isNotEmpty || _selectedFiles.isNotEmpty) {
+                    widget.onPublish(_controller.text, _selectedFiles);
+                  }
+                },
+                child: const Text("Publicar", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
-
-          if (_files.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                "${_files.length} imagem(ns) selecionada(s)",
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
         ],
       ),
     );

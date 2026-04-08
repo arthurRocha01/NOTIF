@@ -1,5 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 
+class CommentModel {
+  final String userName;
+  final String content;
+  final DateTime createdAt;
+
+  CommentModel({required this.userName, required this.content, required this.createdAt});
+}
+
 class PostModel {
   final String id;
   final String userId;
@@ -10,6 +18,7 @@ class PostModel {
   final PlatformFile? image;
   final int likesCount;
   final int commentsCount;
+  final List<CommentModel> comments; // 👈 Adicionado
   final bool isLiked;
   final bool isOwn;
   final DateTime createdAt;
@@ -24,6 +33,7 @@ class PostModel {
     this.image,
     required this.likesCount,
     required this.commentsCount,
+    this.comments = const [], // 👈 Inicializado vazio
     required this.isLiked,
     required this.isOwn,
     required this.createdAt,
@@ -31,31 +41,24 @@ class PostModel {
 
   PostModel copyWith({
     String? id,
-    String? userId,
-    String? userName,
-    String? userRole,
-    PlatformFile? userAvatar,
-    String? content,
-    PlatformFile? image,
     int? likesCount,
-    int? commentsCount,
     bool? isLiked,
-    bool? isOwn,
-    DateTime? createdAt,
+    List<CommentModel>? comments,
   }) {
     return PostModel(
       id: id ?? this.id,
-      userId: userId ?? this.userId,
-      userName: userName ?? this.userName,
-      userRole: userRole ?? this.userRole,
-      userAvatar: userAvatar ?? this.userAvatar,
-      content: content ?? this.content,
-      image: image ?? this.image,
+      userId: userId,
+      userName: userName,
+      userRole: userRole,
+      userAvatar: userAvatar,
+      content: content,
+      image: image,
       likesCount: likesCount ?? this.likesCount,
-      commentsCount: commentsCount ?? this.commentsCount,
+      commentsCount: commentsCount,
+      comments: comments ?? this.comments,
       isLiked: isLiked ?? this.isLiked,
-      isOwn: isOwn ?? this.isOwn,
-      createdAt: createdAt ?? this.createdAt,
+      isOwn: isOwn,
+      createdAt: createdAt,
     );
   }
 }

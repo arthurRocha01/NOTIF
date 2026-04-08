@@ -1,60 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/features/login/providers/auth_provider.dart';
 
-// Transformamos em StatefulWidget para lidar com dados dinâmicos
-class AppDrawer extends StatefulWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  State<AppDrawer> createState() => _AppDrawerState();
-}
-
-class _AppDrawerState extends State<AppDrawer> {
-  // Variáveis de estado para guardar os dados do backend
-  String _userName = '';
-  String _userRole = '';
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  // Método que simula a busca dos dados do usuário logado
-  Future<void> _loadUserData() async {
-    setState(() => _isLoading = true);
-
-    try {
-      // ---------------------------------------------------------
-      // AQUI ENTRA A INTEGRAÇÃO COM SEU BACKEND REAL
-      // Exemplo: final user = await authService.getCurrentUser();
-      // ---------------------------------------------------------
-      
-      // Simulando o tempo de resposta da internet (1.5 segundos)
-      await Future.delayed(const Duration(milliseconds: 1500));
-
-      if (!mounted) return;
-
-      setState(() {
-        // Substitua estas strings pelas variáveis do seu backend (ex: user.name)
-        _userName = 'João Thales'; 
-        _userRole = 'Desenvolvedor Flutter';
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _userName = 'Usuário';
-        _userRole = 'Erro ao carregar dados';
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider);
     const Color darkNavy = Color(0xFF0F172A);
     const Color lightGray = Color(0xFFF1F5F9);
 
@@ -63,7 +18,6 @@ class _AppDrawerState extends State<AppDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabeçalho com dados dinâmicos
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 60, left: 20, bottom: 30),
@@ -73,28 +27,22 @@ class _AppDrawerState extends State<AppDrawer> {
               children: [
                 _buildLogo(),
                 const SizedBox(height: 40),
-                
-                // Mostra um loading enquanto busca, ou os dados quando pronto
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10),
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
+                if (user == null)
+                  const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                 else ...[
                   Text(
-                    _userName,
+                    user.name,
                     style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    _userRole,
-                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                    '${user.sector} • ${user.role.name.toUpperCase()}',
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
                   ),
                 ],
               ],
             ),
           ),
           
-          // Seção Biblioteca
           _buildSectionTitle('BIBLIOTECA'),
           _buildMenuItem(LucideIcons.book, 'Manuais & Políticas', onTap: () {
             Navigator.pop(context);
@@ -106,28 +54,23 @@ class _AppDrawerState extends State<AppDrawer> {
           }),
           
           const SizedBox(height: 20),
-          
-          // Seção Sistema
           _buildSectionTitle('Sistema'),
-
           _buildMenuItem(LucideIcons.settings, 'Configurações', onTap: () {
             Navigator.pop(context); 
             _mostrarDialogoConfiguracoes(context);
           }),
-
           _buildMenuItem(LucideIcons.headphones, 'Suporte', onTap: () {
             Navigator.pop(context);
             _mostrarDialogoSuporte(context);
           }),
           
-          const Spacer(), // Empurra o "Encerrar" para o fundo
-          
+          const Spacer(),
           const Divider(),
           _buildMenuItem(
             LucideIcons.logOut, 
             'Encerrar', 
             color: Colors.red,
-            onTap: () => _confirmarSaida(context),
+            onTap: () => _confirmarSaida(context, ref),
           ),
           const SizedBox(height: 20),
         ],
@@ -135,7 +78,7 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  // --- MÉTODOS AUXILIARES MANTIDOS ---
+  // --- WIDGETS AUXILIARES ---
 
   Widget _buildLogo() {
     return Row(
@@ -169,7 +112,9 @@ class _AppDrawerState extends State<AppDrawer> {
     );
   }
 
-  void _confirmarSaida(BuildContext context) {
+  // --- MÉTODOS DE DIÁLOGO (O QUE ESTAVA FALTANDO) ---
+
+  void _confirmarSaida(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -178,7 +123,10 @@ class _AppDrawerState extends State<AppDrawer> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           TextButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false),
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            },
             child: const Text('Sair', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -187,157 +135,46 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   void _mostrarDialogoManuais(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        expand: false,
-        builder: (_, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Icon(LucideIcons.bookOpen, size: 48, color: Color(0xFF0F172A)), 
-            const SizedBox(height: 10),
-            Text('Manuais & Políticas', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Divider(),
-            const Text(
-              '1. Manual de Integração: Conheça nossa cultura, missão e valores institucionais.\n\n'
-              '2. Código de Conduta: Diretrizes de comportamento ético e profissional esperadas.\n\n'
-              '3. Guia de Benefícios: Informações sobre plano de saúde, VR, VA e auxílios corporativos.\n\n'
-              '4. Política de Home Office: Regras, horários e boas práticas para o trabalho remoto.',
-              style: TextStyle(height: 1.5),
-            ),
-          ],
-        ),
-      ),
-    );
+    _showCustomSheet(context, LucideIcons.bookOpen, 'Manuais & Políticas', 
+      '1. Manual de Integração\n2. Código de Conduta\n3. Guia de Benefícios\n4. Política de Home Office');
   }
 
   void _mostrarDialogoSeguranca(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        expand: false,
-        builder: (_, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Icon(LucideIcons.shieldCheck, size: 48, color: Color(0xFF0F172A)),
-            const SizedBox(height: 10),
-            Text('Políticas de Segurança', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Divider(),
-            const Text(
-              '1. Uso de Senhas: Nunca compartilhe sua senha Notif.\n\n'
-              '2. Dispositivos: Sempre encerre a sessão em dispositivos públicos.\n\n'
-              '3. Notificações: Fique atento a alertas de acessos desconhecidos.\n\n'
-              '4. Dados: Tratamos seus dados conforme a LGPD vigente.',
-              style: TextStyle(height: 1.5),
-            ),
-          ],
-        ),
-      ),
-    );
+    _showCustomSheet(context, LucideIcons.shieldCheck, 'Políticas de Segurança', 
+      '1. Uso de Senhas\n2. Dispositivos\n3. Notificações\n4. Dados (LGPD)');
   }
 
   void _mostrarDialogoConfiguracoes(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (_, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Icon(LucideIcons.settings, size: 48, color: Color(0xFF0F172A)),
-            const SizedBox(height: 10),
-            Text('Configurações', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.user, color: Color(0xFF0F172A))),
-              title: Text('Dados Pessoais e Perfil', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              subtitle: Text('Alterar foto e nome', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
-              trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.key, color: Color(0xFF0F172A))),
-              title: Text('Segurança e Senha', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              subtitle: Text('Atualize sua senha de acesso', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
-              trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.bellRing, color: Color(0xFF0F172A))),
-              title: Text('Preferências de Notificação', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {},
-            ),
-          ],
-        ),
-      ),
-    );
+    _showCustomSheet(context, LucideIcons.settings, 'Configurações', 'Opções de Perfil, Senha e Preferências de Notificação.');
   }
 
   void _mostrarDialogoSuporte(BuildContext context) {
+    _showCustomSheet(context, LucideIcons.headphones, 'Suporte', 'Fale conosco via WhatsApp ou E-mail: suporte@notif.com');
+  }
+
+  // Função genérica para economizar código nos modais
+  void _showCustomSheet(BuildContext context, IconData icon, String title, String content) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (_, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(20),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(LucideIcons.headphones, size: 48, color: Color(0xFF0F172A)),
-            const SizedBox(height: 10),
-            Text('Suporte', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 5),
-            Text('Como podemos ajudar?', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, color: Colors.black54)),
-            const SizedBox(height: 20),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFE8F5E9), child: Icon(LucideIcons.messageCircle, color: Colors.green)),
-              title: Text('WhatsApp', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              subtitle: Text('Atendimento rápido', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
-              trailing: const Icon(LucideIcons.externalLink, size: 20),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.mail, color: Color(0xFF0F172A))),
-              title: Text('E-mail', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              subtitle: Text('suporte@notif.com', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
-              trailing: const Icon(LucideIcons.externalLink, size: 20),
-              onTap: () {},
-            ),
-            const Divider(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(backgroundColor: Color(0xFFF1F5F9), child: Icon(LucideIcons.helpCircle, color: Color(0xFF0F172A))),
-              title: Text('Perguntas Frequentes', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              subtitle: Text('Dúvidas comuns resolvidas', style: GoogleFonts.inter(fontSize: 13, color: Colors.black54)),
-              trailing: const Icon(LucideIcons.chevronRight, size: 20),
-              onTap: () {},
+            Icon(icon, size: 48, color: const Color(0xFF0F172A)),
+            const SizedBox(height: 16),
+            Text(title, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Divider(height: 32),
+            Text(content, style: const TextStyle(fontSize: 16, height: 1.5)),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fechar'),
+              ),
             ),
           ],
         ),

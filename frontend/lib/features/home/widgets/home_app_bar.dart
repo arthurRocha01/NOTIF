@@ -1,67 +1,61 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/features/profile/widgets/profile_photo_dialog.dart';
 
+class HomeBottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final bool isSupervisor;
+  final Function(int) onItemTapped;
+  final int notificationCount;
 
-// Começa vazio para indicar que usaremos o Asset padrão
-final profileImageProvider = StateProvider<String>((ref) => '');
-
-class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const HomeAppBar({super.key});
+  const HomeBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.isSupervisor,
+    required this.onItemTapped,
+    this.notificationCount = 0,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileImagePath = ref.watch(profileImageProvider);
+  Widget build(BuildContext context) {
+    const Color darkNavy = Color(0xFF0F172A);
 
-    return AppBar(
-      backgroundColor: const Color(0xFF0F172A),
-      elevation: 0,
-      centerTitle: true,
-      title: _buildLogo(),
-      leading: IconButton(
-        icon: const Icon(LucideIcons.menu, color: Colors.white),
-        onPressed: () => Scaffold.of(context).openDrawer(),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: GestureDetector(
-            onTap: () => ProfilePhotoDialog.show(
-              context, 
-              profileImagePath, 
-              (newPath) => ref.read(profileImageProvider.notifier).state = newPath,
-            ),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white24,
-              // LÓGICA: Se o path estiver vazio, usa Asset. Se não, usa o File (foto escolhida).
-              backgroundImage: profileImagePath.isEmpty
-                  ? const AssetImage('assets/images/default_user.png') as ImageProvider
-                  : FileImage(File(profileImagePath)),
-            ),
+    return BottomNavigationBar(
+      currentIndex: selectedIndex,
+      onTap: onItemTapped,
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: darkNavy,
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true, // Garante que os nomes apareçam
+      items: [
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Início',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.dashboard_outlined),
+          activeIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.add_box_outlined), // Ícone padrão para publicar
+          activeIcon: Icon(Icons.add_box),
+          label: 'Publicar',
+        ),
+        BottomNavigationBarItem(
+          icon: Badge(
+            label: Text('$notificationCount'),
+            isLabelVisible: notificationCount > 0,
+            // ⚠️ Ícone de Triângulo de Alerta
+            child: const Icon(Icons.warning_amber_rounded),
           ),
+          activeIcon: Badge(
+            label: Text('$notificationCount'),
+            isLabelVisible: notificationCount > 0,
+            child: const Icon(Icons.report_problem), // Triângulo preenchido
+          ),
+          label: isSupervisor ? 'Painel' : 'Alertas',
         ),
       ],
     );
   }
-
-  Widget _buildLogo() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('N', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 22)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 20),
-        ),
-        Text('TIF', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 22)),
-      ],
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

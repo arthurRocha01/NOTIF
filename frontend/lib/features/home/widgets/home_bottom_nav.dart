@@ -1,75 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class HomeBottomNav extends StatelessWidget {
   final int selectedIndex;
+  final bool isSupervisor;
+  final Function(int) onItemTapped;
   final int notificationCount;
-  final ValueChanged<int> onItemTapped;
 
   const HomeBottomNav({
     super.key,
     required this.selectedIndex,
-    required this.notificationCount,
+    required this.isSupervisor,
     required this.onItemTapped,
+    this.notificationCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200, width: 1),
+    // Definimos a cor Navy para manter o padrão do app
+    const Color darkNavy = Color(0xFF0F172A);
+
+    return BottomNavigationBar(
+      currentIndex: selectedIndex,
+      onTap: onItemTapped, // 👈 Isso repassa o clique para a HomeScreen abrir o modal
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: darkNavy,
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true,
+      items: [
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Início',
         ),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: onItemTapped,
-        backgroundColor: Colors.white,
-        elevation: 0, // Tiramos a sombra padrão para usar o border do Container
-
-        selectedItemColor: const Color(0xFF0F172A), 
-        unselectedItemColor: Colors.grey.shade500,
-
-        selectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 11,
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.dashboard_outlined),
+          activeIcon: Icon(Icons.dashboard),
+          label: 'Dashboard', // 👈 Nome atualizado
         ),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-
-        type: BottomNavigationBarType.fixed, // Mantém os labels sempre visíveis
-
-        items: [
-          /// 🏠 INÍCIO (Index 0)
-          const BottomNavigationBarItem(
-            icon: Icon(LucideIcons.home),
-            label: 'Início',
+        const BottomNavigationBarItem(
+          // Removido o CircleAvatar para padronizar o hover/seleção
+          icon: Icon(Icons.add_box_outlined),
+          activeIcon: Icon(Icons.add_box),
+          label: 'Publicar', // 👈 Nome atualizado
+        ),
+        BottomNavigationBarItem(
+          icon: Badge(
+            label: Text('$notificationCount'),
+            isLabelVisible: notificationCount > 0,
+            // 👈 Ícone de triângulo de alerta adicionado
+            child: const Icon(Icons.warning_amber_rounded), 
           ),
-
-          /// 📊 DASHBOARD (Index 1)
-          const BottomNavigationBarItem(
-            icon: Icon(LucideIcons.layoutDashboard),
-            label: 'Dashboard',
+          activeIcon: Badge(
+            label: Text('$notificationCount'),
+            isLabelVisible: notificationCount > 0,
+            child: const Icon(Icons.report_problem), // Triângulo preenchido quando ativo
           ),
-
-          /// ➕ PUBLICAR (Index 2)
-          const BottomNavigationBarItem(
-            icon: Icon(LucideIcons.plusSquare, size: 26),
-            label: 'Publicar',
-          ),
-
-          /// 🚨 ALERTAS (Index 3)
-          BottomNavigationBarItem(
-            icon: Badge(
-              label: Text('$notificationCount'),
-              isLabelVisible: notificationCount > 0,
-              backgroundColor: const Color(0xFFEF4444), // Vermelho vibrante para atenção
-              child: const Icon(LucideIcons.bell), // Mudei para Bell para diferenciar do "Aviso"
-            ),
-            label: 'Alertas',
-          ),
-        ],
-      ),
+          label: isSupervisor ? 'Painel' : 'Alertas',
+        ),
+      ],
     );
   }
 }

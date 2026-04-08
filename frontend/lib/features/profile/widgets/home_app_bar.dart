@@ -7,7 +7,7 @@ import '../providers/profile_provider.dart';
 import 'profile_photo_dialog.dart';
 
 class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const HomeAppBar({super.key});
+  const HomeAppBar({super.key, required void Function() onMenuPressed});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

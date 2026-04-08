@@ -1,32 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // <-- 1. Adicione este import
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 
-// import 'features/login/login_screen.dart'; // Você pode comentar ou apagar se não for usar agora
+import 'package:notif_app/features/login/screen/login_screen.dart';
+// Import da sua tela real
+import 'package:notif_app/features/login/providers/auth_provider.dart';
 
 void main() {
   runApp(
-    // <-- 2. Envolva o NotifApp com o ProviderScope
     const ProviderScope(
-      child: NotifApp(),
+      child: MyApp(),
     ),
   );
 }
 
-class NotifApp extends StatelessWidget {
-  const NotifApp({super.key});
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // O segredo da reatividade: se o estado do authProvider mudar, 
+    // o Flutter reconstrói o MaterialApp inteiro.
+    final user = ref.watch(authProvider);
+
     return MaterialApp(
-      title: 'NOTIF',
+      title: 'Notif App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F172A)),
         useMaterial3: true,
-        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
       ),
-      // AQUI É A MUDANÇA: Mandando abrir a HomeScreen
-      home: const HomeScreen(),
+      // Lógica de Roteamento Automático:
+      // Se não houver usuário logado (null), mostra a tela de Login.
+      // Se houver (UserModel), mostra a Home já configurada.
+      home: user == null ? const LoginScreen() : const HomeScreen(),
     );
   }
 }

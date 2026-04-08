@@ -36,7 +36,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
 
   List<AlertModel> _getFilteredAlerts(List<AlertModel> alerts) {
     return alerts.where((alert) {
-      final matchesSector = _selectedSector == 'Todos' || (alert.sectors?.contains(_selectedSector) ?? false);
+      final matchesSector = _selectedSector == 'Todos' || (alert.sectors.contains(_selectedSector) ?? false);
       final query = _searchCtrl.text.toLowerCase();
       final matchesSearch = alert.title.toLowerCase().contains(query) || 
                            alert.description.toLowerCase().contains(query);
@@ -130,7 +130,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
           else if (filtered.isEmpty)
             _buildEmptyState()
           else
-            ...filtered.map((a) => MonitoringAlertCard(key: ValueKey(a.id), alert: a)).toList(),
+            ...filtered.map((a) => MonitoringAlertCard(key: ValueKey(a.id), alert: a)),
         ],
       ),
     );
