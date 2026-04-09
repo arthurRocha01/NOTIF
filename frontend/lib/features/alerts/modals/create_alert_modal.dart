@@ -29,7 +29,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
 
-  AlertLevel _level = AlertLevel.normal;
+  AlertLevel _level = AlertLevel.low;
   bool _requiresConfirmation = false;
   bool _isLoading = false;
   bool _sendToAll = false;
@@ -42,7 +42,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   // Cor dinâmica baseada no nível de urgência
   Color get _currentThemeColor {
     if (_level == AlertLevel.critical) return Colors.redAccent;
-    if (_level == AlertLevel.normal) return const Color.fromARGB(255, 88, 123, 249);
+    if (_level == AlertLevel.low) return const Color.fromARGB(255, 88, 123, 249);
     return AppColors.primary;
   }
 

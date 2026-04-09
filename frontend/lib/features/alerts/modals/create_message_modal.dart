@@ -40,7 +40,7 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
     final ok = await ref.read(alertProvider.notifier).createAlert(
           title: _titleCtrl.text.trim(),
           description: _contentCtrl.text.trim(),
-          level: AlertLevel.normal,
+          level: AlertLevel.low,
           requiresConfirmation: false,
           sectors: ['Todos'], // Ou lógica de setores específica
         );

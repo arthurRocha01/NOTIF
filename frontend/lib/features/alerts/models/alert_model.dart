@@ -96,7 +96,7 @@ class AlertModel {
   static AlertLevel _parseLevel(dynamic val) {
     return AlertLevel.values.firstWhere(
       (e) => e.name == val.toString(), 
-      orElse: () => AlertLevel.normal
+      orElse: () => AlertLevel.low
     );
   }
 

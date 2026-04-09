@@ -9,8 +9,11 @@ class FeedController extends ChangeNotifier {
 
   List<PostModel> posts = [];
   bool loading = false;
-  int tabIndex = 0;
-  int notifications = 3; 
+
+  // pageIndex: 0 = Feed, 1 = Dashboard, 2 = Alerts
+  int pageIndex = 0;
+
+  int notifications = 3;
 
   Future<void> loadPosts() async {
     loading = true;
@@ -18,36 +21,35 @@ class FeedController extends ChangeNotifier {
     try {
       posts = await _service.fetchPosts();
     } catch (e) {
-      debugPrint("Erro ao carregar: $e");
+      debugPrint("Erro ao carregar posts: $e");
     } finally {
       loading = false;
       notifyListeners();
     }
   }
 
-  void changeTab(int index) {
-    tabIndex = index;
-    if (index == 3) notifications = 0;
+  void changePage(int page) {
+    pageIndex = page;
+    if (page == 2) notifications = 0;
     notifyListeners();
   }
 
   Future<void> publish({
-    required String content, 
+    required String content,
     required List<PlatformFile> attachments,
-    required UserModel? currentUser, 
+    required UserModel? currentUser,
   }) async {
     try {
       final post = await _service.createPost(
-        content: content, 
+        content: content,
         attachments: attachments,
-        user: currentUser, 
+        user: currentUser,
       );
-      
       posts = [post, ...posts];
-      tabIndex = 0; // Volta ao feed
+      pageIndex = 0;
       notifyListeners();
     } catch (e) {
-      debugPrint("ERRO CRÍTICO NA PUBLICAÇÃO: $e");
+      debugPrint("Erro ao publicar: $e");
     }
   }
 

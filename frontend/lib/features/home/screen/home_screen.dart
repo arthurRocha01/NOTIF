@@ -15,6 +15,7 @@ final feedProvider = ChangeNotifierProvider((ref) => FeedController());
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -23,10 +24,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(feedProvider).loadPosts());
+  }
+
+  // Mapeia o tap na nav bar → pageIndex (0=Feed, 1=Dashboard, 2=Alerts)
+  void _onNavTap(int navIndex, bool isSupervisor, FeedController controller, user) {
+    if (isSupervisor) {
+      // Supervisor: [Home=0, Publicar=1, Dashboard=2, Alertas=3]
+      switch (navIndex) {
+        case 0: controller.changePage(0); break;
+        case 1: _handlePublish(user, controller); break;
+        case 2: controller.changePage(1); break;
+        case 3: controller.changePage(2); break;
+      }
+    } else {
+      // Employee: [Home=0, Publicar=1, Alertas=2]
+      switch (navIndex) {
+        case 0: controller.changePage(0); break;
+        case 1: _handlePublish(user, controller); break;
+        case 2: controller.changePage(2); break;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final feedController = ref.watch(feedProvider);
-    final bool isSupervisor = user?.isSupervisor ?? true;
+    final bool isSupervisor = user?.isSupervisor ?? false;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -37,45 +64,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       drawer: const AppDrawer(),
       body: SafeArea(
         child: IndexedStack(
-          index: feedController.tabIndex,
+          index: feedController.pageIndex,
           children: [
-            FeedContent(controller: feedController), // 0
-            const DashboardScreen(), // 1
-            const SizedBox.shrink(), // 2 (Botão publicar)
-            isSupervisor ? const AlertAdminScreen() : const AlertUserScreen(), // 3
+            FeedContent(controller: feedController),        // 0 = Feed
+            const DashboardScreen(),                        // 1 = Dashboard
+            isSupervisor ? const AlertAdminScreen() : const AlertUserScreen(), // 2 = Alertas
           ],
         ),
       ),
       bottomNavigationBar: HomeBottomNav(
-        selectedIndex: feedController.tabIndex,
+        pageIndex: feedController.pageIndex,
         isSupervisor: isSupervisor,
         notificationCount: feedController.notifications,
-        onItemTapped: (index) {
-          if (index == 2) {
-            _handlePublish(user);
-          } else {
-            feedController.changeTab(index);
-          }
-        },
+        onItemTapped: (navIndex) => _onNavTap(navIndex, isSupervisor, feedController, user),
       ),
     );
   }
 
-  void _handlePublish(dynamic user) {
+  void _handlePublish(dynamic user, FeedController controller) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => PublishModal(
         onPublish: (content, files) async {
-          // 🚀 Chama o controller e aguarda a criação
-          await ref.read(feedProvider).publish(
-                content: content,
-                attachments: files,
-                currentUser: user,
-              );
-          
-          // 🚀 Fecha o modal somente após terminar
+          await controller.publish(
+            content: content,
+            attachments: files,
+            currentUser: user,
+          );
           if (mounted) Navigator.pop(context);
         },
       ),

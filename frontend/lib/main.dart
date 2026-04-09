@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 
 import 'package:notif_app/features/login/screen/login_screen.dart';
@@ -34,7 +35,7 @@ class MyApp extends ConsumerWidget {
       // Lógica de Roteamento Automático:
       // Se não houver usuário logado (null), mostra a tela de Login.
       // Se houver (UserModel), mostra a Home já configurada.
-      home: user == null ? const LoginScreen() : const HomeScreen(),
+      home: const HomeScreen(), // TODO: restaurar → user == null ? const LoginScreen() : const HomeScreen()
     );
   }
 }

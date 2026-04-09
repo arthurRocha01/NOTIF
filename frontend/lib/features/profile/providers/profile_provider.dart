@@ -1,30 +1,44 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/profile_repository.dart';
 
-// 1. Criamos o Repository
-final profileRepositoryProvider = Provider((ref) => ProfileRepository());
+class ProfileState {
+  final Uint8List? avatarBytes;
+  final String displayName;
 
-// 2. Criamos o Notifier que gerencia a lógica
-class ProfileNotifier extends StateNotifier<String> {
-  final ProfileRepository _repository;
+  const ProfileState({
+    this.avatarBytes,
+    this.displayName = '',
+  });
 
-  ProfileNotifier(this._repository) : super('') {
-    _init(); // Carrega a foto assim que o provider é criado
-  }
-
-  Future<void> _init() async {
-    final savedPath = await _repository.getPhotoPath();
-    if (savedPath != null) state = savedPath;
-  }
-
-  Future<void> updateProfilePhoto(String newPath) async {
-    state = newPath; // Atualiza a UI na hora (optimistic update)
-    await _repository.savePhotoPath(newPath); // Persiste no banco
+  ProfileState copyWith({
+    Uint8List? avatarBytes,
+    bool clearAvatar = false,
+    String? displayName,
+  }) {
+    return ProfileState(
+      avatarBytes: clearAvatar ? null : (avatarBytes ?? this.avatarBytes),
+      displayName: displayName ?? this.displayName,
+    );
   }
 }
 
-// 3. Expomos o Provider
-final profileProvider = StateNotifierProvider<ProfileNotifier, String>((ref) {
-  final repo = ref.watch(profileRepositoryProvider);
-  return ProfileNotifier(repo);
-});
+class ProfileNotifier extends StateNotifier<ProfileState> {
+  ProfileNotifier() : super(const ProfileState());
+
+  void setAvatar(Uint8List? bytes) {
+    if (bytes == null) {
+      state = state.copyWith(clearAvatar: true);
+    } else {
+      state = state.copyWith(avatarBytes: bytes);
+    }
+  }
+
+  void setDisplayName(String name) {
+    if (name.isEmpty) return;
+    state = state.copyWith(displayName: name);
+  }
+}
+
+final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>(
+  (ref) => ProfileNotifier(),
+);
