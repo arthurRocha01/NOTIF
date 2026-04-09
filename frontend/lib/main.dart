@@ -35,7 +35,7 @@ class MyApp extends ConsumerWidget {
       // Lógica de Roteamento Automático:
       // Se não houver usuário logado (null), mostra a tela de Login.
       // Se houver (UserModel), mostra a Home já configurada.
-      home: const HomeScreen(), // TODO: restaurar → user == null ? const LoginScreen() : const HomeScreen()
+      home: user == null ? const LoginScreen() : const HomeScreen(),
     );
   }
 }

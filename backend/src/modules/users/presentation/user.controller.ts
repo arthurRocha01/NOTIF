@@ -8,7 +8,9 @@ import {
   HttpCode,
   Delete,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/infrastructure/jwt-auth.guard';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -63,6 +65,7 @@ export class UserController {
   }
 
   @Get('by-email/:email')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Buscar usuário por e-mail' })
   @ApiParam({
     name: 'email',

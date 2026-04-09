@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -19,19 +20,17 @@ void main() {
     registerFallbackValue(Uri());
   });
 
+  // ---------------------------------------------------------------------------
+  // AuthService.login
+  // ---------------------------------------------------------------------------
   group('AuthService.login', () {
-    test('retorna token quando credenciais são válidas', () async {
+    test('retorna token quando credenciais são válidas (200)', () async {
       when(
-        () => mockClient.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
       ).thenAnswer(
-        (_) async => http.Response(
-          jsonEncode({'access_token': 'jwt-token-123'}),
-          201,
-        ),
+        (_) async =>
+            http.Response(jsonEncode({'access_token': 'jwt-token-123'}), 200),
       );
 
       final token = await sut.login('user@test.com', 'senha123');
@@ -39,56 +38,153 @@ void main() {
       expect(token, equals('jwt-token-123'));
     });
 
-    test('lança ApiException com status 401 quando credenciais são inválidas',
-        () async {
+    test('retorna token quando credenciais são válidas (201)', () async {
       when(
-        () => mockClient.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
       ).thenAnswer(
-        (_) async => http.Response(
-          jsonEncode({'message': 'Credenciais inválidas'}),
-          401,
-        ),
+        (_) async =>
+            http.Response(jsonEncode({'access_token': 'jwt-token-123'}), 201),
       );
 
-      expect(
+      final token = await sut.login('user@test.com', 'senha123');
+
+      expect(token, equals('jwt-token-123'));
+    });
+
+    test('chama o endpoint correto POST /auth/login', () async {
+      Uri? capturedUri;
+      when(
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((invocation) async {
+        capturedUri = invocation.positionalArguments.first as Uri;
+        return http.Response(
+            jsonEncode({'access_token': 'jwt-token-123'}), 200);
+      });
+
+      await sut.login('user@test.com', 'senha123');
+
+      expect(capturedUri?.path, endsWith('/auth/login'));
+    });
+
+    test('envia email e password no corpo da requisição', () async {
+      String? capturedBody;
+      when(
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[const Symbol('body')] as String;
+        return http.Response(
+            jsonEncode({'access_token': 'jwt-token-123'}), 200);
+      });
+
+      await sut.login('user@test.com', 'senha123');
+
+      final body = jsonDecode(capturedBody!);
+      expect(body['email'], equals('user@test.com'));
+      expect(body['password'], equals('senha123'));
+    });
+
+    test('lança ApiException(401) quando credenciais são inválidas', () async {
+      when(
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer(
+        (_) async => http.Response(
+            jsonEncode({'message': 'Credenciais inválidas'}), 401),
+      );
+
+      await expectLater(
         () => sut.login('wrong@test.com', 'errada'),
-        throwsA(
-          isA<ApiException>()
-              .having((e) => e.statusCode, 'statusCode', 401)
-              .having((e) => e.message, 'message', 'Credenciais inválidas'),
-        ),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 401)
+            .having((e) => e.message, 'message', 'Credenciais inválidas')),
       );
     });
 
-    test('lança ApiException em erro de servidor (500)', () async {
+    test('lança ApiException(500) em erro de servidor', () async {
       when(
-        () => mockClient.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer(
-        (_) async => http.Response('Internal Server Error', 500),
-      );
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((_) async => http.Response('Internal Server Error', 500));
 
-      expect(
+      await expectLater(
         () => sut.login('user@test.com', 'senha123'),
-        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 500)),
+        throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 500)),
+      );
+    });
+
+    test('lança ApiException sem conexão (SocketException)', () async {
+      when(
+        () => mockClient.post(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenThrow(const SocketException('No internet'));
+
+      await expectLater(
+        () => sut.login('user@test.com', 'senha123'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.message, 'message', contains('internet'))
+            .having((e) => e.statusCode, 'statusCode', isNull)),
       );
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // AuthService.fetchUser
+  // ---------------------------------------------------------------------------
   group('AuthService.fetchUser', () {
-    test('retorna UserModel quando o usuário existe', () async {
+    test('chama o endpoint correto GET /users/by-email/:email', () async {
+      Uri? capturedUri;
       when(
-        () => mockClient.get(
-          any(),
-          headers: any(named: 'headers'),
-        ),
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((invocation) async {
+        capturedUri = invocation.positionalArguments.first as Uri;
+        return http.Response(
+          jsonEncode({
+            'id': 'uuid-123',
+            'name': 'João',
+            'email': 'joao@test.com',
+            'role': 'EMPLOYEE',
+            'sectorId': 'sec-1',
+          }),
+          200,
+        );
+      });
+
+      await sut.fetchUser('joao@test.com', 'token');
+
+      expect(capturedUri?.path, contains('/users/by-email/'));
+    });
+
+    test('envia Authorization Bearer no header', () async {
+      Map<String, String>? capturedHeaders;
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer((invocation) async {
+        capturedHeaders = invocation.namedArguments[const Symbol('headers')]
+            as Map<String, String>;
+        return http.Response(
+          jsonEncode({
+            'id': 'uuid-123',
+            'name': 'João',
+            'email': 'joao@test.com',
+            'role': 'EMPLOYEE',
+            'sectorId': 'sec-1',
+          }),
+          200,
+        );
+      });
+
+      await sut.fetchUser('joao@test.com', 'my-token');
+
+      expect(capturedHeaders?['Authorization'], equals('Bearer my-token'));
+    });
+
+    test('retorna UserModel com todos os campos quando usuário existe', () async {
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
       ).thenAnswer(
         (_) async => http.Response(
           jsonEncode({
@@ -111,12 +207,9 @@ void main() {
       expect(user.sector, equals('sector-abc'));
     });
 
-    test('mapeia role SUPERVISOR corretamente', () async {
+    test('mapeia role SUPERVISOR para UserRole.supervisor', () async {
       when(
-        () => mockClient.get(
-          any(),
-          headers: any(named: 'headers'),
-        ),
+        () => mockClient.get(any(), headers: any(named: 'headers')),
       ).thenAnswer(
         (_) async => http.Response(
           jsonEncode({
@@ -135,22 +228,51 @@ void main() {
       expect(user.role, equals(UserRole.supervisor));
     });
 
-    test('lança ApiException quando usuário não é encontrado', () async {
+    test('mapeia role ADMIN para UserRole.supervisor', () async {
       when(
-        () => mockClient.get(
-          any(),
-          headers: any(named: 'headers'),
-        ),
+        () => mockClient.get(any(), headers: any(named: 'headers')),
       ).thenAnswer(
         (_) async => http.Response(
-          jsonEncode({'message': 'Not Found'}),
-          404,
+          jsonEncode({
+            'id': 'uuid-789',
+            'name': 'Admin User',
+            'email': 'admin@test.com',
+            'role': 'ADMIN',
+            'sectorId': 'sector-xyz',
+          }),
+          200,
         ),
       );
 
-      expect(
+      final user = await sut.fetchUser('admin@test.com', 'jwt-token-123');
+
+      expect(user.role, equals(UserRole.supervisor));
+    });
+
+    test('lança ApiException(404) quando usuário não é encontrado', () async {
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer(
+        (_) async =>
+            http.Response(jsonEncode({'message': 'Not Found'}), 404),
+      );
+
+      await expectLater(
         () => sut.fetchUser('ghost@test.com', 'jwt-token-123'),
-        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 404)),
+        throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 404)),
+      );
+    });
+
+    test('lança ApiException sem conexão (SocketException)', () async {
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenThrow(const SocketException('No internet'));
+
+      await expectLater(
+        () => sut.fetchUser('joao@test.com', 'token'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.message, 'message', contains('internet'))),
       );
     });
   });
