@@ -6,21 +6,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
 class MockAuthService extends Mock implements AuthService {}
+class MockTokenStorage extends Mock implements TokenStorage {}
 
-Widget _buildApp(AuthService authService) {
+Widget _buildApp(AuthService authService, TokenStorage storage) {
   return ProviderScope(
-    overrides: [authServiceProvider.overrideWithValue(authService)],
+    overrides: [
+      authServiceProvider.overrideWithValue(authService),
+      tokenStorageProvider.overrideWithValue(storage),
+    ],
     child: const MaterialApp(home: LoginScreen()),
   );
 }
 
 void main() {
   late MockAuthService mockService;
+  late MockTokenStorage mockStorage;
 
   final fakeUser = UserModel(
     id: 'uuid-123',
@@ -32,6 +38,12 @@ void main() {
 
   setUp(() {
     mockService = MockAuthService();
+    mockStorage = MockTokenStorage();
+    when(() => mockStorage.saveToken(any())).thenAnswer((_) async {});
+    when(() => mockStorage.saveEmail(any())).thenAnswer((_) async {});
+    when(() => mockStorage.clearAll()).thenAnswer((_) async {});
+    when(() => mockStorage.getToken()).thenAnswer((_) async => null);
+    when(() => mockStorage.getEmail()).thenAnswer((_) async => null);
     ApiClient.clearToken();
   });
 
@@ -40,19 +52,19 @@ void main() {
   // ---------------------------------------------------------------------------
   group('LoginScreen — renderização', () {
     testWidgets('exibe campo de email/matrícula', (tester) async {
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       expect(find.text('Matrícula ou Email corporativo'), findsOneWidget);
     });
 
     testWidgets('exibe campo de senha', (tester) async {
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       expect(find.text('Senha'), findsOneWidget);
     });
 
     testWidgets('exibe botão Entrar', (tester) async {
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       expect(find.text('Entrar'), findsOneWidget);
     });
@@ -63,7 +75,7 @@ void main() {
   // ---------------------------------------------------------------------------
   group('LoginScreen — validação', () {
     testWidgets('exibe erro ao tentar login com campos vazios', (tester) async {
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       await tester.tap(find.text('Entrar'));
       await tester.pump();
@@ -73,7 +85,7 @@ void main() {
     });
 
     testWidgets('exibe erro ao tentar login só com email', (tester) async {
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       await tester.enterText(
           find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
@@ -96,7 +108,7 @@ void main() {
       when(() => mockService.fetchUser(any(), any()))
           .thenAnswer((_) async => fakeUser);
 
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
           find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
           'joao@test.com');
@@ -120,7 +132,7 @@ void main() {
       when(() => mockService.fetchUser(any(), any()))
           .thenAnswer((_) async => fakeUser);
 
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
           find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
           'joao@test.com');
@@ -138,7 +150,7 @@ void main() {
       when(() => mockService.login(any(), any()))
           .thenThrow(ApiException('Credenciais inválidas', statusCode: 401));
 
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
           find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
           'wrong@test.com');
@@ -154,7 +166,7 @@ void main() {
       when(() => mockService.login(any(), any()))
           .thenThrow(ApiException('Credenciais inválidas', statusCode: 401));
 
-      await tester.pumpWidget(_buildApp(mockService));
+      await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
           find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
           'wrong@test.com');

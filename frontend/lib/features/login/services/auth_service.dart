@@ -13,7 +13,7 @@ class AuthService {
     http.Client? httpClient,
     String? baseUrl,
   })  : _httpClient = httpClient ?? http.Client(),
-        _baseUrl = baseUrl ?? 'http://localhost:3000';
+        _baseUrl = baseUrl ?? ApiClient.baseUrl;
 
   Future<String> login(String email, String password) async {
     try {

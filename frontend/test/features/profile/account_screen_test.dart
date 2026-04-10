@@ -3,11 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/profile/screen/account_screen.dart';
 
 class MockAuthService extends Mock implements AuthService {}
+
+class _FakeTokenStorage extends Fake implements TokenStorage {
+  @override Future<void> saveToken(String token) async {}
+  @override Future<void> saveEmail(String email) async {}
+  @override Future<String?> getToken() async => null;
+  @override Future<String?> getEmail() async => null;
+  @override Future<void> clearAll() async {}
+}
 
 Widget _makeTestable({UserModel? user}) {
   final mockService = MockAuthService();
@@ -15,7 +24,7 @@ Widget _makeTestable({UserModel? user}) {
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final n = AuthNotifier(mockService);
+        final n = AuthNotifier(mockService, _FakeTokenStorage());
         // ignore: invalid_use_of_protected_member
         if (user != null) n.state = user;
         return n;

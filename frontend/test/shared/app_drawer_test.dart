@@ -3,11 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
 class MockAuthService extends Mock implements AuthService {}
+class MockTokenStorage extends Mock implements TokenStorage {}
+
+class _FakeTokenStorage extends Fake implements TokenStorage {
+  @override Future<void> saveToken(String token) async {}
+  @override Future<void> saveEmail(String email) async {}
+  @override Future<String?> getToken() async => null;
+  @override Future<String?> getEmail() async => null;
+  @override Future<void> clearAll() async {}
+}
 
 // Widget de suporte que abre o drawer automaticamente
 Widget _makeTestable({UserModel? user}) {
@@ -17,7 +27,7 @@ Widget _makeTestable({UserModel? user}) {
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final notifier = AuthNotifier(mockService);
+        final notifier = AuthNotifier(mockService, _FakeTokenStorage());
         if (user != null) {
           // ignore: invalid_use_of_protected_member
           notifier.state = user;
@@ -137,7 +147,7 @@ void main() {
           overrides: [
             authServiceProvider.overrideWithValue(MockAuthService()),
             authProvider.overrideWith((ref) {
-              final n = AuthNotifier(MockAuthService());
+              final n = AuthNotifier(MockAuthService(), _FakeTokenStorage());
               // ignore: invalid_use_of_protected_member
               n.state = supervisor;
               return n;

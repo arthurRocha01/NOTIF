@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 
@@ -23,7 +24,7 @@ class AlertService {
     http.Client? httpClient,
     String? baseUrl,
   })  : _httpClient = httpClient ?? http.Client(),
-        _baseUrl = baseUrl ?? 'http://localhost:3000';
+        _baseUrl = baseUrl ?? ApiClient.baseUrl;
 
   Map<String, String> _headers(String token) => {
         'Content-Type': 'application/json',

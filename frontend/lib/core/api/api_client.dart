@@ -12,7 +12,7 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String _baseUrl = 'https://api.notif.com.br/v1';
+  static const String baseUrl = 'http://localhost:3000';
   static String? _authToken;
 
   static void setToken(String token) => _authToken = token;
@@ -28,7 +28,7 @@ class ApiClient {
   static Future<dynamic> get(String path) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl$path'),
+        Uri.parse('$baseUrl$path'),
         headers: _headers,
       );
       return _handleResponse(response);
@@ -40,7 +40,7 @@ class ApiClient {
   static Future<dynamic> post(String path, Map<String, dynamic> body) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl$path'),
+        Uri.parse('$baseUrl$path'),
         headers: _headers,
         body: jsonEncode(body),
       );
@@ -53,7 +53,7 @@ class ApiClient {
   static Future<dynamic> patch(String path, Map<String, dynamic> body) async {
     try {
       final response = await http.patch(
-        Uri.parse('$_baseUrl$path'),
+        Uri.parse('$baseUrl$path'),
         headers: _headers,
         body: jsonEncode(body),
       );
@@ -66,7 +66,7 @@ class ApiClient {
   static Future<dynamic> delete(String path) async {
     try {
       final response = await http.delete(
-        Uri.parse('$_baseUrl$path'),
+        Uri.parse('$baseUrl$path'),
         headers: _headers,
       );
       return _handleResponse(response);
