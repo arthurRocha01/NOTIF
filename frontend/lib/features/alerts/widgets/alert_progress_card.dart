@@ -30,22 +30,20 @@ class AlertProgressCard extends StatelessWidget {
         children: [
           _CardHeader(alert: alert),
           const SizedBox(height: AppSpacing.sm),
-          _CardDescription(description: alert.description),
-          const SizedBox(height: AppSpacing.lg),
-          _ReadRateBar(
-            readRate: alert.readRate,
-            readCount: alert.readCount,
-            totalUsers: alert.totalUsers,
+          Text(
+            alert.message,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          if (alert.sectors.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            _SectorChips(sectors: alert.sectors),
-          ],
+          const SizedBox(height: AppSpacing.md),
+          _SectorInfo(alert: alert),
           const SizedBox(height: AppSpacing.lg),
-          _ActionRow(
-            onDetails: onDetails,
-            onResolve: onResolve,
-          ),
+          _ActionRow(onDetails: onDetails, onResolve: onResolve),
         ],
       ),
     );
@@ -102,125 +100,38 @@ class _CardHeader extends StatelessWidget {
   }
 }
 
-class _CardDescription extends StatelessWidget {
-  final String description;
-  const _CardDescription({required this.description});
+class _SectorInfo extends StatelessWidget {
+  final AlertModel alert;
+  const _SectorInfo({required this.alert});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      description,
-      style: const TextStyle(
-        fontSize: 13,
-        color: AppColors.textSecondary,
-        height: 1.4,
-      ),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-}
-
-class _ReadRateBar extends StatelessWidget {
-  final double readRate;
-  final int readCount;
-  final int totalUsers;
-
-  const _ReadRateBar({
-    required this.readRate,
-    required this.readCount,
-    required this.totalUsers,
-  });
-
-  Color get _barColor {
-    final pct = readRate * 100;
-    if (pct >= 80) return AppColors.resolved;
-    if (pct >= 50) return AppColors.warning;
-    return AppColors.critical;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = (readRate * 100).clamp(0, 100).toInt();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Taxa de leitura',
-              style:
-                  const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '$pct%',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  if (totalUsers > 0)
-                    TextSpan(
-                      text: '  $readCount/$totalUsers',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+        Icon(
+          alert.isGlobal ? Icons.public : Icons.groups,
+          size: 14,
+          color: AppColors.textTertiary,
         ),
-        const SizedBox(height: AppSpacing.xs),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          child: LinearProgressIndicator(
-            value: readRate.clamp(0.0, 1.0),
-            minHeight: 6,
-            backgroundColor: AppColors.border,
-            valueColor: AlwaysStoppedAnimation(_barColor),
+        const SizedBox(width: AppSpacing.xs),
+        Text(
+          alert.isGlobal ? 'Global' : (alert.targetSectorId ?? ''),
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textTertiary,
           ),
         ),
+        if (alert.requiresAcknowledgment) ...[
+          const SizedBox(width: AppSpacing.md),
+          const Icon(Icons.check_circle_outline,
+              size: 14, color: AppColors.textTertiary),
+          const SizedBox(width: AppSpacing.xs),
+          const Text(
+            'Exige confirmação',
+            style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+          ),
+        ],
       ],
-    );
-  }
-}
-
-class _SectorChips extends StatelessWidget {
-  final List<String> sectors;
-  const _SectorChips({required this.sectors});
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
-      children: sectors
-          .take(4)
-          .map((s) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppRadius.full),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Text(
-                  s,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ))
-          .toList(),
     );
   }
 }
@@ -252,25 +163,27 @@ class _ActionRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: onResolve,
-            icon: const Icon(Icons.check_circle_outline, size: 14),
-            label: const Text('Resolver'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.resolved,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              textStyle:
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+        if (onResolve != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: onResolve,
+              icon: const Icon(Icons.check_circle_outline, size: 14),
+              label: const Text('Resolver'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.resolved,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                textStyle:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }

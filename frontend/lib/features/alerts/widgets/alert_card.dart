@@ -91,7 +91,7 @@ class AlertCard extends StatelessWidget {
 
           /// DESCRIÇÃO
           Text(
-            alert.description,
+            alert.message,
             style: const TextStyle(
               fontSize: 13,
               color: Colors.black87,

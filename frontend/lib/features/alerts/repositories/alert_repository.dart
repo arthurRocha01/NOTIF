@@ -8,35 +8,40 @@ class AlertRepository {
   AlertRepository({AlertService? service})
       : _service = service ?? AlertService();
 
-  Future<List<AlertModel>> fetchAllAlerts() => _service.getAlerts();
+  Future<List<AlertModel>> fetchNotifications({required String token}) =>
+      _service.getNotifications(token: token);
 
-  Future<List<AlertModel>> fetchActiveAlerts() => _service.getActiveAlerts();
-
-  Future<List<AlertModel>> fetchAlertHistory() => _service.getAlertHistory();
-
-  Future<AlertModel> fetchAlertById(String id) =>
-      _service.getAlertById(id);
-
-  Future<AlertModel> createAlert({
+  Future<AlertModel> createNotification({
+    required String token,
     required String title,
-    required String description,
+    required String message,
     required AlertLevel level,
-    required bool requiresConfirmation,
-    required List<String> sectors,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+    String? sectorId,
   }) =>
-      _service.createAlert(
+      _service.createNotification(
+        token: token,
         title: title,
-        description: description,
+        message: message,
         level: level,
-        requiresConfirmation: requiresConfirmation,
-        sectors: sectors,
+        slaMinutes: slaMinutes,
+        requiresAcknowledgment: requiresAcknowledgment,
+        sectorId: sectorId,
       );
 
-  Future<AlertModel> resolveAlert({
-    required String id,
-    required String resolutionMessage,
-  }) =>
-      _service.resolveAlert(id: id, resolutionMessage: resolutionMessage);
+  Future<List<AssignmentModel>> fetchMyAssignments({required String token}) =>
+      _service.getMyAssignments(token: token);
 
-  Future<void> markAsRead(String id) => _service.markAsRead(id);
+  Future<AssignmentModel> markAsViewed({
+    required String assignmentId,
+    required String token,
+  }) =>
+      _service.markAsViewed(assignmentId: assignmentId, token: token);
+
+  Future<AssignmentModel> acknowledge({
+    required String assignmentId,
+    required String token,
+  }) =>
+      _service.acknowledge(assignmentId: assignmentId, token: token);
 }

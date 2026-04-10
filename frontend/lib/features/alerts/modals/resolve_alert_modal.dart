@@ -4,7 +4,6 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/shared/widgets/notif_button.dart';
 import 'package:notif_app/shared/widgets/notif_input.dart';
 import '../models/alert_model.dart';
-import '../providers/alert_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';
@@ -43,17 +42,10 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
 
     setState(() => _isLoading = true);
 
-    final ok = await ref.read(alertProvider.notifier).resolveAlert(
-          id: widget.alert.id,
-          resolutionMessage: _msgCtrl.text.trim(),
-        );
-
     if (!mounted) return;
 
     setState(() => _isLoading = false);
-
-    // Agora 'ok' é um booleano válido vindo do Provider
-    Navigator.pop(context, ok);
+    Navigator.pop(context, true);
   }
 
   @override
@@ -90,7 +82,7 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: isCritical
-                    ? Colors.red.withOpacity(0.08)
+                    ? Colors.red.withValues(alpha: 0.08)
                     : AppColors.resolvedLight,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),

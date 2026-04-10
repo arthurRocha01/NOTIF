@@ -1,0 +1,262 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:notif_app/features/alerts/models/alert_model.dart';
+import 'package:notif_app/features/alerts/models/alert_state.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
+
+class MockAlertService extends Mock implements AlertService {}
+
+AlertModel _makeNotification({
+  String id = 'notif-1',
+  AlertLevel level = AlertLevel.high,
+}) =>
+    AlertModel(
+      id: id,
+      title: 'Teste',
+      message: 'Mensagem',
+      level: level,
+      slaMinutes: 60,
+      requiresAcknowledgment: false,
+      createdAt: DateTime(2026, 4, 9),
+    );
+
+AssignmentModel _makeAssignment({
+  String id = 'assign-1',
+  AlertLevel level = AlertLevel.high,
+  AssignmentStatus status = AssignmentStatus.pending,
+}) =>
+    AssignmentModel(
+      id: id,
+      userId: 'user-1',
+      notificationId: 'notif-1',
+      notificationLevel: level,
+      status: status,
+      createdAt: DateTime(2026, 4, 9),
+    );
+
+ProviderContainer _makeContainer(MockAlertService mock) {
+  return ProviderContainer(
+    overrides: [
+      alertServiceProvider.overrideWithValue(mock),
+    ],
+  );
+}
+
+void main() {
+  late MockAlertService mockService;
+
+  setUpAll(() {
+    registerFallbackValue(AlertLevel.low);
+  });
+
+  setUp(() {
+    mockService = MockAlertService();
+  });
+
+  group('AlertNotifier.loadNotifications', () {
+    test('carrega notificações e atualiza estado', () async {
+      when(() => mockService.getNotifications(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeNotification()]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      final state = container.read(alertProvider);
+      expect(state.notifications, hasLength(1));
+      expect(state.notifications.first.id, equals('notif-1'));
+      expect(state.isLoadingNotifications, isFalse);
+    });
+
+    test('isLoadingNotifications fica false após erro', () async {
+      when(() => mockService.getNotifications(token: any(named: 'token')))
+          .thenThrow(AlertServiceException('Erro'));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      expect(container.read(alertProvider).isLoadingNotifications, isFalse);
+    });
+  });
+
+  group('AlertNotifier.loadAssignments', () {
+    test('carrega assignments e atualiza estado', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      final state = container.read(alertProvider);
+      expect(state.assignments, hasLength(1));
+      expect(state.assignments.first.id, equals('assign-1'));
+      expect(state.isLoadingAssignments, isFalse);
+    });
+  });
+
+  group('AlertNotifier.isBlocked', () {
+    test('isBlocked true quando há assignment CRITICAL não acknowledged', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [
+                _makeAssignment(
+                  level: AlertLevel.critical,
+                  status: AssignmentStatus.pending,
+                ),
+              ]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      expect(container.read(alertProvider).isBlocked, isTrue);
+    });
+
+    test('isBlocked false quando CRITICAL está acknowledged', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [
+                _makeAssignment(
+                  level: AlertLevel.critical,
+                  status: AssignmentStatus.acknowledged,
+                ),
+              ]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      expect(container.read(alertProvider).isBlocked, isFalse);
+    });
+
+    test('isBlocked false quando não há assignments críticos', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [
+                _makeAssignment(
+                  level: AlertLevel.high,
+                  status: AssignmentStatus.pending,
+                ),
+              ]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      expect(container.read(alertProvider).isBlocked, isFalse);
+    });
+  });
+
+  group('AlertNotifier.acknowledge', () {
+    test('atualiza assignment local para ACKNOWLEDGED', () async {
+      final updated = _makeAssignment(status: AssignmentStatus.acknowledged);
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenAnswer((_) async => updated);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      final assignment = container
+          .read(alertProvider)
+          .assignments
+          .firstWhere((a) => a.id == 'assign-1');
+
+      expect(assignment.status, equals(AssignmentStatus.acknowledged));
+    });
+  });
+
+  group('AlertNotifier.createNotification', () {
+    test('cria notificação e a adiciona ao estado', () async {
+      final newNotif = _makeNotification(id: 'notif-new');
+
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenAnswer((_) async => newNotif);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final ok = await container.read(alertProvider.notifier).createNotification(
+            token: 'tok',
+            title: 'Novo',
+            message: 'Mensagem',
+            level: AlertLevel.high,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+          );
+
+      expect(ok, isTrue);
+      expect(
+        container.read(alertProvider).notifications.any((n) => n.id == 'notif-new'),
+        isTrue,
+      );
+    });
+
+    test('retorna false em falha', () async {
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenThrow(AlertServiceException('Erro'));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final ok = await container.read(alertProvider.notifier).createNotification(
+            token: 'tok',
+            title: 'Novo',
+            message: 'Mensagem',
+            level: AlertLevel.high,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+          );
+
+      expect(ok, isFalse);
+    });
+  });
+}

@@ -1,74 +1,171 @@
-// lib/features/alerts/services/alert_service.dart
-import '../models/alert_model.dart';
-import '../models/alert_status.dart';
-import '../../../core/api/api_client.dart';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:notif_app/features/alerts/models/alert_model.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
+
+class AlertServiceException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  AlertServiceException(this.message, {this.statusCode});
+
+  @override
+  String toString() => 'AlertServiceException: $message';
+}
 
 class AlertService {
-  Future<List<AlertModel>> getAlerts() async {
-    final response = await ApiClient.get('/alerts');
-    final list = response as List<dynamic>;
-    return list
-        .map((e) => AlertModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+  final http.Client _httpClient;
+  final String _baseUrl;
+
+  AlertService({
+    http.Client? httpClient,
+    String? baseUrl,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _baseUrl = baseUrl ?? 'http://localhost:3000';
+
+  Map<String, String> _headers(String token) => {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+  Future<List<AlertModel>> getNotifications({required String token}) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$_baseUrl/notifications'),
+        headers: _headers(token),
+      );
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((e) => AlertModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao buscar notificações',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
   }
 
-  Future<List<AlertModel>> getActiveAlerts() async {
-    final response = await ApiClient.get('/alerts/active');
-    final list = response as List<dynamic>;
-    return list
-        .map((e) => AlertModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<List<AlertModel>> getAlertHistory() async {
-    final response = await ApiClient.get('/alerts/history');
-    final list = response as List<dynamic>;
-    return list
-        .map((e) => AlertModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<AlertModel> getAlertById(String id) async {
-    final response = await ApiClient.get('/alerts/$id');
-    return AlertModel.fromJson(response as Map<String, dynamic>);
-  }
-
-  Future<AlertModel> createAlert({
+  Future<AlertModel> createNotification({
+    required String token,
     required String title,
-    required String description,
+    required String message,
     required AlertLevel level,
-    required bool requiresConfirmation,
-    required List<String> sectors,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+    String? sectorId,
   }) async {
-    final response = await ApiClient.post('/alerts', {
-      'title': title,
-      'description': description,
-      'level': level.name,
-      'requiresConfirmation': requiresConfirmation,
-      'sectors': sectors,
-    });
-    return AlertModel.fromJson(response as Map<String, dynamic>);
+    try {
+      final payload = <String, dynamic>{
+        'title': title,
+        'message': message,
+        'level': level.backendValue,
+        'slaMinutes': slaMinutes,
+        'requiresAcknowledgment':
+            level == AlertLevel.critical ? true : requiresAcknowledgment,
+        if (sectorId != null) 'sectorId': sectorId,
+      };
+
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/notifications'),
+        headers: _headers(token),
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return AlertModel.fromJson(
+            jsonDecode(response.body) as Map<String, dynamic>);
+      }
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao criar notificação',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
   }
 
-  Future<AlertModel> resolveAlert({
-    required String id,
-    required String resolutionMessage,
+  Future<List<AssignmentModel>> getMyAssignments({required String token}) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$_baseUrl/assignments'),
+        headers: _headers(token),
+      );
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao buscar atribuições',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
+  }
+
+  Future<AssignmentModel> markAsViewed({
+    required String assignmentId,
+    required String token,
   }) async {
-    final response = await ApiClient.patch('/alerts/$id/resolve', {
-      'resolutionMessage': resolutionMessage,
-    });
-    return AlertModel.fromJson(response as Map<String, dynamic>);
+    return _patchAssignmentStatus(
+      assignmentId: assignmentId,
+      token: token,
+      status: AssignmentStatus.viewed,
+    );
   }
 
-  Future<void> markAsRead(String id) async {
-    await ApiClient.post('/alerts/$id/read', {});
+  Future<AssignmentModel> acknowledge({
+    required String assignmentId,
+    required String token,
+  }) async {
+    return _patchAssignmentStatus(
+      assignmentId: assignmentId,
+      token: token,
+      status: AssignmentStatus.acknowledged,
+    );
   }
 
-  // 🔹 AGORA DENTRO DA CLASSE (O Copilot vai reconhecer aqui)
-  Future<void> notifyPendingSectors(List<String> sectors) async {
-    await ApiClient.post('/alerts/notify-pending', {
-      'sectors': sectors,
-      'message': 'Reforço de leitura solicitado pelo administrador.',
-    });
+  Future<AssignmentModel> _patchAssignmentStatus({
+    required String assignmentId,
+    required String token,
+    required AssignmentStatus status,
+  }) async {
+    try {
+      final response = await _httpClient.patch(
+        Uri.parse('$_baseUrl/assignments/$assignmentId'),
+        headers: _headers(token),
+        body: jsonEncode({'status': status.name.toUpperCase()}),
+      );
+      if (response.statusCode == 200) {
+        return AssignmentModel.fromJson(
+            jsonDecode(response.body) as Map<String, dynamic>);
+      }
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao atualizar atribuição',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
   }
-} // <--- A chave de fechamento da classe deve ser AQUI, depois de todos os métodos.
+
+  Map<String, dynamic>? _tryDecode(String body) {
+    try {
+      return body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : null;
+    } catch (_) {
+      return null;
+    }
+  }
+}

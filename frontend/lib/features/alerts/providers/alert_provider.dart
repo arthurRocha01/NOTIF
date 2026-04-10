@@ -1,113 +1,104 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/models/alert_model.dart';
+import 'package:notif_app/features/alerts/models/alert_state.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
-import '../models/alert_status.dart'; 
-import '../models/alert_state.dart'; 
 
-final alertServiceProvider = Provider((ref) => AlertService());
+final alertServiceProvider = Provider<AlertService>((ref) => AlertService());
 
 final alertProvider = StateNotifierProvider<AlertNotifier, AlertState>((ref) {
-  final service = ref.watch(alertServiceProvider);
-  return AlertNotifier(service);
+  return AlertNotifier(ref.read(alertServiceProvider));
 });
 
 class AlertNotifier extends StateNotifier<AlertState> {
   final AlertService _service;
 
-  AlertNotifier(this._service) : super(AlertState()) {
-    loadActiveAlerts();
-    loadHistory(); // Adicionado para carregar ambos ao iniciar
-  }
+  AlertNotifier(this._service) : super(const AlertState());
 
-  Future<void> notifyPendingSectors(List<String> sectors) async {
+  String get _token => ApiClient.currentToken;
+
+  Future<void> loadNotifications({String? token}) async {
+    state = state.copyWith(isLoadingNotifications: true);
     try {
-      await _service.notifyPendingSectors(sectors);
-      await loadActiveAlerts();
-    } catch (e) {
-      print("Erro ao notificar: $e");
+      final notifications =
+          await _service.getNotifications(token: token ?? _token);
+      state = state.copyWith(
+        notifications: notifications,
+        isLoadingNotifications: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingNotifications: false);
     }
   }
 
- Future<bool> createAlert({
-  required String title,
-  required String description,
-  required AlertLevel level,
-  required bool requiresConfirmation,
-  required List<String> sectors,
-}) async {
-  try {
-    // 1. Chama o service
-    final newAlert = await _service.createAlert(
-      title: title,
-      description: description,
-      level: level,
-      requiresConfirmation: level == AlertLevel.critical ? true : requiresConfirmation,
-      sectors: sectors,
-    );
-
-    // 2. Atualiza o estado criando uma NOVA instância da lista
-    // Isso garante que o ref.watch perceba a mudança de referência
-    state = state.copyWith(
-      activeAlerts: List.from([newAlert, ...state.activeAlerts]), 
-    );
-
-    // Opcional: Recarregar do banco para garantir sincronia total com IDs gerados no backend
-    // await loadActiveAlerts(); 
-
-    return true;
-  } catch (e) {
-    print("Erro ao criar alerta: $e");
-    return false;
+  Future<void> loadAssignments({String? token}) async {
+    state = state.copyWith(isLoadingAssignments: true);
+    try {
+      final assignments =
+          await _service.getMyAssignments(token: token ?? _token);
+      state = state.copyWith(
+        assignments: assignments,
+        isLoadingAssignments: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingAssignments: false);
+    }
   }
-}
 
-  Future<bool> resolveAlert({
-    required String id,
-    required String resolutionMessage,
+  Future<bool> createNotification({
+    required String title,
+    required String message,
+    required AlertLevel level,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+    String? sectorId,
+    String? token,
   }) async {
     try {
-      final updatedAlert = await _service.resolveAlert(
-        id: id,
-        resolutionMessage: resolutionMessage,
+      final created = await _service.createNotification(
+        token: token ?? _token,
+        title: title,
+        message: message,
+        level: level,
+        slaMinutes: slaMinutes,
+        requiresAcknowledgment: requiresAcknowledgment,
+        sectorId: sectorId,
       );
-
-      final newActive = state.activeAlerts.where((a) => a.id != id).toList();
-      final newHistory = [updatedAlert, ...state.history];
-
       state = state.copyWith(
-        activeAlerts: newActive,
-        history: newHistory,
+        notifications: [created, ...state.notifications],
       );
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
 
-  Future<void> loadActiveAlerts() async {
-    state = state.copyWith(isLoadingActive: true);
+  Future<void> markAsViewed({required String assignmentId, String? token}) async {
     try {
-      final alerts = await _service.getActiveAlerts();
-      state = state.copyWith(activeAlerts: alerts, isLoadingActive: false);
-    } catch (e) {
-      state = state.copyWith(isLoadingActive: false);
-    }
+      final updated = await _service.markAsViewed(
+        assignmentId: assignmentId,
+        token: token ?? _token,
+      );
+      _updateAssignment(updated);
+    } catch (_) {}
   }
 
-  Future<void> loadHistory() async {
-    state = state.copyWith(isLoadingHistory: true);
+  Future<void> acknowledge({required String assignmentId, String? token}) async {
     try {
-      final alerts = await _service.getAlertHistory();
-      state = state.copyWith(history: alerts, isLoadingHistory: false);
-    } catch (e) {
-      state = state.copyWith(isLoadingHistory: false);
-    }
+      final updated = await _service.acknowledge(
+        assignmentId: assignmentId,
+        token: token ?? _token,
+      );
+      _updateAssignment(updated);
+    } catch (_) {}
   }
 
-  void markAsRead(String id) {
+  void _updateAssignment(AssignmentModel updated) {
     state = state.copyWith(
-      // Nota: Certifique-se que seu AlertModel tem o método copyWith e o campo isRead
-      history: state.history.map((a) => a.id == id ? a.copyWith(isRead: true) : a).toList(),
-      activeAlerts: state.activeAlerts.map((a) => a.id == id ? a.copyWith(isRead: true) : a).toList(),
+      assignments: state.assignments
+          .map((a) => a.id == updated.id ? updated : a)
+          .toList(),
     );
   }
 }

@@ -37,12 +37,13 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
     setState(() => _isLoading = true);
 
     // Comunicados geralmente são alertas de nível "Normal" e sem confirmação obrigatória
-    final ok = await ref.read(alertProvider.notifier).createAlert(
+    final ok = await ref.read(alertProvider.notifier).createNotification(
           title: _titleCtrl.text.trim(),
-          description: _contentCtrl.text.trim(),
+          message: _contentCtrl.text.trim(),
           level: AlertLevel.low,
-          requiresConfirmation: false,
-          sectors: ['Todos'], // Ou lógica de setores específica
+          slaMinutes: 60,
+          requiresAcknowledgment: false,
+          sectorId: null, // global
         );
 
     if (!mounted) return;

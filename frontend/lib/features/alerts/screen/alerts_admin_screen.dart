@@ -36,10 +36,12 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
 
   List<AlertModel> _getFilteredAlerts(List<AlertModel> alerts) {
     return alerts.where((alert) {
-      final matchesSector = _selectedSector == 'Todos' || (alert.sectors.contains(_selectedSector) ?? false);
+      final matchesSector = _selectedSector == 'Todos' ||
+          alert.isGlobal ||
+          alert.targetSectorId == _selectedSector;
       final query = _searchCtrl.text.toLowerCase();
-      final matchesSearch = alert.title.toLowerCase().contains(query) || 
-                           alert.description.toLowerCase().contains(query);
+      final matchesSearch = alert.title.toLowerCase().contains(query) ||
+          alert.message.toLowerCase().contains(query);
       return matchesSector && matchesSearch;
     }).toList();
   }
@@ -71,8 +73,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
                 unselectedLabelColor: Colors.grey,
                 indicatorSize: TabBarIndicatorSize.label,
                 tabs: [
-                  _buildTabHeader("Ativos", state.activeAlerts.length, const Color(0xFFB91C1C)),
-                  _buildTabHeader("Histórico", state.history.length, Colors.grey),
+                  _buildTabHeader("Notificações", state.notifications.length, const Color(0xFFB91C1C)),
+                  _buildTabHeader("Histórico", 0, Colors.grey),
                 ],
               ),
             ),
@@ -81,8 +83,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildListContent(state.activeAlerts, state.isLoadingActive, isHistory: false),
-            _buildListContent(state.history, state.isLoadingHistory, isHistory: true),
+            _buildListContent(state.notifications, state.isLoadingNotifications, isHistory: false),
+            _buildListContent(const [], false, isHistory: true),
           ],
         ),
       ),
@@ -112,9 +114,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
     final filtered = _getFilteredAlerts(alerts);
 
     return RefreshIndicator(
-      onRefresh: () => isHistory 
-          ? ref.read(alertProvider.notifier).loadHistory() 
-          : ref.read(alertProvider.notifier).loadActiveAlerts(),
+      onRefresh: () => ref.read(alertProvider.notifier).loadNotifications(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
@@ -174,7 +174,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
                 selected: _selectedSector == s,
                 onSelected: (v) => setState(() => _selectedSector = s),
                 backgroundColor: Colors.white,
-                selectedColor: const Color(0xFF3B82F6).withOpacity(0.1),
+                selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                 side: BorderSide(color: _selectedSector == s ? const Color(0xFF3B82F6) : Colors.transparent),
                 labelStyle: TextStyle(
                   color: _selectedSector == s ? const Color(0xFF3B82F6) : Colors.grey.shade700,

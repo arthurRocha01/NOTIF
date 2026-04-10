@@ -33,7 +33,7 @@ class AlertHistoryCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  alert.description,
+                  alert.message,
                   style: const TextStyle(fontSize: 12),
                 ),
               ],

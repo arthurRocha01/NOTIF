@@ -1,56 +1,132 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../models/alert_model.dart';
+import '../models/alert_status.dart';
+import '../providers/alert_provider.dart';
 
-class AlertUserScreen extends StatelessWidget {
+class AlertUserScreen extends ConsumerStatefulWidget {
   const AlertUserScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fundo suave (Heurística #8: Estética e design minimalista)
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          _buildSectionHeader('Recentes'),
-          _buildAlertList(recent: true),
-          _buildSectionHeader('Anteriores'),
-          _buildAlertList(recent: false),
-        ],
-      ),
-    );
+  ConsumerState<AlertUserScreen> createState() => _AlertUserScreenState();
+}
+
+class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(alertProvider.notifier).loadAssignments();
+    });
   }
 
-  Widget _buildAppBar() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Meus Alertas',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(alertProvider);
+    final assignments = state.assignments;
+    final isLoading = state.isLoadingAssignments;
+
+    final pending = assignments
+        .where((a) =>
+            a.status == AssignmentStatus.pending ||
+            a.status == AssignmentStatus.viewed ||
+            a.status == AssignmentStatus.overdue)
+        .toList();
+
+    final done = assignments
+        .where((a) => a.status == AssignmentStatus.acknowledged)
+        .toList();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Minhas Notificações',
+                      style: GoogleFonts.inter(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Acompanhe os avisos do seu setor.',
+                      style: GoogleFonts.inter(
+                          fontSize: 14, color: const Color(0xFF64748B)),
+                    ),
+                    if (state.isBlocked) ...[
+                      const SizedBox(height: 12),
+                      _BlockingBanner(),
+                    ],
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Acompanhe os avisos e notificações do seu setor.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-              ),
-            ),
+            if (isLoading && assignments.isEmpty)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else ...[
+              if (pending.isNotEmpty) ...[
+                _sectionHeader('Pendentes (${pending.length})'),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _AssignmentCard(
+                      assignment: pending[i],
+                      onAcknowledge: pending[i].isCritical ||
+                              pending[i].notificationLevel ==
+                                  AlertLevel.high
+                          ? () => ref
+                              .read(alertProvider.notifier)
+                              .acknowledge(assignmentId: pending[i].id)
+                          : null,
+                    ),
+                    childCount: pending.length,
+                  ),
+                ),
+              ],
+              if (done.isNotEmpty) ...[
+                _sectionHeader('Confirmados'),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _AssignmentCard(assignment: done[i]),
+                    childCount: done.length,
+                  ),
+                ),
+              ],
+              if (assignments.isEmpty)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inbox_outlined,
+                            size: 48, color: Colors.grey),
+                        SizedBox(height: 12),
+                        Text('Nenhuma notificação',
+                            style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _sectionHeader(String title) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
@@ -66,80 +142,55 @@ class AlertUserScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildAlertList({required bool recent}) {
-    // Mock de dados (Heurística #1: Status do sistema através de cores/ícones)
-    final alerts = recent 
-      ? [
-          _AlertData(
-            title: 'Manutenção Preventiva',
-            desc: 'O elevador do bloco B ficará indisponível das 14h às 16h.',
-            time: '10 min atrás',
-            type: AlertType.info,
-            isRead: false,
+class _BlockingBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEE2E2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.4)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.block, color: Color(0xFFDC2626), size: 20),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Você possui notificações críticas pendentes. Confirme a ciência para continuar.',
+              style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFFDC2626),
+                  fontWeight: FontWeight.w500),
+            ),
           ),
-          _AlertData(
-            title: 'Urgente: Vazamento',
-            desc: 'Detectado vazamento no 3º andar. Equipe técnica a caminho.',
-            time: '1h atrás',
-            type: AlertType.warning,
-            isRead: false,
-          ),
-        ]
-      : [
-          _AlertData(
-            title: 'Comunicado Geral',
-            desc: 'Novas diretrizes de segurança de dados publicadas no portal.',
-            time: 'Ontem',
-            type: AlertType.success,
-            isRead: true,
-          ),
-        ];
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => _AlertCard(data: alerts[index]),
-        childCount: alerts.length,
+        ],
       ),
     );
   }
 }
 
-enum AlertType { info, warning, success }
+class _AssignmentCard extends StatelessWidget {
+  final AssignmentModel assignment;
+  final VoidCallback? onAcknowledge;
 
-class _AlertData {
-  final String title, desc, time;
-  final AlertType type;
-  final bool isRead;
-
-  _AlertData({
-    required this.title,
-    required this.desc,
-    required this.time,
-    required this.type,
-    required this.isRead,
-  });
-}
-
-class _AlertCard extends StatelessWidget {
-  final _AlertData data;
-
-  const _AlertCard({required this.data});
+  const _AssignmentCard({required this.assignment, this.onAcknowledge});
 
   @override
   Widget build(BuildContext context) {
-    // Definição de cores baseada na Heurística #4: Consistência e Padrões
-    final colorMap = {
-      AlertType.info: const Color(0xFF3B82F6),
-      AlertType.warning: const Color(0xFFF59E0B),
-      AlertType.success: const Color(0xFF10B981),
-    };
+    final status = assignment.status;
+    final level = assignment.notificationLevel;
+    final isOverdue = status == AssignmentStatus.overdue;
+    final isDone = status == AssignmentStatus.acknowledged;
 
-    final iconMap = {
-      AlertType.info: LucideIcons.info,
-      AlertType.warning: LucideIcons.alertTriangle,
-      AlertType.success: LucideIcons.checkCircle,
-    };
+    final Color borderColor = isOverdue
+        ? const Color(0xFFDC2626)
+        : isDone
+            ? const Color(0xFF10B981)
+            : level.color;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -147,82 +198,137 @@ class _AlertCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: data.isRead ? Colors.transparent : colorMap[data.type]!.withOpacity(0.3),
+          color: isDone ? Colors.transparent : borderColor.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {}, // Heurística #7: Flexibilidade e eficiência de uso
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: colorMap[data.type]!.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(iconMap[data.type], color: colorMap[data.type], size: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: level.backgroundColor,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          data.title,
+              child: Icon(level.icon, color: level.color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          assignment.notificationId,
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 14,
                             color: const Color(0xFF1E293B),
                           ),
                         ),
-                        Text(
-                          data.time,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      _StatusChip(status: status),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    level.label,
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF64748B)),
+                  ),
+                  if (assignment.dueAt != null && !isDone) ...[
                     const SizedBox(height: 4),
                     Text(
-                      data.desc,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: const Color(0xFF64748B),
-                        height: 1.4,
+                      'Prazo: ${_formatDue(assignment.dueAt!)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isOverdue
+                            ? const Color(0xFFDC2626)
+                            : const Color(0xFF94A3B8),
+                        fontWeight: isOverdue
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
+                  if (onAcknowledge != null) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: onAcknowledge,
+                        icon: const Icon(Icons.check, size: 16),
+                        label: const Text('Confirmar ciência',
+                            style: TextStyle(fontSize: 13)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: level.color,
+                          side: BorderSide(color: level.color),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (!isDone)
+              Container(
+                margin: const EdgeInsets.only(left: 8, top: 4),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: borderColor,
+                  shape: BoxShape.circle,
                 ),
               ),
-              if (!data.isRead)
-                Container(
-                  margin: const EdgeInsets.only(left: 8, top: 4),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: colorMap[data.type],
-                    shape: BoxShape.circle,
-                  ),
-                ),
-            ],
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDue(DateTime due) {
+    final diff = due.difference(DateTime.now());
+    if (diff.isNegative) return 'Vencido';
+    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
+    if (diff.inHours < 24) return 'em ${diff.inHours}h';
+    return 'em ${diff.inDays}d';
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final AssignmentStatus status;
+
+  const _StatusChip({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: status.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status.label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: status.color,
         ),
       ),
     );

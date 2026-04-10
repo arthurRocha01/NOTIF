@@ -1,74 +1,54 @@
-import 'alert_status.dart'; // Certifique-se que o caminho está correto
+import 'alert_status.dart';
 
 class AlertModel {
   final String id;
   final String title;
-  final String description;
+  final String message;
   final AlertLevel level;
-  final AlertStatus status;
+  final int slaMinutes;
+  final bool requiresAcknowledgment;
+  final String? targetSectorId;
+  final String? authorId;
   final DateTime createdAt;
-  final DateTime? resolvedAt;
-  final String? resolutionMessage;
-  final List<String> sectors;
-  final bool requiresConfirmation;
-  final bool isRead;           
-  final int readCount;         
-  final int totalUsers;        
-  final double readRate;       
 
   AlertModel({
     required this.id,
     required this.title,
-    required this.description,
+    required this.message,
     required this.level,
-    this.status = AlertStatus.active,
+    required this.slaMinutes,
+    required this.requiresAcknowledgment,
+    this.targetSectorId,
+    this.authorId,
     required this.createdAt,
-    this.resolvedAt,
-    this.resolutionMessage,
-    this.sectors = const [],
-    this.requiresConfirmation = false,
-    this.isRead = false,
-    this.readCount = 0,
-    this.totalUsers = 0,
-    this.readRate = 0.0,
   });
 
-  bool get effectiveRequiresConfirmation => 
-    level == AlertLevel.critical ? true : requiresConfirmation;
+  bool get isGlobal => targetSectorId == null;
 
-  bool get isActive => status == AlertStatus.active;
+  bool get effectiveRequiresAcknowledgment =>
+      level == AlertLevel.critical ? true : requiresAcknowledgment;
 
   AlertModel copyWith({
     String? id,
     String? title,
-    String? description,
+    String? message,
     AlertLevel? level,
-    AlertStatus? status,
+    int? slaMinutes,
+    bool? requiresAcknowledgment,
+    String? targetSectorId,
+    String? authorId,
     DateTime? createdAt,
-    DateTime? resolvedAt,
-    String? resolutionMessage,
-    List<String>? sectors,
-    bool? requiresConfirmation,
-    bool? isRead,
-    int? readCount,
-    int? totalUsers,
-    double? readRate,
   }) {
     return AlertModel(
       id: id ?? this.id,
       title: title ?? this.title,
-      description: description ?? this.description,
+      message: message ?? this.message,
       level: level ?? this.level,
-      status: status ?? this.status,
+      slaMinutes: slaMinutes ?? this.slaMinutes,
+      requiresAcknowledgment: requiresAcknowledgment ?? this.requiresAcknowledgment,
+      targetSectorId: targetSectorId ?? this.targetSectorId,
+      authorId: authorId ?? this.authorId,
       createdAt: createdAt ?? this.createdAt,
-      resolvedAt: resolvedAt ?? this.resolvedAt,
-      resolutionMessage: resolutionMessage ?? this.resolutionMessage,
-      sectors: sectors ?? this.sectors,
-      requiresConfirmation: requiresConfirmation ?? this.requiresConfirmation,
-      isRead: isRead ?? this.isRead,
-      readCount: readCount ?? this.readCount,
-      totalUsers: totalUsers ?? this.totalUsers,
-      readRate: readRate ?? this.readRate,
     );
   }
 
@@ -76,34 +56,108 @@ class AlertModel {
     return AlertModel(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      level: _parseLevel(json['level']),
-      status: _parseStatus(json['status']),
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      message: json['message'] ?? '',
+      level: AlertLevel.fromBackend(json['level']?.toString()),
+      slaMinutes: json['slaMinutes'] as int? ?? 0,
+      requiresAcknowledgment: json['requiresAcknowledgment'] as bool? ?? false,
+      targetSectorId: json['targetSectorId'] as String?,
+      authorId: json['authorId'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
-      resolvedAt: json['resolvedAt'] != null ? DateTime.parse(json['resolvedAt']) : null,
-      resolutionMessage: json['resolutionMessage'],
-      sectors: (json['sectors'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      requiresConfirmation: json['requiresConfirmation'] ?? false,
-      isRead: json['isRead'] ?? false,
-      readCount: json['readCount'] ?? 0,
-      totalUsers: json['totalUsers'] ?? 0,
-      readRate: (json['readRate'] ?? 0).toDouble(),
     );
   }
 
-  static AlertLevel _parseLevel(dynamic val) {
-    return AlertLevel.values.firstWhere(
-      (e) => e.name == val.toString(), 
-      orElse: () => AlertLevel.low
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'message': message,
+      'level': level.backendValue,
+      'slaMinutes': slaMinutes,
+      'requiresAcknowledgment': requiresAcknowledgment,
+      if (targetSectorId != null) 'sectorId': targetSectorId,
+    };
+  }
+}
+
+class AssignmentModel {
+  final String id;
+  final String userId;
+  final String notificationId;
+  final AlertLevel notificationLevel;
+  final AssignmentStatus status;
+  final DateTime createdAt;
+  final DateTime? dueAt;
+  final DateTime? deliveredAt;
+  final DateTime? viewedAt;
+  final DateTime? acknowledgedAt;
+
+  AssignmentModel({
+    required this.id,
+    required this.userId,
+    required this.notificationId,
+    required this.notificationLevel,
+    required this.status,
+    required this.createdAt,
+    this.dueAt,
+    this.deliveredAt,
+    this.viewedAt,
+    this.acknowledgedAt,
+  });
+
+  bool get isCritical => notificationLevel == AlertLevel.critical;
+
+  bool get isBlocking =>
+      isCritical && status != AssignmentStatus.acknowledged;
+
+  bool get isOverdue => status == AssignmentStatus.overdue;
+
+  AssignmentModel copyWith({
+    String? id,
+    String? userId,
+    String? notificationId,
+    AlertLevel? notificationLevel,
+    AssignmentStatus? status,
+    DateTime? createdAt,
+    DateTime? dueAt,
+    DateTime? deliveredAt,
+    DateTime? viewedAt,
+    DateTime? acknowledgedAt,
+  }) {
+    return AssignmentModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      notificationId: notificationId ?? this.notificationId,
+      notificationLevel: notificationLevel ?? this.notificationLevel,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      dueAt: dueAt ?? this.dueAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
+      viewedAt: viewedAt ?? this.viewedAt,
+      acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
     );
   }
 
-  static AlertStatus _parseStatus(dynamic val) {
-    return AlertStatus.values.firstWhere(
-      (e) => e.name == val.toString(), 
-      orElse: () => AlertStatus.active
+  factory AssignmentModel.fromJson(Map<String, dynamic> json) {
+    return AssignmentModel(
+      id: json['id']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      notificationId: json['notificationId']?.toString() ?? '',
+      notificationLevel:
+          AlertLevel.fromBackend(json['notificationLevel']?.toString()),
+      status: AssignmentStatus.fromBackend(json['status']?.toString()),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
+      dueAt: json['dueAt'] != null ? DateTime.parse(json['dueAt']) : null,
+      deliveredAt: json['deliveredAt'] != null
+          ? DateTime.parse(json['deliveredAt'])
+          : null,
+      viewedAt:
+          json['viewedAt'] != null ? DateTime.parse(json['viewedAt']) : null,
+      acknowledgedAt: json['acknowledgedAt'] != null
+          ? DateTime.parse(json['acknowledgedAt'])
+          : null,
     );
   }
 }
