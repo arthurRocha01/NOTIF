@@ -6,6 +6,8 @@ import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
+import 'package:notif_app/features/sectors/models/sector_model.dart';
+import 'package:notif_app/features/sectors/services/sector_service.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
 class MockAuthService extends Mock implements AuthService {}
@@ -19,6 +21,11 @@ class _FakeTokenStorage extends Fake implements TokenStorage {
   @override Future<void> clearAll() async {}
 }
 
+class _FakeSectorService extends Fake implements SectorService {
+  @override
+  Future<List<SectorModel>> getSectors({required String token}) async => [];
+}
+
 // Widget de suporte que abre o drawer automaticamente
 Widget _makeTestable({UserModel? user}) {
   final mockService = MockAuthService();
@@ -27,7 +34,7 @@ Widget _makeTestable({UserModel? user}) {
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final notifier = AuthNotifier(mockService, _FakeTokenStorage());
+        final notifier = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService());
         if (user != null) {
           // ignore: invalid_use_of_protected_member
           notifier.state = user;
@@ -147,7 +154,7 @@ void main() {
           overrides: [
             authServiceProvider.overrideWithValue(MockAuthService()),
             authProvider.overrideWith((ref) {
-              final n = AuthNotifier(MockAuthService(), _FakeTokenStorage());
+              final n = AuthNotifier(MockAuthService(), _FakeTokenStorage(), _FakeSectorService());
               // ignore: invalid_use_of_protected_member
               n.state = supervisor;
               return n;
