@@ -19,7 +19,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
   String get _token => ApiClient.currentToken;
 
   Future<void> loadNotifications({String? token}) async {
-    state = state.copyWith(isLoadingNotifications: true);
+    state = state.copyWith(isLoadingNotifications: true, clearError: true);
     try {
       final notifications =
           await _service.getNotifications(token: token ?? _token);
@@ -27,13 +27,27 @@ class AlertNotifier extends StateNotifier<AlertState> {
         notifications: notifications,
         isLoadingNotifications: false,
       );
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(
+        isLoadingNotifications: false,
+        errorMessage: e.message,
+      );
+    } on AlertServiceException catch (e) {
+      state = state.copyWith(
+        isLoadingNotifications: false,
+        errorMessage: e.message,
+      );
     } catch (_) {
-      state = state.copyWith(isLoadingNotifications: false);
+      state = state.copyWith(
+        isLoadingNotifications: false,
+        errorMessage: 'Erro inesperado. Tente novamente.',
+      );
     }
   }
 
   Future<void> loadAssignments({String? token}) async {
-    state = state.copyWith(isLoadingAssignments: true);
+    state = state.copyWith(isLoadingAssignments: true, clearError: true);
     try {
       final assignments =
           await _service.getMyAssignments(token: token ?? _token);
@@ -41,8 +55,22 @@ class AlertNotifier extends StateNotifier<AlertState> {
         assignments: assignments,
         isLoadingAssignments: false,
       );
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(
+        isLoadingAssignments: false,
+        errorMessage: e.message,
+      );
+    } on AlertServiceException catch (e) {
+      state = state.copyWith(
+        isLoadingAssignments: false,
+        errorMessage: e.message,
+      );
     } catch (_) {
-      state = state.copyWith(isLoadingAssignments: false);
+      state = state.copyWith(
+        isLoadingAssignments: false,
+        errorMessage: 'Erro inesperado. Tente novamente.',
+      );
     }
   }
 
@@ -69,28 +97,37 @@ class AlertNotifier extends StateNotifier<AlertState> {
         notifications: [created, ...state.notifications],
       );
       return true;
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      return false;
     } catch (_) {
       return false;
     }
   }
 
-  Future<void> markAsViewed({required String assignmentId, String? token}) async {
+  Future<void> markAsViewed(
+      {required String assignmentId, String? token}) async {
     try {
       final updated = await _service.markAsViewed(
         assignmentId: assignmentId,
         token: token ?? _token,
       );
       _updateAssignment(updated);
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
   }
 
-  Future<void> acknowledge({required String assignmentId, String? token}) async {
+  Future<void> acknowledge(
+      {required String assignmentId, String? token}) async {
     try {
       final updated = await _service.acknowledge(
         assignmentId: assignmentId,
         token: token ?? _token,
       );
       _updateAssignment(updated);
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
   }
 

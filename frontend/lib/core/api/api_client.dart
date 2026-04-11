@@ -14,6 +14,7 @@ class ApiException implements Exception {
 class ApiClient {
   static const String baseUrl = 'http://localhost:3000';
   static String? _authToken;
+  static void Function()? onUnauthorized;
 
   static void setToken(String token) => _authToken = token;
   static void clearToken() => _authToken = null;
@@ -79,6 +80,9 @@ class ApiClient {
     final body = response.body.isNotEmpty ? jsonDecode(response.body) : null;
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
+    }
+    if (response.statusCode == 401) {
+      onUnauthorized?.call();
     }
     final message = body?['message'] ?? 'Erro desconhecido';
     throw ApiException(message, statusCode: response.statusCode);

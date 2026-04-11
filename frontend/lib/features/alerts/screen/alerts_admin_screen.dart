@@ -25,6 +25,9 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(alertProvider.notifier).loadNotifications();
+    });
   }
 
   @override
@@ -49,6 +52,17 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> with Single
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(alertProvider);
+
+    ref.listen<String?>(
+      alertProvider.select((s) => s.errorMessage),
+      (_, error) {
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+          );
+        }
+      },
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),

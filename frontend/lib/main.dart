@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
@@ -19,6 +20,11 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final init = ref.watch(authInitProvider);
     final user = ref.watch(authProvider);
+
+    // Registra callback de logout automático ao receber 401
+    ApiClient.onUnauthorized = () {
+      ref.read(authProvider.notifier).logout();
+    };
 
     final theme = ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F172A)),

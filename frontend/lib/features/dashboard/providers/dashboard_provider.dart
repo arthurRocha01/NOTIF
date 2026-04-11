@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../alerts/models/alert_status.dart';
 import '../../alerts/providers/alert_provider.dart';
 
-/// 1. DEFINIÇÃO DA CLASSE (O que o Dashboard precisa segurar)
 class DashboardData {
   final String topSector;
   final double topSectorRate;
@@ -16,57 +16,66 @@ class DashboardData {
   });
 }
 
-/// 2. O PROVIDER (A lógica que transforma Alertas em Dados de Dashboard)
 final dashboardProvider = Provider<DashboardData>((ref) {
-  // Observa o estado dos alertas (unificando ativos e histórico)
   final alertState = ref.watch(alertProvider);
-  final allAlerts = [...alertState.activeAlerts, ...alertState.history];
+  final notifications = alertState.notifications;
+  final assignments = alertState.assignments;
 
-  if (allAlerts.isEmpty) {
+  if (notifications.isEmpty || assignments.isEmpty) {
     return DashboardData(
-      topSector: "Nenhum",
+      topSector: 'Nenhum',
       topSectorRate: 0.0,
       sectorRates: {},
       attentionSectors: [],
     );
   }
 
-  // Mapa para acumular as taxas de leitura por setor
-  Map<String, List<double>> ratesBySector = {};
+  // notificationId → targetSectorId (null = global, ignorado no cálculo)
+  final sectorById = {
+    for (final n in notifications)
+      if (n.targetSectorId != null) n.id: n.targetSectorId!,
+  };
 
-  for (var alert in allAlerts) {
-    for (var sector in alert.sectors) {
-      ratesBySector.putIfAbsent(sector, () => []);
-      ratesBySector[sector]!.add(alert.readRate);
+  // setor → { total, acknowledged }
+  final Map<String, int> total = {};
+  final Map<String, int> acknowledged = {};
+
+  for (final assignment in assignments) {
+    final sectorId = sectorById[assignment.notificationId];
+    if (sectorId == null) continue; // notificação global → ignora
+
+    total[sectorId] = (total[sectorId] ?? 0) + 1;
+    if (assignment.status == AssignmentStatus.acknowledged) {
+      acknowledged[sectorId] = (acknowledged[sectorId] ?? 0) + 1;
     }
   }
 
-  // Calcula a média de leitura de cada setor
-  Map<String, double> finalRates = {};
-  ratesBySector.forEach((sector, rates) {
-    if (rates.isNotEmpty) {
-      final sum = rates.reduce((a, b) => a + b);
-      finalRates[sector] = sum / rates.length;
-    }
-  });
+  if (total.isEmpty) {
+    return DashboardData(
+      topSector: 'Nenhum',
+      topSectorRate: 0.0,
+      sectorRates: {},
+      attentionSectors: [],
+    );
+  }
 
-  // Identifica o melhor setor (Top Sector)
-  var sortedSectors = finalRates.entries.toList()
+  final sectorRates = {
+    for (final entry in total.entries)
+      entry.key: (acknowledged[entry.key] ?? 0) / entry.value,
+  };
+
+  final sorted = sectorRates.entries.toList()
     ..sort((a, b) => b.value.compareTo(a.value));
-  
-  String topSector = sortedSectors.isNotEmpty ? sortedSectors.first.key : "Nenhum";
-  double topRate = sortedSectors.isNotEmpty ? sortedSectors.first.value : 0.0;
 
-  // Filtra setores com adesão crítica (abaixo de 60%)
-  List<String> attention = finalRates.entries
-      .where((e) => e.value < 0.6)
-      .map((e) => e.key)
-      .toList();
+  final topSector = sorted.first.key;
+  final topRate = sorted.first.value;
+  final attentionSectors =
+      sectorRates.entries.where((e) => e.value < 0.6).map((e) => e.key).toList();
 
   return DashboardData(
     topSector: topSector,
     topSectorRate: topRate,
-    sectorRates: finalRates,
-    attentionSectors: attention,
+    sectorRates: sectorRates,
+    attentionSectors: attentionSectors,
   );
 });

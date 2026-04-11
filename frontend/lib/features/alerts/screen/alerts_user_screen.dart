@@ -16,14 +16,38 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(alertProvider.notifier).loadAssignments();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final notifier = ref.read(alertProvider.notifier);
+      await notifier.loadAssignments();
+      _markPendingAsViewed();
     });
+  }
+
+  void _markPendingAsViewed() {
+    final pending = ref
+        .read(alertProvider)
+        .assignments
+        .where((a) => a.status == AssignmentStatus.pending)
+        .toList();
+    for (final a in pending) {
+      ref.read(alertProvider.notifier).markAsViewed(assignmentId: a.id);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(alertProvider);
+
+    ref.listen<String?>(
+      alertProvider.select((s) => s.errorMessage),
+      (_, error) {
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+          );
+        }
+      },
+    );
     final assignments = state.assignments;
     final isLoading = state.isLoadingAssignments;
 

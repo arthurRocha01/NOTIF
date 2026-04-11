@@ -6,7 +6,6 @@ import '../../alerts/providers/alert_provider.dart';
 import '../widgets/highlight_card.dart';
 import '../widgets/sector_progress_bar.dart';
 
-
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -18,67 +17,78 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("Gestão de Notificações", style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Gestão de Notificações",
+          style: TextStyle(
+              color: Color(0xFF1E293B), fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF1E293B)),
-            onPressed: () => ref.read(alertProvider.notifier).loadActiveAlerts(),
+            onPressed: () =>
+                ref.read(alertProvider.notifier).loadNotifications(),
           )
         ],
       ),
-      body: alertState.isLoadingActive 
-        ? const Center(child: CircularProgressIndicator()) 
-        : RefreshIndicator(
-            onRefresh: () => ref.read(alertProvider.notifier).loadActiveAlerts(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Painel de gestão", 
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-                  const Text("Métricas em tempo real", style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 24),
-
-                  // 1. Card de Destaque
-                  HighlightCard(sector: stats.topSector, rate: stats.topSectorRate),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // 2. Card de Barras de Progresso
-                  _buildSectionCard(
-                    title: "Taxa de leitura por setor",
-                    child: stats.sectorRates.isEmpty 
-                      ? const Text("Nenhum dado disponível")
-                      : Column(
-                          children: stats.sectorRates.entries.map((e) => 
-                            SectorProgressBar(label: e.key, value: e.value)).toList(),
-                        ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // 3. Card de Atenção e Ação
-                  AttentionCard(
-                    sectors: stats.attentionSectors,
-                    onNotify: () {
-                      ref.read(alertProvider.notifier).notifyPendingSectors(stats.attentionSectors);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Comandos de reforço enviados para a API!")),
-                      );
-                    },
-                  ),
-                ],
+      body: alertState.isLoadingNotifications
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(alertProvider.notifier).loadNotifications(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Painel de gestão",
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B)),
+                    ),
+                    const Text(
+                      "Métricas em tempo real",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    HighlightCard(
+                        sector: stats.topSector, rate: stats.topSectorRate),
+                    const SizedBox(height: 20),
+                    _buildSectionCard(
+                      title: "Taxa de adesão por setor",
+                      child: stats.sectorRates.isEmpty
+                          ? const Text("Nenhum dado disponível")
+                          : Column(
+                              children: stats.sectorRates.entries
+                                  .map((e) => SectorProgressBar(
+                                      label: e.key, value: e.value))
+                                  .toList(),
+                            ),
+                    ),
+                    const SizedBox(height: 20),
+                    AttentionCard(
+                      sectors: stats.attentionSectors,
+                      onNotify: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  "Funcionalidade disponível em breve.")),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
     );
   }
 
-  Widget _buildSectionCard({required String title, required Widget child}) {
+  Widget _buildSectionCard(
+      {required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -89,7 +99,9 @@ class DashboardScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 16),
           child,
         ],
