@@ -6,11 +6,25 @@ import '../../alerts/providers/alert_provider.dart';
 import '../widgets/highlight_card.dart';
 import '../widgets/sector_progress_bar.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(alertProvider.notifier).loadNotifications();
+      ref.read(alertProvider.notifier).loadAssignments();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final stats = ref.watch(dashboardProvider);
     final alertState = ref.watch(alertProvider);
 
@@ -27,16 +41,20 @@ class DashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF1E293B)),
-            onPressed: () =>
-                ref.read(alertProvider.notifier).loadNotifications(),
+            onPressed: () {
+              ref.read(alertProvider.notifier).loadNotifications();
+              ref.read(alertProvider.notifier).loadAssignments();
+            },
           )
         ],
       ),
-      body: alertState.isLoadingNotifications
+      body: (alertState.isLoadingNotifications || alertState.isLoadingAssignments)
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(alertProvider.notifier).loadNotifications(),
+              onRefresh: () async {
+                ref.read(alertProvider.notifier).loadNotifications();
+                ref.read(alertProvider.notifier).loadAssignments();
+              },
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 physics: const AlwaysScrollableScrollPhysics(),

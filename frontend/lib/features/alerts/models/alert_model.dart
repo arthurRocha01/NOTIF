@@ -84,6 +84,8 @@ class AssignmentModel {
   final String id;
   final String userId;
   final String notificationId;
+  final String? notificationTitle;
+  final String? notificationMessage;
   final AlertLevel notificationLevel;
   final AssignmentStatus status;
   final DateTime createdAt;
@@ -96,6 +98,8 @@ class AssignmentModel {
     required this.id,
     required this.userId,
     required this.notificationId,
+    this.notificationTitle,
+    this.notificationMessage,
     required this.notificationLevel,
     required this.status,
     required this.createdAt,
@@ -116,6 +120,8 @@ class AssignmentModel {
     String? id,
     String? userId,
     String? notificationId,
+    String? notificationTitle,
+    String? notificationMessage,
     AlertLevel? notificationLevel,
     AssignmentStatus? status,
     DateTime? createdAt,
@@ -128,6 +134,8 @@ class AssignmentModel {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       notificationId: notificationId ?? this.notificationId,
+      notificationTitle: notificationTitle ?? this.notificationTitle,
+      notificationMessage: notificationMessage ?? this.notificationMessage,
       notificationLevel: notificationLevel ?? this.notificationLevel,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -143,6 +151,8 @@ class AssignmentModel {
       id: json['id']?.toString() ?? '',
       userId: json['userId']?.toString() ?? '',
       notificationId: json['notificationId']?.toString() ?? '',
+      notificationTitle: json['notificationTitle'] as String?,
+      notificationMessage: json['notificationMessage'] as String?,
       notificationLevel:
           AlertLevel.fromBackend(json['notificationLevel']?.toString()),
       status: AssignmentStatus.fromBackend(json['status']?.toString()),

@@ -26,7 +26,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 1, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(alertProvider.notifier).loadNotifications();
       ref.read(sectorProvider.notifier).loadSectors();
@@ -98,7 +98,6 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                 tabs: [
                   _buildTabHeader('Notificações',
                       state.notifications.length, const Color(0xFFB91C1C)),
-                  _buildTabHeader('Histórico', 0, Colors.grey),
                 ],
               ),
             ),
@@ -111,9 +110,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
               state.notifications,
               state.isLoadingNotifications,
               sectorState,
-              isHistory: false,
             ),
-            _buildListContent(const [], false, sectorState, isHistory: true),
           ],
         ),
       ),
@@ -151,9 +148,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   Widget _buildListContent(
     List<AlertModel> alerts,
     bool isLoading,
-    SectorState sectorState, {
-    required bool isHistory,
-  }) {
+    SectorState sectorState,
+  ) {
     final filtered = _getFilteredAlerts(alerts);
 
     return RefreshIndicator(
@@ -166,10 +162,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
         padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         children: [
-          if (!isHistory) ...[
-            _buildQuickActions(),
-            const SizedBox(height: 16),
-          ],
+          _buildQuickActions(),
+          const SizedBox(height: 16),
           _buildFilters(sectorState),
           const SizedBox(height: 20),
           if (isLoading && alerts.isEmpty)

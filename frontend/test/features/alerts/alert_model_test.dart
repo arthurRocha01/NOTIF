@@ -127,5 +127,32 @@ void main() {
       final model = AssignmentModel.fromJson({...json, 'status': 'OVERDUE'});
       expect(model.status, equals(AssignmentStatus.overdue));
     });
+
+    test('mapeia notificationTitle quando presente no JSON', () {
+      final model = AssignmentModel.fromJson({
+        ...json,
+        'notificationTitle': 'Manutenção preventiva',
+      });
+      expect(model.notificationTitle, equals('Manutenção preventiva'));
+    });
+
+    test('notificationTitle é null quando ausente no JSON', () {
+      final model = AssignmentModel.fromJson(json);
+      expect(model.notificationTitle, isNull);
+    });
+
+    test('mapeia notificationMessage quando presente no JSON', () {
+      final model = AssignmentModel.fromJson({
+        ...json,
+        'notificationMessage': 'O servidor ficará indisponível às 22h.',
+      });
+      expect(model.notificationMessage,
+          equals('O servidor ficará indisponível às 22h.'));
+    });
+
+    test('notificationMessage é null quando ausente no JSON', () {
+      final model = AssignmentModel.fromJson(json);
+      expect(model.notificationMessage, isNull);
+    });
   });
 }

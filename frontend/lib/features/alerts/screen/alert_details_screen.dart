@@ -1,229 +1,187 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../models/alert_model.dart';
+import '../models/alert_status.dart';
+import '../providers/alert_provider.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class AlertDetailsScreen extends ConsumerWidget {
+  final AssignmentModel assignment;
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _DashboardHeader(),
-          const SizedBox(height: 20),
-          const _HighlightCard(),
-          const SizedBox(height: 20),
-          const _ReadingRateSection(),
-          const SizedBox(height: 20),
-          const _AttentionNeededSection(),
-          const SizedBox(height: 20),
-          _buildNotifyButton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotifyButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          // Ação do botão "Notificar pendentes"
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E3A8A), // Cor azul escura
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Text(
-          'Notificar pendentes',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader();
+  const AlertDetailsScreen({super.key, required this.assignment});
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Painel de gestão',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final title = assignment.notificationTitle ?? 'Notificação';
+    final message = assignment.notificationMessage;
+    final level = assignment.notificationLevel;
+    final status = assignment.status;
+    final isDone = status == AssignmentStatus.acknowledged;
+    final isOverdue = status == AssignmentStatus.overdue;
+    final canAcknowledge = !isDone &&
+        (assignment.isCritical || level == AlertLevel.high);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Detalhes',
           style: GoogleFonts.inter(
-            fontSize: 22,
             fontWeight: FontWeight.bold,
+            fontSize: 18,
             color: const Color(0xFF1E293B),
           ),
         ),
-        Text(
-          'Visão geral de compliance',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: const Color(0xFF64748B),
-          ),
-        ),
-        const SizedBox(height: 15),
-        OutlinedButton(
-          onPressed: () {
-            // Ação do filtro de data
-          },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF64748B),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          ),
-          child: const Text('Últimos 30 dias'),
-        ),
-      ],
-    );
-  }
-}
-
-class _HighlightCard extends StatelessWidget {
-  const _HighlightCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.green.shade100),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.yellow.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(LucideIcons.trophy, color: Colors.orange, size: 32),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: nível + status
+            Row(
               children: [
-                Text(
-                  'Setor Mais Atento',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: level.backgroundColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(level.icon, color: level.color, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: const Color(0xFF1E293B),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'RH - Corporativo (98% de Leitura)',
+                _StatusChip(status: status),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Nível
+            _InfoRow(label: 'Nível', value: level.label),
+            const SizedBox(height: 12),
+
+            // Prazo
+            if (assignment.dueAt != null) ...[
+              _InfoRow(
+                label: 'Prazo',
+                value: _formatDue(assignment.dueAt!, isOverdue),
+                valueColor: isOverdue ? const Color(0xFFDC2626) : null,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Mensagem
+            if (message != null && message.isNotEmpty) ...[
+              Text(
+                'Mensagem',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Text(
+                  message,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF1E293B),
+                    height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Tempo médio de resposta: 2 minutos',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            // Botão de confirmação
+            if (canAcknowledge)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await ref
+                        .read(alertProvider.notifier)
+                        .acknowledge(assignmentId: assignment.id);
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Confirmar ciência',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: level.color,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _formatDue(DateTime due, bool isOverdue) {
+    if (isOverdue) return 'Vencido';
+    final diff = due.difference(DateTime.now());
+    if (diff.isNegative) return 'Vencido';
+    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
+    if (diff.inHours < 24) return 'em ${diff.inHours}h';
+    return 'em ${diff.inDays}d';
   }
 }
 
-class _ReadingRateSection extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
 
-  const _ReadingRateSection();
+  const _InfoRow({required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Taxa de leitura por setor',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildProgressBar('Financeiro', 0.8, const Color(0xFF1E3A8A)), // Azul
-          const SizedBox(height: 15),
-          _buildProgressBar('TI', 0.95, const Color(0xFFDC2626)), // Vermelho
-          const SizedBox(height: 15),
-          _buildProgressBar('Operações', 0.5, const Color(0xFFB45309)), // Laranja/Marrom
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressBar(String label, double percentage, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: GoogleFonts.inter(fontSize: 14)),
-            Text(
-              '${(percentage * 100).toInt()}%',
-              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-            ),
-          ],
+        Text(
+          '$label: ',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64748B),
+          ),
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: percentage,
-            backgroundColor: const Color(0xFFE2E8F0),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 12,
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: valueColor ?? const Color(0xFF1E293B),
+            fontWeight:
+                valueColor != null ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ],
@@ -231,63 +189,27 @@ class _ReadingRateSection extends StatelessWidget {
   }
 }
 
-class _AttentionNeededSection extends StatelessWidget {
-  const _AttentionNeededSection();
+class _StatusChip extends StatelessWidget {
+  final AssignmentStatus status;
+
+  const _StatusChip({required this.status});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: status.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Atenção necessária (Baixa Adesão)',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 15),
-          _buildAlertItem('Logística'),
-          const SizedBox(height: 10),
-          _buildAlertItem('Administração'),
-        ],
+      child: Text(
+        status.label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: status.color,
+        ),
       ),
     );
   }
-
-  Widget _buildAlertItem(String label) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}//
+}

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
+import 'alert_details_screen.dart';
 
 class AlertUserScreen extends ConsumerStatefulWidget {
   const AlertUserScreen({super.key});
@@ -216,7 +217,11 @@ class _AssignmentCard extends StatelessWidget {
             ? const Color(0xFF10B981)
             : level.color;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => AlertDetailsScreen(assignment: assignment),
+      )),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -255,7 +260,7 @@ class _AssignmentCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          assignment.notificationId,
+                          assignment.notificationTitle ?? 'Notificação',
                           style: GoogleFonts.inter(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -321,6 +326,7 @@ class _AssignmentCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
       ),
     );
   }
