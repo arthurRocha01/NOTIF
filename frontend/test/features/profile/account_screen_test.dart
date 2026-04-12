@@ -61,6 +61,16 @@ void main() {
       expect(find.textContaining('joao@test.com'), findsOneWidget);
     });
 
+    testWidgets('exibe setor do usuário', (tester) async {
+      await tester.pumpWidget(_makeTestable(user: user));
+      expect(find.textContaining('Logística'), findsOneWidget);
+    });
+
+    testWidgets('exibe cargo do usuário', (tester) async {
+      await tester.pumpWidget(_makeTestable(user: user));
+      expect(find.textContaining('Funcionário'), findsOneWidget);
+    });
+
     testWidgets('exibe botão de trocar senha', (tester) async {
       await tester.pumpWidget(_makeTestable(user: user));
       expect(find.text('Trocar senha'), findsOneWidget);

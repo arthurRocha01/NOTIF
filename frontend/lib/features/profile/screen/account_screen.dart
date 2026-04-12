@@ -37,6 +37,16 @@ class AccountScreen extends ConsumerWidget {
               icon: LucideIcons.user,
               label: 'Nome',
               value: user?.name ?? '—',
+            ),
+            _InfoRow(
+              icon: LucideIcons.building2,
+              label: 'Setor',
+              value: user?.sector ?? '—',
+            ),
+            _InfoRow(
+              icon: LucideIcons.briefcase,
+              label: 'Cargo',
+              value: user?.roleLabel ?? '—',
               isLast: true,
             ),
           ]),

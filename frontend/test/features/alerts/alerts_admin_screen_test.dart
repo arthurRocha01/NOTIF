@@ -25,6 +25,24 @@ class _StubAlertNotifier extends AlertNotifier {
   Future<void> loadAssignments({String? token}) async {}
 }
 
+class _TrackingAlertNotifier extends AlertNotifier {
+  final List<String> calls = [];
+
+  _TrackingAlertNotifier(super.service) {
+    state = const AlertState();
+  }
+
+  @override
+  Future<void> loadNotifications({String? token}) async {
+    calls.add('loadNotifications');
+  }
+
+  @override
+  Future<void> loadAssignments({String? token}) async {
+    calls.add('loadAssignments');
+  }
+}
+
 class _StubSectorNotifier extends SectorNotifier {
   _StubSectorNotifier(super.service) {
     state = const SectorState();
@@ -64,6 +82,33 @@ void main() {
       await tester.pump();
 
       expect(find.text('Histórico'), findsNothing);
+    });
+
+    testWidgets('exibe a aba Minhas notificações', (tester) async {
+      await tester.pumpWidget(buildSubject());
+      await tester.pump();
+
+      expect(find.text('Minhas notificações'), findsOneWidget);
+    });
+  });
+
+  group('AlertAdminScreen init', () {
+    testWidgets('chama loadNotifications e loadAssignments ao inicializar',
+        (tester) async {
+      final notifier = _TrackingAlertNotifier(MockAlertService());
+      final sectorService = MockSectorService();
+
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          alertProvider.overrideWith((_) => notifier),
+          sectorProvider.overrideWith(
+              (_) => _StubSectorNotifier(sectorService)),
+        ],
+        child: const MaterialApp(home: AlertAdminScreen()),
+      ));
+      await tester.pump();
+
+      expect(notifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
     });
   });
 }

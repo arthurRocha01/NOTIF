@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
+import 'package:notif_app/features/alerts/widgets/assignments_body.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
+import '../models/alert_status.dart';
 import '../../../core/constants/app_spacing.dart';
 
 class AlertAdminScreen extends ConsumerStatefulWidget {
@@ -26,11 +28,24 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 1, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.read(alertProvider.notifier).loadNotifications();
       ref.read(sectorProvider.notifier).loadSectors();
+      await ref.read(alertProvider.notifier).loadAssignments();
+      _markPendingAsViewed();
     });
+  }
+
+  void _markPendingAsViewed() {
+    final pending = ref
+        .read(alertProvider)
+        .assignments
+        .where((a) => a.status == AssignmentStatus.pending)
+        .toList();
+    for (final a in pending) {
+      ref.read(alertProvider.notifier).markAsViewed(assignmentId: a.id);
+    }
   }
 
   @override
@@ -98,6 +113,10 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                 tabs: [
                   _buildTabHeader('Notificações',
                       state.notifications.length, const Color(0xFFB91C1C)),
+                  _buildTabHeader('Minhas notificações',
+                      state.assignments.where((a) =>
+                        a.status != AssignmentStatus.acknowledged).length,
+                      const Color(0xFF3B82F6)),
                 ],
               ),
             ),
@@ -110,6 +129,15 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
               state.notifications,
               state.isLoadingNotifications,
               sectorState,
+            ),
+            AssignmentsBody(
+              assignments: state.assignments,
+              isLoading: state.isLoadingAssignments,
+              isBlocked: state.isBlocked,
+              onRefresh: () =>
+                  ref.read(alertProvider.notifier).loadAssignments(),
+              onAcknowledge: (id) =>
+                  ref.read(alertProvider.notifier).acknowledge(assignmentId: id),
             ),
           ],
         ),
