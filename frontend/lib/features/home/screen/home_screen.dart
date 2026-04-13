@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
 import 'package:notif_app/features/alerts/screen/alerts_user_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
@@ -55,6 +57,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final feedController = ref.watch(feedProvider);
     final bool isSupervisor = user?.isSupervisor ?? false;
 
+    // Contagem real de assignments não confirmados — alimenta o badge da navbar
+    final pendingCount = ref
+        .watch(alertProvider)
+        .assignments
+        .where((a) => a.status != AssignmentStatus.acknowledged)
+        .length;
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
@@ -75,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottomNavigationBar: HomeBottomNav(
         pageIndex: feedController.pageIndex,
         isSupervisor: isSupervisor,
-        notificationCount: feedController.notifications,
+        notificationCount: pendingCount,
         onItemTapped: (navIndex) => _onNavTap(navIndex, isSupervisor, feedController, user),
       ),
     );
@@ -88,12 +97,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => PublishModal(
         onPublish: (content, files) async {
+          final nav = Navigator.of(context);
           await controller.publish(
             content: content,
             attachments: files,
             currentUser: user,
           );
-          if (mounted) Navigator.pop(context);
+          nav.pop();
         },
       ),
     );

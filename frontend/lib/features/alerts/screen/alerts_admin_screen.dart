@@ -87,60 +87,58 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, _) => [
-          SliverAppBar(
-            pinned: true,
-            floating: true,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            backgroundColor: const Color(0xFFF8FAFC),
-            title: const Text(
-              'Painel de Monitoramento',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color(0xFF1E293B)),
+      body: Column(
+        children: [
+          // ── TabBar ─────────────────────────────────────────────────────────
+          Container(
+            color: const Color(0xFFF8FAFC),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: const Color(0xFF3B82F6),
+              labelColor: const Color(0xFF3B82F6),
+              unselectedLabelColor: Colors.grey,
+              indicatorSize: TabBarIndicatorSize.label,
+              tabs: [
+                _buildTabHeader(
+                  'Notificações',
+                  state.notifications.length,
+                  const Color(0xFFB91C1C),
+                ),
+                _buildTabHeader(
+                  'Minhas notificações',
+                  state.assignments
+                      .where((a) => a.status != AssignmentStatus.acknowledged)
+                      .length,
+                  const Color(0xFF3B82F6),
+                ),
+              ],
             ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: TabBar(
-                controller: _tabController,
-                indicatorColor: const Color(0xFF3B82F6),
-                labelColor: const Color(0xFF3B82F6),
-                unselectedLabelColor: Colors.grey,
-                indicatorSize: TabBarIndicatorSize.label,
-                tabs: [
-                  _buildTabHeader('Notificações',
-                      state.notifications.length, const Color(0xFFB91C1C)),
-                  _buildTabHeader('Minhas notificações',
-                      state.assignments.where((a) =>
-                        a.status != AssignmentStatus.acknowledged).length,
-                      const Color(0xFF3B82F6)),
-                ],
-              ),
+          ),
+
+          // ── Conteúdo das abas ───────────────────────────────────────────────
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildListContent(
+                  state.notifications,
+                  state.isLoadingNotifications,
+                  sectorState,
+                ),
+                AssignmentsBody(
+                  assignments: state.assignments,
+                  isLoading: state.isLoadingAssignments,
+                  isBlocked: state.isBlocked,
+                  onRefresh: () =>
+                      ref.read(alertProvider.notifier).loadAssignments(),
+                  onAcknowledge: (id) => ref
+                      .read(alertProvider.notifier)
+                      .acknowledge(assignmentId: id),
+                ),
+              ],
             ),
           ),
         ],
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildListContent(
-              state.notifications,
-              state.isLoadingNotifications,
-              sectorState,
-            ),
-            AssignmentsBody(
-              assignments: state.assignments,
-              isLoading: state.isLoadingAssignments,
-              isBlocked: state.isBlocked,
-              onRefresh: () =>
-                  ref.read(alertProvider.notifier).loadAssignments(),
-              onAcknowledge: (id) =>
-                  ref.read(alertProvider.notifier).acknowledge(assignmentId: id),
-            ),
-          ],
-        ),
       ),
     );
   }

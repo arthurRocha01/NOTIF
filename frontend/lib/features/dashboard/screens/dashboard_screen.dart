@@ -30,24 +30,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        title: const Text(
-          "Gestão de Notificações",
-          style: TextStyle(
-              color: Color(0xFF1E293B), fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF1E293B)),
-            onPressed: () {
-              ref.read(alertProvider.notifier).loadNotifications();
-              ref.read(alertProvider.notifier).loadAssignments();
-            },
-          )
-        ],
-      ),
       body: (alertState.isLoadingNotifications || alertState.isLoadingAssignments)
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -61,16 +43,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Painel de gestão",
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B)),
-                    ),
-                    const Text(
-                      "Métricas em tempo real",
-                      style: TextStyle(color: Colors.grey),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Painel de gestão",
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1E293B)),
+                              ),
+                              Text(
+                                "Métricas em tempo real",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh,
+                              color: Color(0xFF1E293B)),
+                          tooltip: 'Atualizar',
+                          onPressed: () {
+                            ref
+                                .read(alertProvider.notifier)
+                                .loadNotifications();
+                            ref
+                                .read(alertProvider.notifier)
+                                .loadAssignments();
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
                     HighlightCard(

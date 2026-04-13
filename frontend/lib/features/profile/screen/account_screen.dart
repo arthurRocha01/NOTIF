@@ -119,31 +119,6 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     super.dispose();
   }
 
-  void _submit() {
-    final newPass = _newCtrl.text;
-    final confirm = _confirmCtrl.text;
-
-    if (newPass.length < 6) {
-      setState(() => _error = 'A senha deve ter mínimo 6 caracteres.');
-      return;
-    }
-    if (newPass != confirm) {
-      setState(() => _error = 'As senhas não coincidem.');
-      return;
-    }
-
-    // TODO: chamar API quando endpoint de troca de senha for implementado
-    setState(() => _error = null);
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Senha alterada com sucesso!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -183,13 +158,26 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _submit,
+                    // Desabilitado até PATCH /users/{id}/password estar disponível
+                    onPressed: null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0F172A),
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Confirmar'),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.info_outline, size: 13, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  'Funcionalidade disponível em breve.',
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -248,23 +236,26 @@ class _RecoverPasswordSheet extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: chamar API quando endpoint de recuperação for implementado
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Link enviado para $email'),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+                  // Desabilitado até POST /auth/password-reset estar disponível
+                  onPressed: null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0F172A),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Enviar'),
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.info_outline, size: 13, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                'Funcionalidade disponível em breve.',
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
