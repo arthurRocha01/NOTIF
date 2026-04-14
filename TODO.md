@@ -1,6 +1,6 @@
 # TODO — Roadmap de Desenvolvimento
 
-> Atualizado em 13/04/2026.  
+> Atualizado em 14/04/2026.  
 > Edições são feitas **somente no frontend** (`frontend/`).  
 > 145 testes passando na última sessão.
 
@@ -35,23 +35,34 @@
 | `CustomNavbar` | Barra de navegação moderna com pill effect, animações e badge — substitui `HomeBottomNav` |
 | Double AppBar corrigido — Dashboard | `AppBar` interno removido do `DashboardScreen`; botão refresh movido para o body |
 | Double header corrigido — AlertAdmin | `NestedScrollView` + `SliverAppBar` substituídos por `Column` + `TabBar` fixo |
-| Falsa confirmação de senha removida | Botões "Confirmar" e "Enviar" desabilitados; nota "disponível em breve" exibida |
+| Trocar senha via `PATCH /users/:id` | Validação local (mín. 6 chars, senhas coincidem) + chamada real ao backend; loading e erro exibidos |
 | Badge da navbar → `alertProvider` | `notificationCount` usa assignments pendentes reais do `alertProvider` |
+| Base URL → produção | `ApiClient.baseUrl` aponta para `https://notifta.vercel.app` |
 
 ---
 
 ## 🔴 Crítico — Quebra a integração (depende de backend)
 
-### 1. [BACKEND] Habilitar `PATCH /assignments/{id}`
+### 1. [FRONTEND] Atualizar `AlertService` para novos endpoints de interaction
 
-**Problema:** endpoint comentado no backend. `markAsViewed` e `acknowledge` falham silenciosamente.
+**Contexto:** o backend não usa mais `PATCH /assignments/{id}`. Os novos endpoints são:
 
-**Consequências:**
+| Ação | Endpoint |
+|---|---|
+| Visualizar | `POST /assignments/:id/view` |
+| Confirmar ciência | `POST /assignments/:id/acknowledge` |
+| Sincronizar entrega | `POST /assignments/sync/:userId` |
+
+**Consequências enquanto não atualizado:**
+- `markAsViewed` e `acknowledge` continuam falhando silenciosamente (chamam endpoint errado)
 - `isBlocked` nunca volta a `false` após confirmação
 - Taxa de adesão no dashboard sempre 0%
-- Status nos cards nunca atualiza
 
-**O que fazer:** implementar `PATCH /assignments/{id}` com `{ status: "VIEWED" | "ACKNOWLEDGED" }`.
+**O que fazer:**
+- `AlertService.markAsViewed(id)` → `POST /assignments/$id/view`
+- `AlertService.acknowledge(id)` → `POST /assignments/$id/acknowledge`
+- Adicionar `AlertService.syncDeliveries(userId)` → `POST /assignments/sync/$userId`
+- Chamar `syncDeliveries` no login e restore de sessão (`AuthNotifier`)
 
 ---
 
@@ -224,10 +235,10 @@ Botão "Notificar" no `DashboardScreen` dispara SnackBar "em breve" mas está ha
 ✅ Remover double header do AlertAdminScreen
 ✅ Corrigir badge da navbar para usar alertProvider
 
-── Fase 2: Backend urgente ───────────────────────────────────────
-1. [BACKEND] Habilitar PATCH /assignments/{id} (#1)
-2. [BACKEND] Retornar notificationTitle + notificationMessage (#2)
-3. Testar ciclo PENDING → VIEWED → ACKNOWLEDGED end-to-end
+── Fase 2: Frontend urgente ──────────────────────────────────────
+1. [FRONTEND] Atualizar AlertService: POST view/acknowledge/sync (#1)
+2. Testar ciclo PENDING → VIEWED → ACKNOWLEDGED end-to-end
+3. [BACKEND] Retornar notificationTitle + notificationMessage no GET /assignments (#2)
 
 ── Fase 3: Sprint nova — features ────────────────────────────────
 4. [BACKEND] Integrar Firebase Admin + FCM ao criar assignment (#3)

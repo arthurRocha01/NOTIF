@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 
 class AccountScreen extends ConsumerWidget {
@@ -98,18 +99,19 @@ class AccountScreen extends ConsumerWidget {
 
 // ── Modal de trocar senha ──────────────────────────────────────────────────
 
-class _ChangePasswordSheet extends StatefulWidget {
+class _ChangePasswordSheet extends ConsumerStatefulWidget {
   const _ChangePasswordSheet();
 
   @override
-  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
+  ConsumerState<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
 }
 
-class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
+class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   String? _error;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -117,6 +119,32 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     _newCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final newPassword = _newCtrl.text.trim();
+    final confirm = _confirmCtrl.text.trim();
+
+    if (newPassword.length < 6) {
+      setState(() => _error = 'A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    if (newPassword != confirm) {
+      setState(() => _error = 'As senhas não coincidem.');
+      return;
+    }
+
+    setState(() { _error = null; _isLoading = true; });
+
+    try {
+      final user = ref.read(authProvider);
+      await ApiClient.patch('/users/${user!.id}', {'password': newPassword});
+      if (mounted) Navigator.pop(context);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -151,33 +179,25 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
                     child: const Text('Cancelar'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    // Desabilitado até PATCH /users/{id}/password estar disponível
-                    onPressed: null,
+                    onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0F172A),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Confirmar'),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 18, width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Confirmar'),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.info_outline, size: 13, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(
-                  'Funcionalidade disponível em breve.',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
