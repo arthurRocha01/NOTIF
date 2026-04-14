@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { UserRole } from './types';
 
 export class User {
@@ -9,14 +9,16 @@ export class User {
     private passwordHash: string,
     private sectorId: string,
     private role: UserRole,
+    private fcmToken: string,
     private createdAt: Date,
   ) {
-    this.id = id || uuidv4();
+    this.id = id;
     this.name = name;
     this.email = email;
     this.passwordHash = passwordHash;
     this.sectorId = sectorId;
     this.role = role;
+    this.fcmToken = fcmToken;
     this.createdAt = createdAt || new Date();
   }
 
@@ -26,13 +28,23 @@ export class User {
     passwordHash: string,
     sectorId: string,
     role: UserRole,
+    fcmToken: string,
   ) {
-    const id = uuidv4();
+    const id = randomUUID();
     const createdAt = new Date();
 
     // Validações
 
-    return new User(id, name, email, passwordHash, sectorId, role, createdAt);
+    return new User(
+      id,
+      name,
+      email,
+      passwordHash,
+      sectorId,
+      role,
+      fcmToken,
+      createdAt,
+    );
   }
 
   public static reconstitute(
@@ -42,9 +54,19 @@ export class User {
     passwordHash: string,
     sectorId: string,
     role: UserRole,
+    fcmToken: string,
     createdAt: Date,
   ): User {
-    return new User(id, name, email, passwordHash, sectorId, role, createdAt);
+    return new User(
+      id,
+      name,
+      email,
+      passwordHash,
+      sectorId,
+      role,
+      fcmToken,
+      createdAt,
+    );
   }
 
   getId(): string {
@@ -71,6 +93,10 @@ export class User {
     return this.role;
   }
 
+  getFcmToken(): string {
+    return this.fcmToken;
+  }
+
   getCreatedAt(): Date {
     return this.createdAt;
   }
@@ -81,5 +107,13 @@ export class User {
     }
 
     this.name = name;
+  }
+
+  changeFcmToken(fcmToken: string): void {
+    if (this.fcmToken == fcmToken) {
+      return;
+    }
+
+    this.fcmToken = fcmToken;
   }
 }

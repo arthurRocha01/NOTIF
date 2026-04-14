@@ -11,6 +11,7 @@ export class UserMapper {
       raw.passwordHash,
       raw.sectorId,
       this.mapRole(raw.role),
+      raw.fcmToken,
       raw.createdAt,
     );
   }
@@ -36,6 +37,7 @@ export class UserMapper {
       passwordHash: user.getPasswordHash(),
       sectorId: user.getSectorId(),
       role: user.getRole(),
+      fcmToken: user.getFcmToken(),
       createdAt: user.getCreatedAt(),
     };
   }

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/main.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/src/main.ts"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import {
 } from '@prisma/client';
 import { NotificationAssignment } from '../domain/notification-assignment.entity';
 import { NotificationLevel as PrismaNotificationLevel } from '@prisma/client';
-import { NotificationLevel as DomainNotificationLevel } from 'src/modules/notifications/domain/type';
+import { NotificationLevel as DomainNotificationLevel } from '../../../modules/notifications/domain/type';
 import { AssignmentStatus } from '../domain/type';
 
 export class NotificationAssignmentMapper {

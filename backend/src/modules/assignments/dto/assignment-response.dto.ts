@@ -1,4 +1,4 @@
-import type { NotificationLevel } from 'src/modules/notifications/domain/type';
+import type { NotificationLevel } from '../../../modules/notifications/domain/type';
 import type { AssignmentStatus } from '../domain/type';
 import type { NotificationAssignment } from '../domain/notification-assignment.entity';
 

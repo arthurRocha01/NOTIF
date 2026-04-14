@@ -1,64 +1,39 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
-  Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { UserRole } from '../domain/types';
 
 export class CreateUserDto {
-  @ApiProperty({
-    description: 'Nome completo do usuário',
-    example: 'João da Silva',
-    minLength: 3,
-  })
-  @Transform(({ value }) => value?.trim())
-  @IsString()
-  @MinLength(3)
+  @IsString({ message: 'O nome deve ser um texto válido' })
+  @IsNotEmpty({ message: 'O nome é obrigatório' })
+  @MaxLength(100, { message: 'O nome não pode ter mais de 100 caracteres' })
   name: string;
 
-  @ApiProperty({
-    description: 'E-mail corporativo único',
-    example: 'joao.silva@empresa.com',
-  })
-  @Transform(({ value }) => value?.trim().toLowerCase())
-  @IsEmail()
+  @IsEmail({}, { message: 'Forneça um endereço de e-mail válido' })
+  @IsNotEmpty({ message: 'O e-mail é obrigatório' })
   email: string;
 
-  @ApiProperty({
-    description:
-      'Senha do usuário (mínimo 8 caracteres, com maiúscula, minúscula e número)',
-    example: 'Senha123',
-    minLength: 8,
-  })
   @IsString()
-  @MinLength(8)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
-    message:
-      'A senha deve conter ao menos uma letra maiúscula, uma minúscula e um número',
-  })
+  @IsNotEmpty({ message: 'A senha é obrigatória' })
+  @MinLength(8, { message: 'A senha deve ter no mínimo 8 caracteres' })
+  @MaxLength(50, { message: 'A senha não pode ter mais de 50 caracteres' })
   password: string;
 
-  @ApiProperty({
-    description: 'ID do setor (UUID)',
-    example: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0',
-    format: 'uuid',
-  })
-  @IsUUID()
+  @IsUUID('4', { message: 'O ID do setor fornecido é inválido' })
+  @IsNotEmpty({ message: 'O setor é obrigatório' })
   sectorId: string;
 
-  @ApiProperty({
-    description: 'Nível de acesso do usuário',
-    enum: UserRole,
-    required: false,
-    example: UserRole.EMPLOYEE,
-  })
-  @IsEnum(UserRole)
   @IsOptional()
+  @IsEnum(UserRole, { message: 'O papel (role) fornecido não é válido' })
   role?: UserRole;
+
+  @IsString()
+  fcmToken: string;
 }

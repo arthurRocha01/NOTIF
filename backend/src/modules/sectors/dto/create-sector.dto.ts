@@ -1,13 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateSectorDto {
-  @ApiProperty({
-    description: 'Nome do setor',
-    example: 'Financeiro',
+  @IsString({ message: 'O nome do setor deve ser um texto válido' })
+  @IsNotEmpty({ message: 'O nome do setor é obrigatório' })
+  @MinLength(2, { message: 'O nome do setor deve ter no mínimo 2 caracteres' })
+  @MaxLength(50, {
+    message: 'O nome do setor não pode ter mais de 50 caracteres',
   })
-  @IsString()
-  @IsNotEmpty()
-  @Length(2, 100)
   name: string;
 }

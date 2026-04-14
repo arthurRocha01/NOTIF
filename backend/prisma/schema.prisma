@@ -6,11 +6,13 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -58,6 +60,8 @@ model User {
   email        String   @unique
   passwordHash String? // Opcional: Permite uso híbrido (Firebase Auth ou Senha Local)
   role         UserRole @default(EMPLOYEE)
+  fcmToken     String? @db.Text 
+
 
   // FK: Vínculo obrigatório com Setor
   sectorId String

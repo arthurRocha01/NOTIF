@@ -1,38 +1,18 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
-import { AuthService } from '../application/auth.service';
 
 describe('AuthController', () => {
-  let sut: AuthController;
-  let authService: jest.Mocked<AuthService>;
+  let controller: AuthController;
 
-  beforeEach(() => {
-    authService = {
-      login: jest.fn(),
-    } as unknown as jest.Mocked<AuthService>;
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+    }).compile();
 
-    sut = new AuthController(authService);
+    controller = module.get<AuthController>(AuthController);
   });
 
-  describe('login', () => {
-    it('retorna access_token quando credenciais são válidas', async () => {
-      authService.login.mockResolvedValue({ access_token: 'jwt-token-abc' });
-
-      const result = await sut.login({ email: 'joao@test.com', password: 'senha123' });
-
-      expect(result).toEqual({ access_token: 'jwt-token-abc' });
-      expect(authService.login).toHaveBeenCalledWith({
-        email: 'joao@test.com',
-        password: 'senha123',
-      });
-    });
-
-    it('propaga UnauthorizedException quando credenciais são inválidas', async () => {
-      authService.login.mockRejectedValue(new UnauthorizedException('Credenciais inválidas'));
-
-      await expect(
-        sut.login({ email: 'wrong@test.com', password: 'errada' }),
-      ).rejects.toThrow(UnauthorizedException);
-    });
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 });

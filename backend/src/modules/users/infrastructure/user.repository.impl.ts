@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IUserRepository } from '../domain/user.repository';
 import { User } from '../domain/user.entity';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { UserMapper } from './user.mapper';
 
 @Injectable()
@@ -10,6 +10,13 @@ export class UserRepository implements IUserRepository {
 
   async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
+    return users.map((user) => UserMapper.toDomain(user));
+  }
+
+  async findBySectorId(id: string): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: { sectorId: id, fcmToken: { not: null } },
+    });
     return users.map((user) => UserMapper.toDomain(user));
   }
 
@@ -43,5 +50,14 @@ export class UserRepository implements IUserRepository {
 
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  async removeTokens(tokens: string[]) {
+    await this.prisma.user.updateMany({
+      where: { fcmToken: { in: tokens } },
+      data: {
+        fcmToken: null,
+      },
+    });
   }
 }
