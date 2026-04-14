@@ -170,46 +170,55 @@ void main() {
   });
 
   group('AlertService.markAsViewed', () {
-    test('faz PATCH /assignments/:id com status VIEWED', () async {
-      when(() => mockClient.patch(
+    test('faz POST /assignments/:id/view e retorna void em sucesso', () async {
+      when(() => mockClient.post(
             any(),
             headers: any(named: 'headers'),
             body: any(named: 'body'),
           )).thenAnswer((_) async => http.Response(
-            jsonEncode({...assignmentJson, 'status': 'VIEWED'}),
+            jsonEncode({'message': 'Notificação visualizada'}),
             200,
           ));
 
-      final result = await service.markAsViewed(
-        assignmentId: 'assign-1',
-        token: token,
+      await expectLater(
+        service.markAsViewed(assignmentId: 'assign-1', token: token),
+        completes,
       );
+    });
 
-      expect(result.status, equals(AssignmentStatus.viewed));
+    test('lança exceção em falha', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{"message":"Not Found"}', 404));
+
+      expect(
+        () => service.markAsViewed(assignmentId: 'assign-1', token: token),
+        throwsA(isA<AlertServiceException>()),
+      );
     });
   });
 
   group('AlertService.acknowledge', () {
-    test('faz PATCH /assignments/:id com status ACKNOWLEDGED', () async {
-      when(() => mockClient.patch(
+    test('faz POST /assignments/:id/acknowledge e retorna void em sucesso', () async {
+      when(() => mockClient.post(
             any(),
             headers: any(named: 'headers'),
             body: any(named: 'body'),
           )).thenAnswer((_) async => http.Response(
-            jsonEncode({...assignmentJson, 'status': 'ACKNOWLEDGED'}),
+            jsonEncode({'message': 'Ciência confirmada com sucesso'}),
             200,
           ));
 
-      final result = await service.acknowledge(
-        assignmentId: 'assign-1',
-        token: token,
+      await expectLater(
+        service.acknowledge(assignmentId: 'assign-1', token: token),
+        completes,
       );
-
-      expect(result.status, equals(AssignmentStatus.acknowledged));
     });
 
     test('lança exceção em falha', () async {
-      when(() => mockClient.patch(
+      when(() => mockClient.post(
             any(),
             headers: any(named: 'headers'),
             body: any(named: 'body'),
@@ -217,6 +226,37 @@ void main() {
 
       expect(
         () => service.acknowledge(assignmentId: 'assign-1', token: token),
+        throwsA(isA<AlertServiceException>()),
+      );
+    });
+  });
+
+  group('AlertService.syncDeliveries', () {
+    test('faz POST /assignments/sync/:userId e retorna void em sucesso', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response(
+            jsonEncode({'message': 'Sincronização concluída', 'deliveredCount': 3}),
+            200,
+          ));
+
+      await expectLater(
+        service.syncDeliveries(userId: 'user-1', token: token),
+        completes,
+      );
+    });
+
+    test('lança exceção em falha', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{"message":"Unauthorized"}', 401));
+
+      expect(
+        () => service.syncDeliveries(userId: 'user-1', token: token),
         throwsA(isA<AlertServiceException>()),
       );
     });

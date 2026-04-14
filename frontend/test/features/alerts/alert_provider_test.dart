@@ -168,16 +168,14 @@ void main() {
   });
 
   group('AlertNotifier.acknowledge', () {
-    test('atualiza assignment local para ACKNOWLEDGED', () async {
-      final updated = _makeAssignment(status: AssignmentStatus.acknowledged);
-
+    test('atualiza assignment local para ACKNOWLEDGED após sucesso', () async {
       when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.acknowledge(
                 assignmentId: any(named: 'assignmentId'),
                 token: any(named: 'token'),
               ))
-          .thenAnswer((_) async => updated);
+          .thenAnswer((_) async {});
 
       final container = _makeContainer(mockService);
       addTearDown(container.dispose);
@@ -195,6 +193,34 @@ void main() {
           .firstWhere((a) => a.id == 'assign-1');
 
       expect(assignment.status, equals(AssignmentStatus.acknowledged));
+    });
+  });
+
+  group('AlertNotifier.syncDeliveries', () {
+    test('chama service.syncDeliveries sem alterar estado de assignments', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.syncDeliveries(
+                userId: any(named: 'userId'),
+                token: any(named: 'token'),
+              ))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .syncDeliveries(userId: 'user-1', token: 'tok');
+
+      verify(() => mockService.syncDeliveries(
+            userId: 'user-1',
+            token: any(named: 'token'),
+          )).called(1);
+      expect(container.read(alertProvider).assignments, hasLength(1));
     });
   });
 

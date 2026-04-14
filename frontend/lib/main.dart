@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 // import 'package:notif_app/features/login/screen/login_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
@@ -21,6 +22,7 @@ class _TestAuthNotifier extends AuthNotifier {
           AuthService(),
           TokenStorage(),
           SectorService(),
+          AlertService(),
         ) {
     state = const UserModel(
       id: 'test-supervisor-001',

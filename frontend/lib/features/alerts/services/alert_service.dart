@@ -115,46 +115,62 @@ class AlertService {
     }
   }
 
-  Future<AssignmentModel> markAsViewed({
+  Future<void> markAsViewed({
     required String assignmentId,
     required String token,
-  }) async {
-    return _patchAssignmentStatus(
-      assignmentId: assignmentId,
-      token: token,
-      status: AssignmentStatus.viewed,
-    );
-  }
-
-  Future<AssignmentModel> acknowledge({
-    required String assignmentId,
-    required String token,
-  }) async {
-    return _patchAssignmentStatus(
-      assignmentId: assignmentId,
-      token: token,
-      status: AssignmentStatus.acknowledged,
-    );
-  }
-
-  Future<AssignmentModel> _patchAssignmentStatus({
-    required String assignmentId,
-    required String token,
-    required AssignmentStatus status,
   }) async {
     try {
-      final response = await _httpClient.patch(
-        Uri.parse('$_baseUrl/assignments/$assignmentId'),
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/assignments/$assignmentId/view'),
         headers: _headers(token),
-        body: jsonEncode({'status': status.name.toUpperCase()}),
+        body: jsonEncode({}),
       );
-      if (response.statusCode == 200) {
-        return AssignmentModel.fromJson(
-            jsonDecode(response.body) as Map<String, dynamic>);
-      }
+      if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
       throw AlertServiceException(
-        body?['message'] ?? 'Erro ao atualizar atribuição',
+        body?['message'] ?? 'Erro ao visualizar notificação',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
+  }
+
+  Future<void> acknowledge({
+    required String assignmentId,
+    required String token,
+  }) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/assignments/$assignmentId/acknowledge'),
+        headers: _headers(token),
+        body: jsonEncode({}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) return;
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao confirmar ciência',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw AlertServiceException('Sem conexão com a internet');
+    }
+  }
+
+  Future<void> syncDeliveries({
+    required String userId,
+    required String token,
+  }) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/assignments/sync/$userId'),
+        headers: _headers(token),
+        body: jsonEncode({}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) return;
+      final body = _tryDecode(response.body);
+      throw AlertServiceException(
+        body?['message'] ?? 'Erro ao sincronizar entregas',
         statusCode: response.statusCode,
       );
     } on SocketException {

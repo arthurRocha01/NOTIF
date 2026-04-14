@@ -4,6 +4,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
@@ -12,6 +14,7 @@ import 'package:notif_app/features/sectors/services/sector_service.dart';
 class MockAuthService extends Mock implements AuthService {}
 class MockTokenStorage extends Mock implements TokenStorage {}
 class MockSectorService extends Mock implements SectorService {}
+class MockAlertService extends Mock implements AlertService {}
 
 void main() {
   late MockAuthService mockService;
@@ -38,6 +41,7 @@ void main() {
     mockService = MockAuthService();
     mockStorage = MockTokenStorage();
     final mockSector = MockSectorService();
+    final mockAlertService = MockAlertService();
 
     // stubs padrão para evitar erros em testes que não verificam storage
     when(() => mockStorage.saveToken(any())).thenAnswer((_) async {});
@@ -50,11 +54,17 @@ void main() {
     when(() => mockSector.getSectors(token: any(named: 'token')))
         .thenAnswer((_) async => []);
 
+    when(() => mockAlertService.syncDeliveries(
+          userId: any(named: 'userId'),
+          token: any(named: 'token'),
+        )).thenAnswer((_) async {});
+
     container = ProviderContainer(
       overrides: [
         authServiceProvider.overrideWithValue(mockService),
         tokenStorageProvider.overrideWithValue(mockStorage),
         sectorServiceProvider.overrideWithValue(mockSector),
+        alertServiceProvider.overrideWithValue(mockAlertService),
       ],
     );
     ApiClient.clearToken();

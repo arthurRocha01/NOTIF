@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
@@ -15,6 +17,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, UserModel?>((ref) {
     ref.read(authServiceProvider),
     ref.read(tokenStorageProvider),
     ref.read(sectorServiceProvider),
+    ref.read(alertServiceProvider),
   );
 });
 
@@ -26,15 +29,18 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   final AuthService _service;
   final TokenStorage _storage;
   final SectorService _sectorService;
+  final AlertService _alertService;
   String? _errorMessage;
 
-  AuthNotifier(this._service, this._storage, this._sectorService) : super(null);
+  AuthNotifier(
+    this._service,
+    this._storage,
+    this._sectorService,
+    this._alertService,
+  ) : super(null);
 
   String? get errorMessage => _errorMessage;
 
-  /// Tenta resolver o sectorId do usuário para o nome legível do setor.
-  /// Usa o token já setado em [ApiClient.currentToken].
-  /// Em caso de falha ou setor não encontrado, retorna o usuário com o valor original.
   Future<UserModel> _resolveUser(UserModel user) async {
     try {
       final sectors =
@@ -65,6 +71,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       await _storage.saveEmail(email);
       final raw = await _service.fetchUser(email, token);
       state = await _resolveUser(raw);
+      _syncDeliveriesSilently(state!.id, token);
       return true;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -85,6 +92,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       ApiClient.setToken(token);
       final raw = await _service.fetchUser(email, token);
       state = await _resolveUser(raw);
+      _syncDeliveriesSilently(state!.id, token);
     } catch (_) {
       ApiClient.clearToken();
       await _storage.clearAll();
@@ -96,5 +104,11 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     _storage.clearAll();
     _errorMessage = null;
     state = null;
+  }
+
+  void _syncDeliveriesSilently(String userId, String token) {
+    _alertService
+        .syncDeliveries(userId: userId, token: token)
+        .catchError((_) {});
   }
 }

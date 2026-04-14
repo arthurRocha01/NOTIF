@@ -4,6 +4,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
@@ -13,17 +15,26 @@ import 'package:notif_app/features/sectors/services/sector_service.dart';
 class MockAuthService extends Mock implements AuthService {}
 class MockSectorService extends Mock implements SectorService {}
 class MockTokenStorage extends Mock implements TokenStorage {}
+class MockAlertService extends Mock implements AlertService {}
 
 ProviderContainer _makeContainer({
   required MockAuthService authService,
   required MockSectorService sectorService,
   required MockTokenStorage storage,
+  MockAlertService? alertService,
 }) {
+  final mockAlert = alertService ?? MockAlertService();
+  when(() => mockAlert.syncDeliveries(
+        userId: any(named: 'userId'),
+        token: any(named: 'token'),
+      )).thenAnswer((_) async {});
+
   return ProviderContainer(
     overrides: [
       authServiceProvider.overrideWithValue(authService),
       tokenStorageProvider.overrideWithValue(storage),
       sectorServiceProvider.overrideWithValue(sectorService),
+      alertServiceProvider.overrideWithValue(mockAlert),
     ],
   );
 }

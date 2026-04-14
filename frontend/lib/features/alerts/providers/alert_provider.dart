@@ -108,11 +108,11 @@ class AlertNotifier extends StateNotifier<AlertState> {
   Future<void> markAsViewed(
       {required String assignmentId, String? token}) async {
     try {
-      final updated = await _service.markAsViewed(
+      await _service.markAsViewed(
         assignmentId: assignmentId,
         token: token ?? _token,
       );
-      _updateAssignment(updated);
+      _updateAssignmentStatus(assignmentId, AssignmentStatus.viewed);
     } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
@@ -121,20 +121,32 @@ class AlertNotifier extends StateNotifier<AlertState> {
   Future<void> acknowledge(
       {required String assignmentId, String? token}) async {
     try {
-      final updated = await _service.acknowledge(
+      await _service.acknowledge(
         assignmentId: assignmentId,
         token: token ?? _token,
       );
-      _updateAssignment(updated);
+      _updateAssignmentStatus(assignmentId, AssignmentStatus.acknowledged);
     } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
   }
 
-  void _updateAssignment(AssignmentModel updated) {
+  Future<void> syncDeliveries(
+      {required String userId, String? token}) async {
+    try {
+      await _service.syncDeliveries(
+        userId: userId,
+        token: token ?? _token,
+      );
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } catch (_) {}
+  }
+
+  void _updateAssignmentStatus(String id, AssignmentStatus status) {
     state = state.copyWith(
       assignments: state.assignments
-          .map((a) => a.id == updated.id ? updated : a)
+          .map((a) => a.id == id ? a.copyWith(status: status) : a)
           .toList(),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/storage/token_storage.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/profile/screen/account_screen.dart';
@@ -25,13 +26,18 @@ class _FakeSectorService extends Fake implements SectorService {
   Future<List<SectorModel>> getSectors({required String token}) async => [];
 }
 
+class _FakeAlertService extends Fake implements AlertService {
+  @override
+  Future<void> syncDeliveries({required String userId, required String token}) async {}
+}
+
 Widget _makeTestable({UserModel? user}) {
   final mockService = MockAuthService();
   return ProviderScope(
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final n = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService());
+        final n = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService());
         // ignore: invalid_use_of_protected_member
         if (user != null) n.state = user;
         return n;
