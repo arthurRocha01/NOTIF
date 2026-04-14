@@ -2,7 +2,7 @@
 
 > Atualizado em 14/04/2026.  
 > Edições são feitas **somente no frontend** (`frontend/`).  
-> 145 testes passando na última sessão.
+> 149 testes passando na última sessão.
 
 ---
 
@@ -12,8 +12,9 @@
 |---|---|
 | Auth completo | Login, logout, restore de sessão via `TokenStorage` + `SharedPreferences` |
 | `AlertModel` + `AssignmentModel` | Modelos mapeando `Notification` e `NotificationAssignment` do backend |
-| `AlertService` | `GET /notifications`, `POST /notifications`, `GET /assignments`, `PATCH /assignments/{id}` |
-| `AlertNotifier` | `loadNotifications`, `loadAssignments`, `createNotification`, `markAsViewed`, `acknowledge` |
+| `AlertService` | `GET /notifications`, `POST /notifications`, `GET /assignments`, `POST /assignments/:id/view`, `POST /assignments/:id/acknowledge`, `POST /assignments/sync/:userId` |
+| `AlertNotifier` | `loadNotifications`, `loadAssignments`, `createNotification`, `markAsViewed`, `acknowledge`, `syncDeliveries`; status atualizado localmente via `copyWith` |
+| `syncDeliveries` no login/restore | `AuthNotifier` chama `syncDeliveries` silenciosamente após login e restore de sessão |
 | `isBlocked` | Calculado: qualquer assignment CRITICAL não ACKNOWLEDGED bloqueia |
 | `AlertUserScreen` | Reescrita com dados reais; `markAsViewed` chamado automaticamente no carregamento |
 | `AlertAdminScreen` | Aba "Notificações" + aba "Minhas notificações" para supervisor |
@@ -43,30 +44,7 @@
 
 ## 🔴 Crítico — Quebra a integração (depende de backend)
 
-### 1. [FRONTEND] Atualizar `AlertService` para novos endpoints de interaction
-
-**Contexto:** o backend não usa mais `PATCH /assignments/{id}`. Os novos endpoints são:
-
-| Ação | Endpoint |
-|---|---|
-| Visualizar | `POST /assignments/:id/view` |
-| Confirmar ciência | `POST /assignments/:id/acknowledge` |
-| Sincronizar entrega | `POST /assignments/sync/:userId` |
-
-**Consequências enquanto não atualizado:**
-- `markAsViewed` e `acknowledge` continuam falhando silenciosamente (chamam endpoint errado)
-- `isBlocked` nunca volta a `false` após confirmação
-- Taxa de adesão no dashboard sempre 0%
-
-**O que fazer:**
-- `AlertService.markAsViewed(id)` → `POST /assignments/$id/view`
-- `AlertService.acknowledge(id)` → `POST /assignments/$id/acknowledge`
-- Adicionar `AlertService.syncDeliveries(userId)` → `POST /assignments/sync/$userId`
-- Chamar `syncDeliveries` no login e restore de sessão (`AuthNotifier`)
-
----
-
-### 2. [BACKEND] Retornar `notificationTitle` e `notificationMessage` no `GET /assignments`
+### 1. [BACKEND] Retornar `notificationTitle` e `notificationMessage` no `GET /assignments`
 
 **Problema:** `AssignmentModel` já parseia esses campos, mas o backend não os retorna embutidos. Cards exibem fallback `'Notificação'` e `AlertDetailsScreen` não exibe mensagem.
 
@@ -235,10 +213,11 @@ Botão "Notificar" no `DashboardScreen` dispara SnackBar "em breve" mas está ha
 ✅ Remover double header do AlertAdminScreen
 ✅ Corrigir badge da navbar para usar alertProvider
 
-── Fase 2: Frontend urgente ──────────────────────────────────────
-1. [FRONTEND] Atualizar AlertService: POST view/acknowledge/sync (#1)
-2. Testar ciclo PENDING → VIEWED → ACKNOWLEDGED end-to-end
-3. [BACKEND] Retornar notificationTitle + notificationMessage no GET /assignments (#2)
+── Fase 2: Integração crítica ────────────────────────────────────
+✅ [FRONTEND] AlertService: POST view/acknowledge/sync
+✅ syncDeliveries integrado no login e restore de sessão
+1. Testar ciclo PENDING → VIEWED → ACKNOWLEDGED end-to-end com backend
+2. [BACKEND] Retornar notificationTitle + notificationMessage no GET /assignments (#1)
 
 ── Fase 3: Sprint nova — features ────────────────────────────────
 4. [BACKEND] Integrar Firebase Admin + FCM ao criar assignment (#3)
