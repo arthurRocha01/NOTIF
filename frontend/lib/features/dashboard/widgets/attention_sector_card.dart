@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 class AttentionCard extends StatelessWidget {
   final List<String> sectors;
-  final VoidCallback onNotify;
 
-  const AttentionCard({super.key, required this.sectors, required this.onNotify});
+  const AttentionCard({super.key, required this.sectors});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class AttentionCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: onNotify,
+              onPressed: null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E3A8A),
                 foregroundColor: Colors.white,

@@ -10,7 +10,7 @@ import 'package:notif_app/features/home/widgets/feed/feed_content.dart';
 import 'package:notif_app/features/home/widgets/home_bottom_nav.dart';
 import 'package:notif_app/features/home/widgets/publish_modal.dart';
 import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
-import 'package:notif_app/features/profile/widgets/home_app_bar.dart';
+import 'package:notif_app/shared/widgets/home_app_bar.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
 final feedProvider = ChangeNotifierProvider((ref) => FeedController());

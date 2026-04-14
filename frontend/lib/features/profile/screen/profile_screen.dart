@@ -8,6 +8,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
+import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -124,11 +125,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SectionHeader(label: 'INFORMAÇÕES'),
+                  ProfileSectionHeader(label: 'INFORMAÇÕES'),
                   const SizedBox(height: 8),
 
-                  _InfoCard(children: [
-                    _InfoRow(
+                  ProfileInfoCard(children: [
+                    ProfileInfoRow(
                       icon: LucideIcons.user,
                       label: 'Nome exibido',
                       value: profile.displayName.isNotEmpty
@@ -176,17 +177,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ],
                         ),
                       ),
-                    _InfoRow(
+                    ProfileInfoRow(
                       icon: LucideIcons.mail,
                       label: 'Email',
                       value: user?.email ?? '—',
                     ),
-                    _InfoRow(
+                    ProfileInfoRow(
                       icon: LucideIcons.briefcase,
                       label: 'Cargo',
                       value: user?.roleLabel ?? '—',
                     ),
-                    _InfoRow(
+                    ProfileInfoRow(
                       icon: LucideIcons.building2,
                       label: 'Setor',
                       value: user?.sector.isNotEmpty == true ? user!.sector : '—',
@@ -195,10 +196,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ]),
 
                   const SizedBox(height: 24),
-                  _SectionHeader(label: 'FOTO DE PERFIL'),
+                  ProfileSectionHeader(label: 'FOTO DE PERFIL'),
                   const SizedBox(height: 8),
 
-                  _InfoCard(children: [
+                  ProfileInfoCard(children: [
                     ListTile(
                       leading: const Icon(LucideIcons.image, size: 20),
                       title: Text('Alterar foto', style: GoogleFonts.inter(fontSize: 15)),
@@ -231,7 +232,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-// ── Widgets auxiliares ─────────────────────────────────────────────────────
+// ── Avatar ────────────────────────────────────────────────────────────────
 
 class _Avatar extends StatelessWidget {
   final Uint8List? bytes;
@@ -256,75 +257,3 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String label;
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.2,
-        color: Colors.black45,
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final List<Widget> children;
-  const _InfoCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Widget? trailing;
-  final bool isLast;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.trailing,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          title: Text(label,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-          subtitle: Text(value,
-              style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1E293B))),
-          trailing: trailing,
-        ),
-        if (!isLast) const Divider(height: 1, indent: 56),
-      ],
-    );
-  }
-}

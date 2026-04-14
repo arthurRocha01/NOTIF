@@ -196,6 +196,67 @@ void main() {
     });
   });
 
+  group('AlertNotifier.markAllPendingAsViewed', () {
+    test('chama markAsViewed para cada assignment com status PENDING', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [
+                _makeAssignment(id: 'a1', status: AssignmentStatus.pending),
+                _makeAssignment(id: 'a2', status: AssignmentStatus.pending),
+                _makeAssignment(id: 'a3', status: AssignmentStatus.viewed),
+              ]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAllPendingAsViewed(token: 'tok');
+
+      verify(() => mockService.markAsViewed(
+            assignmentId: 'a1',
+            token: any(named: 'token'),
+          )).called(1);
+      verify(() => mockService.markAsViewed(
+            assignmentId: 'a2',
+            token: any(named: 'token'),
+          )).called(1);
+      verifyNever(() => mockService.markAsViewed(
+            assignmentId: 'a3',
+            token: any(named: 'token'),
+          ));
+    });
+
+    test('não chama service quando não há assignments PENDING', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [
+                _makeAssignment(id: 'a1', status: AssignmentStatus.viewed),
+              ]);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAllPendingAsViewed(token: 'tok');
+
+      verifyNever(() => mockService.markAsViewed(
+            assignmentId: any(named: 'assignmentId'),
+            token: any(named: 'token'),
+          ));
+    });
+  });
+
   group('AlertNotifier.syncDeliveries', () {
     test('chama service.syncDeliveries sem alterar estado de assignments', () async {
       when(() => mockService.getMyAssignments(token: any(named: 'token')))

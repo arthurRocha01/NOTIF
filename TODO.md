@@ -2,7 +2,7 @@
 
 > Atualizado em 14/04/2026.  
 > Edições são feitas **somente no frontend** (`frontend/`).  
-> 151 testes passando na última sessão.
+> 153 testes passando na última sessão. Rede social permanece 100% mock por decisão de produto.
 
 ---
 
@@ -239,13 +239,14 @@ Botão "Notificar" no `DashboardScreen` dispara SnackBar "em breve" mas está ha
 14. [FRONTEND] Reescrever PostService + PostModel com API real (#6)
 
 ── Fase 5: Débito técnico ────────────────────────────────────────
-15. Mover HomeAppBar para shared/ (#9)
-16. Extrair widgets duplicados de Profile (#10)
+✅ Mover HomeAppBar para shared/ (#9)
+✅ Extrair widgets duplicados de Profile → profile_widgets.dart (#10)
+✅ Consolidar _markPendingAsViewed → markAllPendingAsViewed (#13)
+✅ Usar FeedSkeleton no loading do feed (#14)
+✅ Desabilitar botão "Notificar" no AttentionCard (#15)
+✅ Subtítulo dinâmico no AssignmentsBody por role (#4-front)
 17. Centralizar mapeamento de índices da navbar (#11)
 18. Substituir cores hardcoded por AppColors (#12)
-19. Consolidar _markPendingAsViewed no notifier (#13)
-20. Usar FeedSkeleton no loading (#14)
-21. Desabilitar botão "Notificar" no AttentionCard (#15)
 
 ── Fase 6: Novas features ────────────────────────────────────────
 22. Notices (Avisos) — feature do zero (#7)

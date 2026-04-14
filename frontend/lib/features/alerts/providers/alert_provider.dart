@@ -143,6 +143,15 @@ class AlertNotifier extends StateNotifier<AlertState> {
     } catch (_) {}
   }
 
+  Future<void> markAllPendingAsViewed({String? token}) async {
+    final pending = state.assignments
+        .where((a) => a.status == AssignmentStatus.pending)
+        .toList();
+    for (final a in pending) {
+      await markAsViewed(assignmentId: a.id, token: token);
+    }
+  }
+
   void _updateAssignmentStatus(String id, AssignmentStatus status) {
     state = state.copyWith(
       assignments: state.assignments

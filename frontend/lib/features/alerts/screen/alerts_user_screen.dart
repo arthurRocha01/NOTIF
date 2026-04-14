@@ -18,19 +18,8 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final notifier = ref.read(alertProvider.notifier);
       await notifier.loadAssignments();
-      _markPendingAsViewed();
+      notifier.markAllPendingAsViewed();
     });
-  }
-
-  void _markPendingAsViewed() {
-    final pending = ref
-        .read(alertProvider)
-        .assignments
-        .where((a) => a.status == AssignmentStatus.pending)
-        .toList();
-    for (final a in pending) {
-      ref.read(alertProvider.notifier).markAsViewed(assignmentId: a.id);
-    }
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
+import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -26,25 +27,25 @@ class AccountScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         children: [
           // ── Identificação ─────────────────────────────────────────────
-          _SectionHeader(label: 'IDENTIFICAÇÃO'),
+          ProfileSectionHeader(label: 'IDENTIFICAÇÃO'),
           const SizedBox(height: 8),
-          _InfoCard(children: [
-            _InfoRow(
+          ProfileInfoCard(children: [
+            ProfileInfoRow(
               icon: LucideIcons.mail,
               label: 'Email da conta',
               value: user?.email ?? '—',
             ),
-            _InfoRow(
+            ProfileInfoRow(
               icon: LucideIcons.user,
               label: 'Nome',
               value: user?.name ?? '—',
             ),
-            _InfoRow(
+            ProfileInfoRow(
               icon: LucideIcons.building2,
               label: 'Setor',
               value: user?.sector ?? '—',
             ),
-            _InfoRow(
+            ProfileInfoRow(
               icon: LucideIcons.briefcase,
               label: 'Cargo',
               value: user?.roleLabel ?? '—',
@@ -55,17 +56,17 @@ class AccountScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ── Segurança ─────────────────────────────────────────────────
-          _SectionHeader(label: 'SEGURANÇA'),
+          ProfileSectionHeader(label: 'SEGURANÇA'),
           const SizedBox(height: 8),
-          _InfoCard(children: [
-            _ActionRow(
+          ProfileInfoCard(children: [
+            ProfileActionRow(
               icon: LucideIcons.lock,
               label: 'Trocar senha',
               subtitle: 'Altere sua senha de acesso',
               onTap: () => _showChangePasswordModal(context),
             ),
             const Divider(height: 1, indent: 56),
-            _ActionRow(
+            ProfileActionRow(
               icon: LucideIcons.keyRound,
               label: 'Recuperar senha',
               subtitle: 'Enviar link de redefinição por e-mail',
@@ -318,90 +319,3 @@ class _PasswordFieldState extends State<_PasswordField> {
   }
 }
 
-// ── Widgets auxiliares ─────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  final String label;
-  const _SectionHeader({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(label,
-        style: GoogleFonts.inter(
-            fontSize: 11, fontWeight: FontWeight.bold,
-            letterSpacing: 1.2, color: Colors.black45));
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final List<Widget> children;
-  const _InfoCard({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2))],
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool isLast;
-
-  const _InfoRow({required this.icon, required this.label, required this.value, this.isLast = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          title: Text(label, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-          subtitle: Text(value,
-              style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
-        ),
-        if (!isLast) const Divider(height: 1, indent: 56),
-      ],
-    );
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool isLast;
-
-  const _ActionRow({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          title: Text(label, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
-          subtitle: Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-          trailing: const Icon(LucideIcons.chevronRight, size: 18, color: Colors.grey),
-          onTap: onTap,
-        ),
-        if (!isLast) const Divider(height: 1, indent: 56),
-      ],
-    );
-  }
-}

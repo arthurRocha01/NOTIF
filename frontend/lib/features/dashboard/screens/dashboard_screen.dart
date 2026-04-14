@@ -97,13 +97,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     const SizedBox(height: 20),
                     AttentionCard(
                       sectors: stats.attentionSectors,
-                      onNotify: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  "Funcionalidade disponível em breve.")),
-                        );
-                      },
                     ),
                   ],
                 ),

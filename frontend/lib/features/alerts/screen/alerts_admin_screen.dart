@@ -33,19 +33,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
       ref.read(alertProvider.notifier).loadNotifications();
       ref.read(sectorProvider.notifier).loadSectors();
       await ref.read(alertProvider.notifier).loadAssignments();
-      _markPendingAsViewed();
+      ref.read(alertProvider.notifier).markAllPendingAsViewed();
     });
-  }
-
-  void _markPendingAsViewed() {
-    final pending = ref
-        .read(alertProvider)
-        .assignments
-        .where((a) => a.status == AssignmentStatus.pending)
-        .toList();
-    for (final a in pending) {
-      ref.read(alertProvider.notifier).markAsViewed(assignmentId: a.id);
-    }
   }
 
   @override
@@ -129,6 +118,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   assignments: state.assignments,
                   isLoading: state.isLoadingAssignments,
                   isBlocked: state.isBlocked,
+                  isSupervisor: true,
                   onRefresh: () =>
                       ref.read(alertProvider.notifier).loadAssignments(),
                   onAcknowledge: (id) => ref

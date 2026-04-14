@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/features/home/controllers/feed_controller.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'feed_list.dart';
+import 'feed_skeleton.dart';
 
 class FeedContent extends ConsumerWidget {
   final FeedController controller;
@@ -19,9 +20,7 @@ class FeedContent extends ConsumerWidget {
 
     // Se o controller estiver em estado de carregamento inicial
     if (controller.loading && controller.posts.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const FeedSkeleton();
     }
 
     return FeedList(

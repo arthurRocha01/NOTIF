@@ -40,7 +40,6 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Avatar: foto se existir, inicial caso contrário
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: Colors.white12,

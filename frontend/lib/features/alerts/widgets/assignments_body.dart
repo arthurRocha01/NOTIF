@@ -8,6 +8,7 @@ class AssignmentsBody extends StatelessWidget {
   final List<AssignmentModel> assignments;
   final bool isLoading;
   final bool isBlocked;
+  final bool isSupervisor;
   final Future<void> Function() onRefresh;
   final void Function(String assignmentId)? onAcknowledge;
 
@@ -17,6 +18,7 @@ class AssignmentsBody extends StatelessWidget {
     required this.isLoading,
     required this.isBlocked,
     required this.onRefresh,
+    this.isSupervisor = false,
     this.onAcknowledge,
   });
 
@@ -53,7 +55,9 @@ class AssignmentsBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Acompanhe os avisos do seu setor.',
+                    isSupervisor
+                        ? 'Visão geral de todos os setores.'
+                        : 'Acompanhe os avisos do seu setor.',
                     style: GoogleFonts.inter(
                         fontSize: 14, color: const Color(0xFF64748B)),
                   ),
