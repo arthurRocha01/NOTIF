@@ -2,7 +2,7 @@
 
 > Atualizado em 14/04/2026.  
 > Edições são feitas **somente no frontend** (`frontend/`).  
-> 149 testes passando na última sessão.
+> 151 testes passando na última sessão.
 
 ---
 
@@ -39,6 +39,8 @@
 | Trocar senha via `PATCH /users/:id` | Validação local (mín. 6 chars, senhas coincidem) + chamada real ao backend; loading e erro exibidos |
 | Badge da navbar → `alertProvider` | `notificationCount` usa assignments pendentes reais do `alertProvider` |
 | Base URL → produção | `ApiClient.baseUrl` aponta para `https://notifta.vercel.app` |
+| `main.dart` → produção | Fluxo real de auth ativo: `authInitProvider`, `LoginScreen`, `onUnauthorized` → logout |
+| `UserModel.fcmToken` | Campo adicionado; `AuthService.fetchUser` parseia do `GET /users/by-email/:email` |
 
 ---
 
@@ -216,6 +218,8 @@ Botão "Notificar" no `DashboardScreen` dispara SnackBar "em breve" mas está ha
 ── Fase 2: Integração crítica ────────────────────────────────────
 ✅ [FRONTEND] AlertService: POST view/acknowledge/sync
 ✅ syncDeliveries integrado no login e restore de sessão
+✅ main.dart em produção — fluxo real de auth ativo
+✅ UserModel.fcmToken — parseado do GET /users/by-email/:email
 1. Testar ciclo PENDING → VIEWED → ACKNOWLEDGED end-to-end com backend
 2. [BACKEND] Retornar notificationTitle + notificationMessage no GET /assignments (#1)
 

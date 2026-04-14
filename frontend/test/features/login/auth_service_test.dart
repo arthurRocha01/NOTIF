@@ -275,5 +275,48 @@ void main() {
             .having((e) => e.message, 'message', contains('internet'))),
       );
     });
+
+    test('parseia fcmToken quando retornado pelo backend', () async {
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({
+            'id': 'uuid-123',
+            'name': 'João Silva',
+            'email': 'joao@test.com',
+            'role': 'EMPLOYEE',
+            'sectorId': 'sector-abc',
+            'fcmToken': 'token-fcm-abc123',
+          }),
+          200,
+        ),
+      );
+
+      final user = await sut.fetchUser('joao@test.com', 'jwt-token-123');
+
+      expect(user.fcmToken, equals('token-fcm-abc123'));
+    });
+
+    test('fcmToken é null quando não retornado pelo backend', () async {
+      when(
+        () => mockClient.get(any(), headers: any(named: 'headers')),
+      ).thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({
+            'id': 'uuid-123',
+            'name': 'João Silva',
+            'email': 'joao@test.com',
+            'role': 'EMPLOYEE',
+            'sectorId': 'sector-abc',
+          }),
+          200,
+        ),
+      );
+
+      final user = await sut.fetchUser('joao@test.com', 'jwt-token-123');
+
+      expect(user.fcmToken, isNull);
+    });
   });
 }

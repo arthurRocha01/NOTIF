@@ -6,9 +6,10 @@ class UserModel {
   final String id;
   final String name;
   final String email;
-  final String sector; 
-  final UserRole role; 
+  final String sector;
+  final UserRole role;
   final PlatformFile? avatar;
+  final String? fcmToken;
 
   const UserModel({
     required this.id,
@@ -17,6 +18,7 @@ class UserModel {
     required this.sector,
     required this.role,
     this.avatar,
+    this.fcmToken,
   });
 
   // Garante que a UI saiba quem é admin

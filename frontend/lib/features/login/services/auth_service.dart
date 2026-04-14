@@ -61,6 +61,7 @@ class AuthService {
           role: data['role'] == 'SUPERVISOR' || data['role'] == 'ADMIN'
               ? UserRole.supervisor
               : UserRole.employee,
+          fcmToken: data['fcmToken'] as String?,
         );
       }
 
