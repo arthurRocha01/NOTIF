@@ -70,7 +70,7 @@ class AccountScreen extends ConsumerWidget {
               icon: LucideIcons.keyRound,
               label: 'Recuperar senha',
               subtitle: 'Enviar link de redefinição por e-mail',
-              onTap: () => _showRecoverPasswordModal(context, user?.email ?? ''),
+              onTap: () => _showRecoverPasswordModal(context),
               isLast: true,
             ),
           ]),
@@ -88,12 +88,12 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
-  void _showRecoverPasswordModal(BuildContext context, String email) {
+  void _showRecoverPasswordModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RecoverPasswordSheet(email: email),
+      builder: (_) => const _RecoverPasswordSheet(),
     );
   }
 }
@@ -139,7 +139,10 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
 
     try {
       final user = ref.read(authProvider);
-      await ApiClient.patch('/users/${user!.id}', {'password': newPassword});
+      await ApiClient.patch('/users/${user!.id}', {
+        'currentPassword': _currentCtrl.text.trim(),
+        'password': newPassword,
+      });
       if (mounted) Navigator.pop(context);
     } on ApiException catch (e) {
       setState(() => _error = e.message);
@@ -211,77 +214,162 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
 
 // ── Modal de recuperar senha ───────────────────────────────────────────────
 
-class _RecoverPasswordSheet extends StatelessWidget {
-  final String email;
-  const _RecoverPasswordSheet({required this.email});
+class _RecoverPasswordSheet extends ConsumerStatefulWidget {
+  const _RecoverPasswordSheet();
+
+  @override
+  ConsumerState<_RecoverPasswordSheet> createState() =>
+      _RecoverPasswordSheetState();
+}
+
+class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
+  final _newCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  String? _error;
+  bool _isLoading = false;
+  bool _success = false;
+
+  @override
+  void dispose() {
+    _newCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final newPassword = _newCtrl.text.trim();
+    final confirm = _confirmCtrl.text.trim();
+
+    if (newPassword.length < 6) {
+      setState(() => _error = 'A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    if (newPassword != confirm) {
+      setState(() => _error = 'As senhas não coincidem.');
+      return;
+    }
+
+    setState(() { _error = null; _isLoading = true; });
+
+    try {
+      final user = ref.read(authProvider);
+      await ApiClient.patch('/users/${user!.id}', {'password': newPassword});
+      if (mounted) setState(() => _success = true);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    final user = ref.watch(authProvider);
+
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: _success ? _buildSuccess(context) : _buildForm(context, user?.email ?? ''),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(LucideIcons.mailCheck, size: 48, color: Color(0xFF0F172A)),
-          const SizedBox(height: 16),
-          Text('Recuperar senha',
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(
-            'Um link de redefinição será enviado para:',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+    );
+  }
+
+  Widget _buildSuccess(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(LucideIcons.checkCircle, size: 48, color: Color(0xFF16A34A)),
+        const SizedBox(height: 16),
+        Text('Senha alterada com sucesso!',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Fechar'),
           ),
-          const SizedBox(height: 4),
-          Text(
-            email,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-                color: const Color(0xFF0F172A)),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  // Desabilitado até POST /auth/password-reset estar disponível
-                  onPressed: null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Enviar'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.info_outline, size: 13, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                'Funcionalidade disponível em breve.',
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForm(BuildContext context, String email) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Recuperar senha',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text(
+          'Defina uma nova senha para:',
+          style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+        ),
+        Text(
+          email,
+          style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: const Color(0xFF0F172A)),
+        ),
+        const SizedBox(height: 20),
+        _PasswordField(
+          key: const Key('recoverNewPassword'),
+          label: 'Nova senha',
+          controller: _newCtrl,
+        ),
+        const SizedBox(height: 12),
+        _PasswordField(
+          key: const Key('recoverConfirmPassword'),
+          label: 'Confirmar nova senha',
+          controller: _confirmCtrl,
+        ),
+        if (_error != null) ...[
+          const SizedBox(height: 10),
+          Text(_error!,
+              style: GoogleFonts.inter(color: Colors.red, fontSize: 13)),
         ],
-      ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Enviar'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

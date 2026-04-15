@@ -69,6 +69,39 @@ class AuthService {
     }
   }
 
+  Future<void> updatePassword({
+    required String userId,
+    required String newPassword,
+    String? currentPassword,
+    required String token,
+  }) async {
+    try {
+      final body = <String, String>{'password': newPassword};
+      if (currentPassword != null) body['currentPassword'] = currentPassword;
+
+      final response = await _httpClient.patch(
+        Uri.parse('$_baseUrl/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) return;
+      dynamic responseBody;
+      try {
+        responseBody =
+            response.body.isNotEmpty ? jsonDecode(response.body) : null;
+      } catch (_) {}
+      throw ApiException(
+        responseBody?['message'] ?? 'Erro ao atualizar senha',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+
   Future<UserModel> fetchUser(String email, String token) async {
     try {
       final response = await _httpClient.get(

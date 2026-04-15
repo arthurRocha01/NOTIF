@@ -147,13 +147,48 @@ void main() {
   });
 
   group('AccountScreen — recuperar senha (H4: consistência)', () {
-    testWidgets('tocar em Recuperar senha abre confirmação com email', (tester) async {
+    testWidgets('tocar em Recuperar senha abre modal com email', (tester) async {
       await tester.pumpWidget(_makeTestable(user: user));
       await tester.tap(find.text('Recuperar senha'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('joao@test.com'), findsWidgets);
       expect(find.text('Enviar'), findsOneWidget);
+    });
+
+    testWidgets('modal exibe campos nova senha e confirmar', (tester) async {
+      await tester.pumpWidget(_makeTestable(user: user));
+      await tester.tap(find.text('Recuperar senha'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('recoverNewPassword')), findsOneWidget);
+      expect(find.byKey(const Key('recoverConfirmPassword')), findsOneWidget);
+    });
+
+    testWidgets('exibe erro se senhas não coincidem', (tester) async {
+      await tester.pumpWidget(_makeTestable(user: user));
+      await tester.tap(find.text('Recuperar senha'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('recoverNewPassword')), 'nova123');
+      await tester.enterText(find.byKey(const Key('recoverConfirmPassword')), 'diferente');
+      await tester.tap(find.text('Enviar'));
+      await tester.pump();
+
+      expect(find.textContaining('não coincidem'), findsOneWidget);
+    });
+
+    testWidgets('exibe erro se nova senha tiver menos de 6 caracteres', (tester) async {
+      await tester.pumpWidget(_makeTestable(user: user));
+      await tester.tap(find.text('Recuperar senha'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('recoverNewPassword')), '123');
+      await tester.enterText(find.byKey(const Key('recoverConfirmPassword')), '123');
+      await tester.tap(find.text('Enviar'));
+      await tester.pump();
+
+      expect(find.textContaining('mínimo 6'), findsOneWidget);
     });
   });
 }

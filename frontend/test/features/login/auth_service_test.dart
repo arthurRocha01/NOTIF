@@ -132,6 +132,104 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // AuthService.updatePassword
+  // ---------------------------------------------------------------------------
+  group('AuthService.updatePassword', () {
+    test('chama o endpoint correto PATCH /users/:id', () async {
+      Uri? capturedUri;
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((invocation) async {
+        capturedUri = invocation.positionalArguments.first as Uri;
+        return http.Response('{}', 200);
+      });
+
+      await sut.updatePassword(userId: 'user-1', newPassword: 'nova123', token: 'jwt');
+
+      expect(capturedUri?.path, endsWith('/users/user-1'));
+    });
+
+    test('envia password e currentPassword no corpo quando fornecidos', () async {
+      String? capturedBody;
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[const Symbol('body')] as String;
+        return http.Response('{}', 200);
+      });
+
+      await sut.updatePassword(
+        userId: 'user-1',
+        newPassword: 'nova123',
+        currentPassword: 'atual123',
+        token: 'jwt',
+      );
+
+      final body = jsonDecode(capturedBody!);
+      expect(body['password'], equals('nova123'));
+      expect(body['currentPassword'], equals('atual123'));
+    });
+
+    test('NÃO envia currentPassword quando não fornecido', () async {
+      String? capturedBody;
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[const Symbol('body')] as String;
+        return http.Response('{}', 200);
+      });
+
+      await sut.updatePassword(userId: 'user-1', newPassword: 'nova123', token: 'jwt');
+
+      final body = jsonDecode(capturedBody!);
+      expect(body['password'], equals('nova123'));
+      expect(body.containsKey('currentPassword'), isFalse);
+    });
+
+    test('retorna sem exceção em 200', () async {
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer((_) async => http.Response('{}', 200));
+
+      await expectLater(
+        sut.updatePassword(userId: 'user-1', newPassword: 'nova123', token: 'jwt'),
+        completes,
+      );
+    });
+
+    test('lança ApiException em erro HTTP', () async {
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenAnswer(
+          (_) async => http.Response('{"message":"Não autorizado"}', 401));
+
+      await expectLater(
+        sut.updatePassword(userId: 'user-1', newPassword: 'nova123', token: 'jwt'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 401)),
+      );
+    });
+
+    test('lança ApiException sem conexão (SocketException)', () async {
+      when(
+        () => mockClient.patch(any(),
+            headers: any(named: 'headers'), body: any(named: 'body')),
+      ).thenThrow(const SocketException('No internet'));
+
+      await expectLater(
+        sut.updatePassword(userId: 'user-1', newPassword: 'nova123', token: 'jwt'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.message, 'message', contains('internet'))),
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // AuthService.fetchUser
   // ---------------------------------------------------------------------------
   group('AuthService.fetchUser', () {
