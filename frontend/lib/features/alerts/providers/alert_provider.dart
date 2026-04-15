@@ -112,7 +112,14 @@ class AlertNotifier extends StateNotifier<AlertState> {
         assignmentId: assignmentId,
         token: token ?? _token,
       );
-      _updateAssignmentStatus(assignmentId, AssignmentStatus.viewed);
+      final now = DateTime.now();
+      state = state.copyWith(
+        assignments: state.assignments
+            .map((a) => a.id == assignmentId
+                ? a.copyWith(status: AssignmentStatus.viewed, viewedAt: now)
+                : a)
+            .toList(),
+      );
     } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
@@ -125,7 +132,17 @@ class AlertNotifier extends StateNotifier<AlertState> {
         assignmentId: assignmentId,
         token: token ?? _token,
       );
-      _updateAssignmentStatus(assignmentId, AssignmentStatus.acknowledged);
+      final now = DateTime.now();
+      state = state.copyWith(
+        assignments: state.assignments
+            .map((a) => a.id == assignmentId
+                ? a.copyWith(
+                    status: AssignmentStatus.acknowledged,
+                    acknowledgedAt: now,
+                  )
+                : a)
+            .toList(),
+      );
     } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
@@ -152,11 +169,4 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  void _updateAssignmentStatus(String id, AssignmentStatus status) {
-    state = state.copyWith(
-      assignments: state.assignments
-          .map((a) => a.id == id ? a.copyWith(status: status) : a)
-          .toList(),
-    );
-  }
 }

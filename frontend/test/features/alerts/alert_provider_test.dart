@@ -194,6 +194,77 @@ void main() {
 
       expect(assignment.status, equals(AssignmentStatus.acknowledged));
     });
+
+    test('define acknowledgedAt localmente após sucesso', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      final before = DateTime.now();
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      final assignment = container
+          .read(alertProvider)
+          .assignments
+          .firstWhere((a) => a.id == 'assign-1');
+
+      expect(assignment.acknowledgedAt, isNotNull);
+      expect(
+        assignment.acknowledgedAt!.isAfter(before) ||
+            assignment.acknowledgedAt!.isAtSameMomentAs(before),
+        isTrue,
+      );
+    });
+  });
+
+  group('AlertNotifier.markAsViewed', () {
+    test('atualiza status para VIEWED e define viewedAt localmente', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment(status: AssignmentStatus.pending)]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenAnswer((_) async {});
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      final before = DateTime.now();
+      await container
+          .read(alertProvider.notifier)
+          .markAsViewed(assignmentId: 'assign-1', token: 'tok');
+
+      final assignment = container
+          .read(alertProvider)
+          .assignments
+          .firstWhere((a) => a.id == 'assign-1');
+
+      expect(assignment.status, equals(AssignmentStatus.viewed));
+      expect(assignment.viewedAt, isNotNull);
+      expect(
+        assignment.viewedAt!.isAfter(before) ||
+            assignment.viewedAt!.isAtSameMomentAs(before),
+        isTrue,
+      );
+    });
   });
 
   group('AlertNotifier.markAllPendingAsViewed', () {
