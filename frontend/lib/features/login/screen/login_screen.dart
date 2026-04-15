@@ -75,13 +75,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 36),
 
                   // Título principal
                   Text(
                     'Portal de Segurança\ne Compliance.',
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -89,16 +90,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
-                  // Slogan
-                  Text(
-                    'NOTIF: Menos ruído. Mais clareza.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w400,
-                    ),
+                  // Tagline com separadores
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Divider(
+                          color: AppColors.accent,
+                          thickness: 1,
+                          endIndent: 10,
+                        ),
+                      ),
+                      Text(
+                        'Menos ruído. Mais clareza.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.accent,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Expanded(
+                        child: Divider(
+                          color: AppColors.accent,
+                          thickness: 1,
+                          indent: 10,
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 32),
@@ -106,6 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Subtítulo de acesso
                   Text(
                     'Acesso restrito',
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -115,6 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Insira seu email corporativo',
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: AppColors.textTertiary,

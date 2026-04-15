@@ -70,8 +70,8 @@ class AuthHeader extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 4),
                       child: Icon(
                         LucideIcons.bellRing,
-                        color: AppColors.accent,
-                        size: 26,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
                     Text(
