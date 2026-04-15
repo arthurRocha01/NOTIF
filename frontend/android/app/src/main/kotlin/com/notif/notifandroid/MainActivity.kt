@@ -1,4 +1,4 @@
-package com.example.notif_app
+package com.notif.notifandroid
 
 import io.flutter.embedding.android.FlutterActivity
 

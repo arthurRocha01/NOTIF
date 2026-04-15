@@ -41,6 +41,34 @@ class AuthService {
     }
   }
 
+  Future<void> updateFcmToken({
+    required String userId,
+    required String fcmToken,
+    required String token,
+  }) async {
+    try {
+      final response = await _httpClient.patch(
+        Uri.parse('$_baseUrl/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'fcmToken': fcmToken}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) return;
+      dynamic body;
+      try {
+        body = response.body.isNotEmpty ? jsonDecode(response.body) : null;
+      } catch (_) {}
+      throw ApiException(
+        body?['message'] ?? 'Erro ao atualizar token FCM',
+        statusCode: response.statusCode,
+      );
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+
   Future<UserModel> fetchUser(String email, String token) async {
     try {
       final response = await _httpClient.get(

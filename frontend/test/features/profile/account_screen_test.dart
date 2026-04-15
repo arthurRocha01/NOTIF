@@ -7,6 +7,7 @@ import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
+import 'package:notif_app/features/login/services/fcm_service.dart';
 import 'package:notif_app/features/profile/screen/account_screen.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
@@ -31,13 +32,18 @@ class _FakeAlertService extends Fake implements AlertService {
   Future<void> syncDeliveries({required String userId, required String token}) async {}
 }
 
+class _FakeFcmService extends Fake implements FcmService {
+  @override
+  Future<String?> getToken() async => null;
+}
+
 Widget _makeTestable({UserModel? user}) {
   final mockService = MockAuthService();
   return ProviderScope(
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final n = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService());
+        final n = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService(), _FakeFcmService());
         // ignore: invalid_use_of_protected_member
         if (user != null) n.state = user;
         return n;

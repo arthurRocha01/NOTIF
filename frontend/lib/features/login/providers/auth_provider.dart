@@ -5,10 +5,13 @@ import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
+import 'package:notif_app/features/login/services/fcm_service.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
+
+final fcmServiceProvider = Provider<FcmService>((ref) => FcmService());
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -18,6 +21,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, UserModel?>((ref) {
     ref.read(tokenStorageProvider),
     ref.read(sectorServiceProvider),
     ref.read(alertServiceProvider),
+    ref.read(fcmServiceProvider),
   );
 });
 
@@ -30,6 +34,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   final TokenStorage _storage;
   final SectorService _sectorService;
   final AlertService _alertService;
+  final FcmService _fcmService;
   String? _errorMessage;
 
   AuthNotifier(
@@ -37,6 +42,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     this._storage,
     this._sectorService,
     this._alertService,
+    this._fcmService,
   ) : super(null);
 
   String? get errorMessage => _errorMessage;
@@ -72,6 +78,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       final raw = await _service.fetchUser(email, token);
       state = await _resolveUser(raw);
       _syncDeliveriesSilently(state!.id, token);
+      _syncFcmTokenSilently(state!);
       return true;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -93,6 +100,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       final raw = await _service.fetchUser(email, token);
       state = await _resolveUser(raw);
       _syncDeliveriesSilently(state!.id, token);
+      _syncFcmTokenSilently(state!);
     } catch (_) {
       ApiClient.clearToken();
       await _storage.clearAll();
@@ -110,5 +118,30 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     _alertService
         .syncDeliveries(userId: userId, token: token)
         .catchError((_) {});
+  }
+
+  void _syncFcmTokenSilently(UserModel user) {
+    _syncFcmToken(user).catchError((_) {});
+  }
+
+  Future<void> _syncFcmToken(UserModel user) async {
+    final deviceToken = await _fcmService.getToken();
+    if (deviceToken == null || deviceToken == user.fcmToken) return;
+    await _service.updateFcmToken(
+      userId: user.id,
+      fcmToken: deviceToken,
+      token: ApiClient.currentToken,
+    );
+    if (state != null) {
+      state = UserModel(
+        id: state!.id,
+        name: state!.name,
+        email: state!.email,
+        sector: state!.sector,
+        role: state!.role,
+        avatar: state!.avatar,
+        fcmToken: deviceToken,
+      );
+    }
   }
 }

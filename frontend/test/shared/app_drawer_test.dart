@@ -7,6 +7,7 @@ import 'package:notif_app/core/storage/token_storage.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
+import 'package:notif_app/features/login/services/fcm_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
@@ -32,6 +33,11 @@ class _FakeAlertService extends Fake implements AlertService {
   Future<void> syncDeliveries({required String userId, required String token}) async {}
 }
 
+class _FakeFcmService extends Fake implements FcmService {
+  @override
+  Future<String?> getToken() async => null;
+}
+
 // Widget de suporte que abre o drawer automaticamente
 Widget _makeTestable({UserModel? user}) {
   final mockService = MockAuthService();
@@ -40,7 +46,7 @@ Widget _makeTestable({UserModel? user}) {
     overrides: [
       authServiceProvider.overrideWithValue(mockService),
       authProvider.overrideWith((ref) {
-        final notifier = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService());
+        final notifier = AuthNotifier(mockService, _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService(), _FakeFcmService());
         if (user != null) {
           // ignore: invalid_use_of_protected_member
           notifier.state = user;
@@ -160,7 +166,7 @@ void main() {
           overrides: [
             authServiceProvider.overrideWithValue(MockAuthService()),
             authProvider.overrideWith((ref) {
-              final n = AuthNotifier(MockAuthService(), _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService());
+              final n = AuthNotifier(MockAuthService(), _FakeTokenStorage(), _FakeSectorService(), _FakeAlertService(), _FakeFcmService());
               // ignore: invalid_use_of_protected_member
               n.state = supervisor;
               return n;
