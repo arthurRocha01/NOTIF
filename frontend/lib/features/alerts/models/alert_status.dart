@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 enum AlertLevel {
   low,
@@ -37,10 +38,10 @@ enum AlertLevel {
 
   IconData get icon {
     switch (this) {
-      case AlertLevel.low:      return Icons.notifications_outlined;
-      case AlertLevel.medium:   return Icons.info_outline;
-      case AlertLevel.high:     return Icons.warning_amber_rounded;
-      case AlertLevel.critical: return Icons.report_problem;
+      case AlertLevel.low:      return LucideIcons.bell;
+      case AlertLevel.medium:   return LucideIcons.info;
+      case AlertLevel.high:     return LucideIcons.alertTriangle;
+      case AlertLevel.critical: return LucideIcons.alertOctagon;
     }
   }
 

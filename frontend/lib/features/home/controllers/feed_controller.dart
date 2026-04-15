@@ -10,7 +10,7 @@ class FeedController extends ChangeNotifier {
   List<PostModel> posts = [];
   bool loading = false;
 
-  // pageIndex: 0 = Feed, 1 = Dashboard, 2 = Alerts
+
   int pageIndex = 0;
 
   int notifications = 3;

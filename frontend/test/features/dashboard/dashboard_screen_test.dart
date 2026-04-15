@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
@@ -57,7 +58,7 @@ void main() {
 
     notifier.calls.clear();
 
-    await tester.tap(find.byIcon(Icons.refresh));
+    await tester.tap(find.byIcon(LucideIcons.refreshCw));
     await tester.pump();
 
     expect(notifier.calls, containsAll(['loadNotifications', 'loadAssignments']));

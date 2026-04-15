@@ -54,7 +54,7 @@ void main() {
     testWidgets('exibe campo de email/matrícula', (tester) async {
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
-      expect(find.text('Matrícula ou Email corporativo'), findsOneWidget);
+      expect(find.text('Ex: joao@empresa.com'), findsOneWidget);
     });
 
     testWidgets('exibe campo de senha', (tester) async {
@@ -88,7 +88,7 @@ void main() {
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
 
       await tester.enterText(
-          find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
+          find.widgetWithText(TextField, 'Ex: joao@empresa.com'),
           'user@test.com');
       await tester.tap(find.text('Entrar'));
       await tester.pump();
@@ -110,7 +110,7 @@ void main() {
 
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
-          find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
+          find.widgetWithText(TextField, 'Ex: joao@empresa.com'),
           'joao@test.com');
       await tester.enterText(
           find.widgetWithText(TextField, 'Senha'), 'senha123');
@@ -134,7 +134,7 @@ void main() {
 
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
-          find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
+          find.widgetWithText(TextField, 'Ex: joao@empresa.com'),
           'joao@test.com');
       await tester.enterText(
           find.widgetWithText(TextField, 'Senha'), 'senha123');
@@ -152,7 +152,7 @@ void main() {
 
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
-          find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
+          find.widgetWithText(TextField, 'Ex: joao@empresa.com'),
           'wrong@test.com');
       await tester.enterText(find.widgetWithText(TextField, 'Senha'), 'errada');
 
@@ -168,7 +168,7 @@ void main() {
 
       await tester.pumpWidget(_buildApp(mockService, mockStorage));
       await tester.enterText(
-          find.widgetWithText(TextField, 'Matrícula ou Email corporativo'),
+          find.widgetWithText(TextField, 'Ex: joao@empresa.com'),
           'wrong@test.com');
       await tester.enterText(find.widgetWithText(TextField, 'Senha'), 'errada');
 

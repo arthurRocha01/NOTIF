@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
@@ -8,7 +10,6 @@ import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
-import '../../../core/constants/app_spacing.dart';
 
 class AlertAdminScreen extends ConsumerStatefulWidget {
   const AlertAdminScreen({super.key});
@@ -58,7 +59,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(alertProvider);
+    final state       = ref.watch(alertProvider);
     final sectorState = ref.watch(sectorProvider);
 
     ref.listen<String?>(
@@ -67,44 +68,67 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
         if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(error),
-                backgroundColor: Colors.red.shade700),
+              content: Text(error, style: GoogleFonts.inter()),
+              backgroundColor: const Color(0xFFDC2626),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
       },
     );
 
+    final criticalCount = state.notifications
+        .where((n) => n.level == AlertLevel.critical)
+        .length;
+
+    final pendingAssignments = state.assignments
+        .where((a) => a.status != AssignmentStatus.acknowledged)
+        .length;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9),
       body: Column(
         children: [
-          // ── TabBar ─────────────────────────────────────────────────────────
+          // ── TabBar ───────────────────────────────────────────────────────
           Container(
-            color: const Color(0xFFF8FAFC),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+            ),
             child: TabBar(
               controller: _tabController,
-              indicatorColor: const Color(0xFF3B82F6),
-              labelColor: const Color(0xFF3B82F6),
-              unselectedLabelColor: Colors.grey,
+              indicatorColor: const Color(0xFF4A6CF7),
+              indicatorWeight: 2.5,
               indicatorSize: TabBarIndicatorSize.label,
+              labelColor: const Color(0xFF4A6CF7),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              labelStyle:
+                  GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+              unselectedLabelStyle:
+                  GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               tabs: [
-                _buildTabHeader(
+                _buildTabLabel(
                   'Notificações',
-                  state.notifications.length,
-                  const Color(0xFFB91C1C),
+                  count: criticalCount,
+                  badgeColor: const Color(0xFFDC2626),
+                  badgeBg: const Color(0xFFFEE2E2),
                 ),
-                _buildTabHeader(
+                _buildTabLabel(
                   'Minhas notificações',
-                  state.assignments
-                      .where((a) => a.status != AssignmentStatus.acknowledged)
-                      .length,
-                  const Color(0xFF3B82F6),
+                  count: pendingAssignments,
+                  badgeColor: const Color(0xFF4A6CF7),
+                  badgeBg: const Color(0xFFEEF2FF),
                 ),
               ],
             ),
           ),
 
-          // ── Conteúdo das abas ───────────────────────────────────────────────
+          // ── Conteúdo das abas ───────────────────────────────────────────
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -133,27 +157,34 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     );
   }
 
-  Widget _buildTabHeader(String label, int count, Color badgeColor) {
+  Tab _buildTabLabel(
+    String label, {
+    int count = 0,
+    required Color badgeColor,
+    required Color badgeBg,
+  }) {
     return Tab(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(label),
           if (count > 0) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: badgeColor,
-                  borderRadius: BorderRadius.circular(8)),
-              child: Text('$count',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
+                ),
+              ),
             ),
           ],
         ],
@@ -166,27 +197,41 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     bool isLoading,
     SectorState sectorState,
   ) {
-    final filtered = _getFilteredAlerts(alerts);
+    final filtered      = _getFilteredAlerts(alerts);
+    final criticalCount = alerts.where((a) => a.level == AlertLevel.critical).length;
 
     return RefreshIndicator(
       onRefresh: () async {
         await ref.read(alertProvider.notifier).loadNotifications();
         await ref.read(sectorProvider.notifier).loadSectors();
       },
+      color: const Color(0xFF4A6CF7),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
         children: [
+          // ── Summary ──────────────────────────────────────────────────────
+          if (alerts.isNotEmpty) ...[
+            _buildSummaryHeader(alerts.length, criticalCount),
+            const SizedBox(height: 16),
+          ],
+
+          // ── Ações rápidas ────────────────────────────────────────────────
           _buildQuickActions(),
           const SizedBox(height: 16),
+
+          // ── Filtros ──────────────────────────────────────────────────────
           _buildFilters(sectorState),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // ── Lista ────────────────────────────────────────────────────────
           if (isLoading && alerts.isEmpty)
             const Center(
-                child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator()))
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(color: Color(0xFF4A6CF7)),
+              ),
+            )
           else if (filtered.isEmpty)
             _buildEmptyState()
           else
@@ -197,14 +242,66 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     );
   }
 
+  Widget _buildSummaryHeader(int total, int critical) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SummaryTile(
+              icon: LucideIcons.bell,
+              iconColor: const Color(0xFF4A6CF7),
+              iconBg: const Color(0xFFEEF2FF),
+              value: '$total',
+              label: 'Total',
+            ),
+          ),
+          Container(width: 1, height: 40, color: const Color(0xFFE2E8F0)),
+          Expanded(
+            child: _SummaryTile(
+              icon: LucideIcons.alertOctagon,
+              iconColor: const Color(0xFFDC2626),
+              iconBg: const Color(0xFFFEE2E2),
+              value: '$critical',
+              label: 'Críticos',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickActions() {
     return Row(
       children: [
-        _buildActionBtn('Novo Alerta', Icons.add_alert,
-            const Color(0xFFB91C1C), () => CreateAlertModal.show(context)),
+        Expanded(
+          child: _ActionButton(
+            label: 'Novo Alerta',
+            icon: LucideIcons.bellRing,
+            color: const Color(0xFFDC2626),
+            onTap: () => CreateAlertModal.show(context),
+          ),
+        ),
         const SizedBox(width: 12),
-        _buildActionBtn('Comunicado', Icons.campaign,
-            const Color(0xFF1E3A8A), () => CreateMessageModal.show(context)),
+        Expanded(
+          child: _ActionButton(
+            label: 'Comunicado',
+            icon: LucideIcons.megaphone,
+            color: const Color(0xFF1A2340),
+            onTap: () => CreateMessageModal.show(context),
+          ),
+        ),
       ],
     );
   }
@@ -212,38 +309,44 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   Widget _buildFilters(SectorState sectorState) {
     return Column(
       children: [
-        TextField(
-          controller: _searchCtrl,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Pesquisar registros...',
-            prefixIcon: const Icon(Icons.search, size: 20),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.all(12),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none),
+        // ── Campo de busca ────────────────────────────────────────────────
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: TextField(
+            controller: _searchCtrl,
+            onChanged: (_) => setState(() {}),
+            style: GoogleFonts.inter(
+                fontSize: 14, color: const Color(0xFF0F172A)),
+            decoration: InputDecoration(
+              hintText: 'Pesquisar registros...',
+              hintStyle: GoogleFonts.inter(
+                  fontSize: 14, color: const Color(0xFF94A3B8)),
+              prefixIcon: const Icon(LucideIcons.search,
+                  size: 18, color: Color(0xFF94A3B8)),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 13),
+              border: InputBorder.none,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+        // ── Chips de setor ────────────────────────────────────────────────
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              // Chip "Todos"
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: _buildSectorChip(
-                  label: 'Todos',
-                  isSelected: _selectedSectorId == null,
-                  onTap: () => setState(() => _selectedSectorId = null),
-                ),
+              _SectorChip(
+                label: 'Todos',
+                isSelected: _selectedSectorId == null,
+                onTap: () => setState(() => _selectedSectorId = null),
               ),
-              // Chips dos setores reais
               if (sectorState.isLoading)
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
                   child: SizedBox(
                     width: 16,
                     height: 16,
@@ -252,8 +355,8 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                 )
               else
                 ...sectorState.sectors.map((sector) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _buildSectorChip(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: _SectorChip(
                         label: sector.name,
                         isSelected: _selectedSectorId == sector.id,
                         onTap: () =>
@@ -267,70 +370,186 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     );
   }
 
-  Widget _buildSectorChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: Colors.white,
-      selectedColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-      side: BorderSide(
-          color: isSelected
-              ? const Color(0xFF3B82F6)
-              : Colors.transparent),
-      labelStyle: TextStyle(
-        color: isSelected
-            ? const Color(0xFF3B82F6)
-            : Colors.grey.shade700,
-        fontSize: 12,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 60),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Center(
         child: Column(
           children: [
-            Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
-            Text('Nenhum registro encontrado',
-                style: TextStyle(color: Colors.grey)),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEF2FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(LucideIcons.bellOff,
+                  size: 32, color: Color(0xFF4A6CF7)),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nenhum registro encontrado',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Puxe para baixo para atualizar',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildActionBtn(
-      String label, IconData icon, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: Material(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13)),
-              ],
+// ── Summary tile ──────────────────────────────────────────────────────────────
+
+class _SummaryTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String value;
+  final String label;
+
+  const _SummaryTile({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: iconColor),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0F172A),
+              ),
             ),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── Action button ─────────────────────────────────────────────────────────────
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Sector chip ───────────────────────────────────────────────────────────────
+
+class _SectorChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SectorChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4A6CF7) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF4A6CF7)
+                : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight:
+                isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected
+                ? Colors.white
+                : const Color(0xFF64748B),
           ),
         ),
       ),

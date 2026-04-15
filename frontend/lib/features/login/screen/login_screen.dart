@@ -14,19 +14,19 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final TextEditingController _userController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController    = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _userController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    final email = _userController.text.trim();
+    final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
@@ -36,9 +36,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await ref
-        .read(authProvider.notifier)
-        .login(email, password);
+    final success =
+        await ref.read(authProvider.notifier).login(email, password);
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -54,8 +53,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: GoogleFonts.inter()),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -66,84 +67,189 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
+          // ── Header azul com logo ────────────────────────────────────────
           const AuthHeader(),
+
+          // ── Conteúdo rolável ────────────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 60),
-                  _buildTitleSection(),
-                  const SizedBox(height: 40),
-                  CustomInputField(
-                    controller: _userController,
-                    icon: LucideIcons.userCircle,
-                    hint: 'Matrícula ou Email corporativo',
+                  const SizedBox(height: 36),
+
+                  // Título principal
+                  Text(
+                    'Portal de Segurança\ne Compliance.',
+                    style: GoogleFonts.inter(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      height: 1.2,
+                    ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 8),
+
+                  // Slogan
+                  Text(
+                    'NOTIF: Menos ruído. Mais clareza.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Subtítulo de acesso
+                  Text(
+                    'Acesso restrito',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Insira seu email corporativo',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Campo e-mail
+                  CustomInputField(
+                    controller: _emailController,
+                    icon: LucideIcons.user,
+                    hint: 'Ex: joao@empresa.com',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Campo senha
                   CustomInputField(
                     controller: _passwordController,
                     icon: LucideIcons.lock,
                     hint: 'Senha',
                     isPassword: true,
                   ),
-                  const SizedBox(height: 30),
-                  _isLoading
-                      ? const CircularProgressIndicator(
-                          color: AppColors.primary,
-                        )
-                      : PrimaryButton(
-                          text: 'Entrar',
-                          onPressed: _handleLogin,
+
+                  const SizedBox(height: 28),
+
+                  // Botão / loading
+                  if (_isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.accent,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  else
+                    PrimaryButton(text: 'Entrar', onPressed: _handleLogin),
+
+                  const SizedBox(height: 24),
+
+                  // Link de suporte
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Precisa de Ajuda? ',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                  const SizedBox(height: 30),
-                  _buildHelpLinks(),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Text(
+                            'Contate o Suporte',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
           ),
+
+          // ── Rodapé fixo ─────────────────────────────────────────────────
+          const _Footer(),
         ],
       ),
     );
   }
+}
 
-  Widget _buildTitleSection() {
-    return Column(
-      children: [
-        Text(
-          'Portal de Segurança e\nCompliance.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Acesso restrito a colaboradores',
-          style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
+// ── Rodapé ────────────────────────────────────────────────────────────────────
 
-  Widget _buildHelpLinks() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text('Precisa de Ajuda? ', style: GoogleFonts.inter(fontSize: 12)),
-        Text(
-          'Contate o Suporte',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: AppColors.accent,
-            fontWeight: FontWeight.w600,
-            decoration: TextDecoration.underline,
+class _Footer extends StatelessWidget {
+  const _Footer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        bottom: MediaQuery.of(context).padding.bottom + 12,
+        top: 12,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.borderLight)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.tag,
+                  size: 11, color: AppColors.textTertiary),
+              const SizedBox(width: 4),
+              Text(
+                'Versão 1.0',
+                style: GoogleFonts.firaCode(
+                  fontSize: 11,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          Row(
+            children: [
+              const Icon(LucideIcons.shieldCheck,
+                  size: 11, color: AppColors.textTertiary),
+              const SizedBox(width: 4),
+              Text(
+                'Sistema Seguro',
+                style: GoogleFonts.firaCode(
+                  fontSize: 11,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
