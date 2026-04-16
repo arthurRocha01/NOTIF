@@ -82,7 +82,11 @@ class _SectorsManagementScreenState
       body: state.isLoading
           ? const LoadingIndicator()
           : state.sectors.isEmpty
-              ? const EmptyState(message: 'Nenhum setor cadastrado')
+              ? const EmptyState(
+                  icon: Icons.business_outlined,
+                  title: 'Sem setores',
+                  message: 'Nenhum setor cadastrado',
+                )
               : RefreshIndicator(
                   onRefresh: () =>
                       ref.read(adminSectorProvider.notifier).loadSectors(),

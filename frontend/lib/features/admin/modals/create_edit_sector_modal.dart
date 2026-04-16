@@ -130,7 +130,7 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
               const SizedBox(height: AppSpacing.xl),
               NotifButton(
                 label: _isEditing ? 'Salvar' : 'Criar Setor',
-                onTap: _submit,
+                onPressed: _submit,
                 isLoading: _isLoading,
               ),
             ],

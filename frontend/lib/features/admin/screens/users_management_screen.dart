@@ -96,7 +96,11 @@ class _UsersManagementScreenState
       body: state.isLoading
           ? const LoadingIndicator()
           : state.users.isEmpty
-              ? const EmptyState(message: 'Nenhum usuário cadastrado')
+              ? const EmptyState(
+                  icon: Icons.people_outline,
+                  title: 'Sem usuários',
+                  message: 'Nenhum usuário cadastrado',
+                )
               : RefreshIndicator(
                   onRefresh: () =>
                       ref.read(adminUserProvider.notifier).loadUsers(),

@@ -179,15 +179,36 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
                 ),
                 if (!_isEditing) ...[
                   const SizedBox(height: AppSpacing.md),
-                  NotifInput(
-                    controller: _passwordCtrl,
-                    label: 'Senha',
-                    hint: 'Mínimo 6 caracteres',
-                    isRequired: true,
-                    obscureText: true,
-                    validator: (v) => v == null || v.length < 6
-                        ? 'Mínimo 6 caracteres'
-                        : null,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Senha *',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          hintText: 'Mínimo 6 caracteres',
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF1F5F9),
+                        ),
+                        validator: (v) => v == null || v.length < 6
+                            ? 'Mínimo 6 caracteres'
+                            : null,
+                      ),
+                    ],
                   ),
                 ],
                 const SizedBox(height: AppSpacing.md),
@@ -218,7 +239,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
                 const SizedBox(height: AppSpacing.xl),
                 NotifButton(
                   label: _isEditing ? 'Salvar' : 'Criar Usuário',
-                  onTap: _submit,
+                  onPressed: _submit,
                   isLoading: _isLoading,
                 ),
               ],

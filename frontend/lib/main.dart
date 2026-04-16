@@ -21,6 +21,12 @@ void main() async {
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
+  Widget _resolveHome(user) {
+    if (user == null) return const LoginScreen();
+    if (user.isAdmin) return const AdminPanelScreen();
+    return const HomeScreen();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final init = ref.watch(authInitProvider);
@@ -35,12 +41,6 @@ class MyApp extends ConsumerWidget {
       useMaterial3: true,
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
     );
-
-    Widget _resolveHome(user) {
-      if (user == null) return const LoginScreen();
-      if (user.isAdmin) return const AdminPanelScreen();
-      return const HomeScreen();
-    }
 
     return MaterialApp(
       title: 'Notif App',
