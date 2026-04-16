@@ -9,6 +9,8 @@ class AdminUserService {
   final http.Client _httpClient;
   final String _baseUrl;
 
+  static const _timeout = Duration(seconds: 20);
+
   AdminUserService({
     http.Client? httpClient,
     String? baseUrl,
@@ -35,22 +37,23 @@ class AdminUserService {
 
   Future<List<UserModel>> getUsers({required String token}) async {
     try {
-      // GET /users é público no backend — auth com role ADMIN causa 500
-      final response = await _httpClient.get(
-        Uri.parse('$_baseUrl/users'),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final response = await _httpClient
+          .get(Uri.parse('$_baseUrl/users'), headers: _headers(token))
+          .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list
             .map((e) => _parseUser(e as Map<String, dynamic>))
             .toList();
       }
-      throw ApiException('Erro ao buscar usuários', statusCode: response.statusCode);
+      throw ApiException('Erro ao buscar usuários',
+          statusCode: response.statusCode);
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on Exception {
+      throw ApiException('Tempo limite excedido. Tente novamente.');
     }
   }
 
@@ -63,26 +66,31 @@ class AdminUserService {
     required String sectorId,
   }) async {
     try {
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/users'),
-        headers: _headers(token),
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-          'role': role,
-          'sectorId': sectorId,
-          'fcmToken': '',
-        }),
-      );
+      final response = await _httpClient
+          .post(
+            Uri.parse('$_baseUrl/users'),
+            headers: _headers(token),
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+              'role': role,
+              'sectorId': sectorId,
+              'fcmToken': '',
+            }),
+          )
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao criar usuário', statusCode: response.statusCode);
+      throw ApiException('Erro ao criar usuário',
+          statusCode: response.statusCode);
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on Exception {
+      throw ApiException('Tempo limite excedido. Tente novamente.');
     }
   }
 
@@ -101,19 +109,24 @@ class AdminUserService {
       if (role != null) body['role'] = role;
       if (sectorId != null) body['sectorId'] = sectorId;
 
-      final response = await _httpClient.patch(
-        Uri.parse('$_baseUrl/users/$userId'),
-        headers: _headers(token),
-        body: jsonEncode(body),
-      );
+      final response = await _httpClient
+          .patch(
+            Uri.parse('$_baseUrl/users/$userId'),
+            headers: _headers(token),
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) {
         return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao atualizar usuário', statusCode: response.statusCode);
+      throw ApiException('Erro ao atualizar usuário',
+          statusCode: response.statusCode);
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on Exception {
+      throw ApiException('Tempo limite excedido. Tente novamente.');
     }
   }
 
@@ -122,18 +135,23 @@ class AdminUserService {
     required String userId,
   }) async {
     try {
-      final response = await _httpClient.delete(
-        Uri.parse('$_baseUrl/users/$userId'),
-        headers: _headers(token),
-      );
+      final response = await _httpClient
+          .delete(
+            Uri.parse('$_baseUrl/users/$userId'),
+            headers: _headers(token),
+          )
+          .timeout(_timeout);
       if (response.statusCode == 200 ||
           response.statusCode == 204 ||
           response.statusCode == 201) return;
-      throw ApiException('Erro ao deletar usuário', statusCode: response.statusCode);
+      throw ApiException('Erro ao deletar usuário',
+          statusCode: response.statusCode);
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on Exception {
+      throw ApiException('Tempo limite excedido. Tente novamente.');
     }
   }
 }
