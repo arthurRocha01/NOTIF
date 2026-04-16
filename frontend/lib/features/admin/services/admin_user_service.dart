@@ -35,9 +35,10 @@ class AdminUserService {
 
   Future<List<UserModel>> getUsers({required String token}) async {
     try {
+      // GET /users é público no backend — auth com role ADMIN causa 500
       final response = await _httpClient.get(
         Uri.parse('$_baseUrl/users'),
-        headers: _headers(token),
+        headers: {'Content-Type': 'application/json'},
       );
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
@@ -71,6 +72,7 @@ class AdminUserService {
           'password': password,
           'role': role,
           'sectorId': sectorId,
+          'fcmToken': '',
         }),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {

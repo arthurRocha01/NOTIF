@@ -65,7 +65,7 @@ void main() {
       await service.getUsers(token: token);
 
       expect(capturedUri?.path, equals('/users'));
-      expect(capturedHeaders?['Authorization'], equals('Bearer $token'));
+      expect(capturedHeaders?.containsKey('Authorization'), isFalse);
     });
 
     test('lança ApiException em erro HTTP', () async {
@@ -122,6 +122,7 @@ void main() {
       expect(body['password'], equals('senha123'));
       expect(body['role'], equals('EMPLOYEE'));
       expect(body['sectorId'], equals('sector-1'));
+      expect(body['fcmToken'], equals(''));
       expect(result.id, equals('user-1'));
     });
 
