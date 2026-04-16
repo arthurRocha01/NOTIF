@@ -1,0 +1,137 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/model/user_model.dart';
+
+class AdminUserService {
+  final http.Client _httpClient;
+  final String _baseUrl;
+
+  AdminUserService({
+    http.Client? httpClient,
+    String? baseUrl,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _baseUrl = baseUrl ?? ApiClient.baseUrl;
+
+  Map<String, String> _headers(String token) => {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+  UserModel _parseUser(Map<String, dynamic> data) => UserModel(
+        id: data['id'] as String,
+        name: data['name'] as String,
+        email: data['email'] as String,
+        sector: data['sectorId'] as String? ?? '',
+        role: data['role'] == 'ADMIN'
+            ? UserRole.admin
+            : data['role'] == 'SUPERVISOR'
+                ? UserRole.supervisor
+                : UserRole.employee,
+        fcmToken: data['fcmToken'] as String?,
+      );
+
+  Future<List<UserModel>> getUsers({required String token}) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$_baseUrl/users'),
+        headers: _headers(token),
+      );
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((e) => _parseUser(e as Map<String, dynamic>))
+            .toList();
+      }
+      throw ApiException('Erro ao buscar usuários', statusCode: response.statusCode);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+
+  Future<UserModel> createUser({
+    required String token,
+    required String name,
+    required String email,
+    required String password,
+    required String role,
+    required String sectorId,
+  }) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/users'),
+        headers: _headers(token),
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'password': password,
+          'role': role,
+          'sectorId': sectorId,
+        }),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
+      }
+      throw ApiException('Erro ao criar usuário', statusCode: response.statusCode);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+
+  Future<UserModel> updateUser({
+    required String token,
+    required String userId,
+    String? name,
+    String? email,
+    String? role,
+    String? sectorId,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (name != null) body['name'] = name;
+      if (email != null) body['email'] = email;
+      if (role != null) body['role'] = role;
+      if (sectorId != null) body['sectorId'] = sectorId;
+
+      final response = await _httpClient.patch(
+        Uri.parse('$_baseUrl/users/$userId'),
+        headers: _headers(token),
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
+      }
+      throw ApiException('Erro ao atualizar usuário', statusCode: response.statusCode);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+
+  Future<void> deleteUser({
+    required String token,
+    required String userId,
+  }) async {
+    try {
+      final response = await _httpClient.delete(
+        Uri.parse('$_baseUrl/users/$userId'),
+        headers: _headers(token),
+      );
+      if (response.statusCode == 200 ||
+          response.statusCode == 204 ||
+          response.statusCode == 201) return;
+      throw ApiException('Erro ao deletar usuário', statusCode: response.statusCode);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw ApiException('Sem conexão com a internet');
+    }
+  }
+}

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
@@ -35,6 +36,12 @@ class MyApp extends ConsumerWidget {
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
     );
 
+    Widget _resolveHome(user) {
+      if (user == null) return const LoginScreen();
+      if (user.isAdmin) return const AdminPanelScreen();
+      return const HomeScreen();
+    }
+
     return MaterialApp(
       title: 'Notif App',
       debugShowCheckedModeBanner: false,
@@ -43,10 +50,8 @@ class MyApp extends ConsumerWidget {
         loading: () => const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         ),
-        error: (_, __) =>
-            user == null ? const LoginScreen() : const HomeScreen(),
-        data: (_) =>
-            user == null ? const LoginScreen() : const HomeScreen(),
+        error: (_, __) => _resolveHome(user),
+        data: (_) => _resolveHome(user),
       ),
     );
   }

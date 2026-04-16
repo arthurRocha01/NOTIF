@@ -119,9 +119,11 @@ class AuthService {
           name: data['name'] as String,
           email: data['email'] as String,
           sector: data['sectorId'] as String? ?? '',
-          role: data['role'] == 'SUPERVISOR' || data['role'] == 'ADMIN'
-              ? UserRole.supervisor
-              : UserRole.employee,
+          role: data['role'] == 'ADMIN'
+              ? UserRole.admin
+              : data['role'] == 'SUPERVISOR'
+                  ? UserRole.supervisor
+                  : UserRole.employee,
           fcmToken: data['fcmToken'] as String?,
         );
       }

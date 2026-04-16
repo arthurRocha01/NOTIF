@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 
-enum UserRole { supervisor, employee }
+enum UserRole { supervisor, employee, admin }
 
 class UserModel {
   final String id;
@@ -21,7 +21,16 @@ class UserModel {
     this.fcmToken,
   });
 
-  // Garante que a UI saiba quem é admin
   bool get isSupervisor => role == UserRole.supervisor;
-  String get roleLabel => isSupervisor ? "Supervisor" : "Funcionário";
+  bool get isAdmin => role == UserRole.admin;
+  String get roleLabel {
+    switch (role) {
+      case UserRole.admin:
+        return "Administrador";
+      case UserRole.supervisor:
+        return "Supervisor";
+      case UserRole.employee:
+        return "Funcionário";
+    }
+  }
 }

@@ -326,7 +326,7 @@ void main() {
       expect(user.role, equals(UserRole.supervisor));
     });
 
-    test('mapeia role ADMIN para UserRole.supervisor', () async {
+    test('mapeia role ADMIN para UserRole.admin', () async {
       when(
         () => mockClient.get(any(), headers: any(named: 'headers')),
       ).thenAnswer(
@@ -344,7 +344,7 @@ void main() {
 
       final user = await sut.fetchUser('admin@test.com', 'jwt-token-123');
 
-      expect(user.role, equals(UserRole.supervisor));
+      expect(user.role, equals(UserRole.admin));
     });
 
     test('lança ApiException(404) quando usuário não é encontrado', () async {
