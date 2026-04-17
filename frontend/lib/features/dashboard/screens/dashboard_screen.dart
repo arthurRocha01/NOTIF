@@ -26,12 +26,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(alertProvider.notifier).loadNotifications();
       ref.read(alertProvider.notifier).loadAssignments();
+      ref.read(sectorProvider.notifier).loadSectors();
     });
   }
 
   Future<void> _refresh() async {
     ref.read(alertProvider.notifier).loadNotifications();
     ref.read(alertProvider.notifier).loadAssignments();
+    ref.read(sectorProvider.notifier).loadSectors();
   }
 
   @override

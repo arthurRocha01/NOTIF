@@ -6,8 +6,12 @@ import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:notif_app/features/sectors/providers/sector_provider.dart';
+import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 class MockAlertService extends Mock implements AlertService {}
+
+class MockSectorService extends Mock implements SectorService {}
 
 class _TrackingAlertNotifier extends AlertNotifier {
   final List<String> calls = [];
@@ -25,19 +29,35 @@ class _TrackingAlertNotifier extends AlertNotifier {
   }
 }
 
+class _TrackingSectorNotifier extends SectorNotifier {
+  final List<String> calls = [];
+
+  _TrackingSectorNotifier(super.service);
+
+  @override
+  Future<void> loadSectors({String? token}) async {
+    calls.add('loadSectors');
+  }
+}
+
 void main() {
-  late MockAlertService mockService;
-  late _TrackingAlertNotifier notifier;
+  late MockAlertService mockAlertService;
+  late MockSectorService mockSectorService;
+  late _TrackingAlertNotifier alertNotifier;
+  late _TrackingSectorNotifier sectorNotifier;
 
   setUp(() {
-    mockService = MockAlertService();
-    notifier = _TrackingAlertNotifier(mockService);
+    mockAlertService = MockAlertService();
+    mockSectorService = MockSectorService();
+    alertNotifier = _TrackingAlertNotifier(mockAlertService);
+    sectorNotifier = _TrackingSectorNotifier(mockSectorService);
   });
 
   Widget buildSubject() {
     return ProviderScope(
       overrides: [
-        alertProvider.overrideWith((_) => notifier),
+        alertProvider.overrideWith((_) => alertNotifier),
+        sectorProvider.overrideWith((_) => sectorNotifier),
       ],
       child: const MaterialApp(home: DashboardScreen()),
     );
@@ -46,9 +66,16 @@ void main() {
   testWidgets('chama loadNotifications e loadAssignments ao inicializar',
       (tester) async {
     await tester.pumpWidget(buildSubject());
-    await tester.pump(); // processa o addPostFrameCallback
+    await tester.pump();
 
-    expect(notifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
+    expect(alertNotifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
+  });
+
+  testWidgets('chama loadSectors ao inicializar', (tester) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    expect(sectorNotifier.calls, contains('loadSectors'));
   });
 
   testWidgets('botão de refresh chama loadNotifications e loadAssignments',
@@ -56,11 +83,23 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
 
-    notifier.calls.clear();
+    alertNotifier.calls.clear();
 
     await tester.tap(find.byIcon(LucideIcons.refreshCw));
     await tester.pump();
 
-    expect(notifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
+    expect(alertNotifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
+  });
+
+  testWidgets('botão de refresh chama loadSectors', (tester) async {
+    await tester.pumpWidget(buildSubject());
+    await tester.pump();
+
+    sectorNotifier.calls.clear();
+
+    await tester.tap(find.byIcon(LucideIcons.refreshCw));
+    await tester.pump();
+
+    expect(sectorNotifier.calls, contains('loadSectors'));
   });
 }
