@@ -43,6 +43,7 @@ ProviderContainer _makeContainer({
         userId: any(named: 'userId'),
         token: any(named: 'token'),
       )).thenAnswer((_) async {});
+  when(() => fcmService.requestPermission()).thenAnswer((_) async {});
   when(() => storage.saveToken(any())).thenAnswer((_) async {});
   when(() => storage.saveEmail(any())).thenAnswer((_) async {});
   when(() => storage.clearAll()).thenAnswer((_) async {});

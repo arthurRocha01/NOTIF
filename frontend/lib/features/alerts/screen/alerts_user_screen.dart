@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../widgets/assignments_body.dart';
 

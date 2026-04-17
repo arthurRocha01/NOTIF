@@ -34,10 +34,11 @@ class ProfilePhotoDialog extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () async {
+                final navigator = Navigator.of(context);
                 final XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
                 if (image != null) {
                   onImagePicked(image.path);
-                  Navigator.pop(context);
+                  navigator.pop();
                 }
               },
               icon: const Icon(LucideIcons.camera),

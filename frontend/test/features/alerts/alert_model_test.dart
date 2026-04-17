@@ -8,7 +8,7 @@ void main() {
       'id': 'uuid-123',
       'title': 'Manutenção preventiva',
       'message': 'O servidor ficará indisponível às 22h.',
-      'level': 'HIGH',
+      'level': 'MEDIUM',
       'slaMinutes': 60,
       'requiresAcknowledgment': true,
       'targetSectorId': 'sector-abc',
@@ -23,9 +23,9 @@ void main() {
       expect(model.message, equals('O servidor ficará indisponível às 22h.'));
     });
 
-    test('mapeia level HIGH corretamente', () {
+    test('mapeia level MEDIUM corretamente', () {
       final model = AlertModel.fromJson(backendResponse);
-      expect(model.level, equals(AlertLevel.high));
+      expect(model.level, equals(AlertLevel.medium));
     });
 
     test('mapeia level CRITICAL corretamente', () {
@@ -98,7 +98,7 @@ void main() {
       'id': 'assign-1',
       'userId': 'user-1',
       'notificationId': 'notif-1',
-      'notificationLevel': 'HIGH',
+      'notificationLevel': 'MEDIUM',
       'status': 'PENDING',
       'createdAt': '2026-04-08T10:00:00.000Z',
       'dueAt': null,

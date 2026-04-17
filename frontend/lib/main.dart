@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/notifications/notification_service.dart';
 import 'package:notif_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
@@ -11,6 +12,7 @@ import 'package:notif_app/features/login/screen/login_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService().initialize();
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -21,7 +23,7 @@ void main() async {
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
-  Widget _resolveHome(user) {
+  Widget _resolveHome(dynamic user) {
     if (user == null) return const LoginScreen();
     if (user.isAdmin) return const AdminPanelScreen();
     return const HomeScreen();

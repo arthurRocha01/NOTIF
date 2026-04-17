@@ -9,8 +9,6 @@ class AdminSectorService {
   final http.Client _httpClient;
   final String _baseUrl;
 
-  static const _timeout = Duration(seconds: 20);
-
   AdminSectorService({
     http.Client? httpClient,
     String? baseUrl,

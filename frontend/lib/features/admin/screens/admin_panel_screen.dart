@@ -1,123 +1,116 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notif_app/core/constants/app_colors.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/features/admin/modals/create_edit_sector_modal.dart';
+import 'package:notif_app/features/admin/modals/create_edit_user_modal.dart';
+import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
+import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
+import 'package:notif_app/features/admin/screens/admin_dashboard_page.dart';
 import 'package:notif_app/features/admin/screens/sectors_management_screen.dart';
 import 'package:notif_app/features/admin/screens/users_management_screen.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
+import 'package:notif_app/shared/layout/app_drawer.dart';
+import 'package:notif_app/shared/widgets/home_app_bar.dart';
 
-class AdminPanelScreen extends ConsumerWidget {
+class AdminPanelScreen extends ConsumerStatefulWidget {
   const AdminPanelScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Painel Administrativo'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (user != null) ...[
-              Text(
-                'Olá, ${user.name}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Administrador do sistema',
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
-              ),
-              const SizedBox(height: 24),
-            ],
-            const Text(
-              'Gerenciamento',
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            _AdminCard(
-              icon: Icons.people_outline,
-              title: 'Usuários',
-              subtitle: 'Criar, editar e remover usuários do sistema',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const UsersManagementScreen()),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _AdminCard(
-              icon: Icons.business_outlined,
-              title: 'Setores',
-              subtitle: 'Criar, editar e remover setores',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const SectorsManagementScreen()),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  ConsumerState<AdminPanelScreen> createState() => _AdminPanelScreenState();
 }
 
-class _AdminCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _pageIndex = 0;
 
-  const _AdminCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(adminUserProvider.notifier).loadUsers();
+      ref.read(adminSectorProvider.notifier).loadSectors();
+    });
+  }
+
+  void _onNavTap(int index) => setState(() => _pageIndex = index);
+
+  Widget? _buildFab() {
+    switch (_pageIndex) {
+      case 1:
+        return FloatingActionButton(
+          heroTag: 'fab-users',
+          backgroundColor: const Color(0xFF4A6CF7),
+          onPressed: () async {
+            final ok = await CreateEditUserModal.show(context);
+            if (ok == true && mounted) {
+              ref.read(adminUserProvider.notifier).loadUsers();
+            }
+          },
+          child: const Icon(Icons.person_add, color: Colors.white),
+        );
+      case 2:
+        return FloatingActionButton(
+          heroTag: 'fab-sectors',
+          backgroundColor: const Color(0xFF16A34A),
+          onPressed: () async {
+            final ok = await CreateEditSectorModal.show(context);
+            if (ok == true && mounted) {
+              ref.read(adminSectorProvider.notifier).loadSectors();
+            }
+          },
+          child: const Icon(Icons.add, color: Colors.white),
+        );
+      default:
+        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: HomeAppBar(
+        onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withOpacity(0.1),
-          child: Icon(icon, color: AppColors.primary),
-        ),
-        title:
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+      drawer: const AppDrawer(),
+      body: IndexedStack(
+        index: _pageIndex,
+        children: [
+          AdminDashboardPage(
+            onNavigateToUsers: () => _onNavTap(1),
+            onNavigateToSectors: () => _onNavTap(2),
+          ),
+          const UsersManagementScreen(),
+          const SectorsManagementScreen(),
+        ],
+      ),
+      floatingActionButton: _buildFab(),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _pageIndex,
+        onDestinationSelected: _onNavTap,
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFF4A6CF7).withValues(alpha: 0.12),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(LucideIcons.layoutDashboard),
+            selectedIcon: Icon(LucideIcons.layoutDashboard,
+                color: Color(0xFF4A6CF7)),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(LucideIcons.users),
+            selectedIcon:
+                Icon(LucideIcons.users, color: Color(0xFF4A6CF7)),
+            label: 'Usuários',
+          ),
+          NavigationDestination(
+            icon: Icon(LucideIcons.building2),
+            selectedIcon:
+                Icon(LucideIcons.building2, color: Color(0xFF4A6CF7)),
+            label: 'Setores',
+          ),
+        ],
       ),
     );
   }

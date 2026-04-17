@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/api/api_client.dart';
-import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
 import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';

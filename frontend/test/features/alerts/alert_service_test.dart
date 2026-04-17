@@ -27,7 +27,7 @@ void main() {
     'id': 'notif-1',
     'title': 'Manutenção',
     'message': 'Servidor offline às 22h.',
-    'level': 'HIGH',
+    'level': 'MEDIUM',
     'slaMinutes': 60,
     'requiresAcknowledgment': false,
     'targetSectorId': 'sector-1',
@@ -39,7 +39,7 @@ void main() {
     'id': 'assign-1',
     'userId': 'user-1',
     'notificationId': 'notif-1',
-    'notificationLevel': 'HIGH',
+    'notificationLevel': 'MEDIUM',
     'status': 'PENDING',
     'createdAt': '2026-04-09T10:00:00.000Z',
     'dueAt': null,
@@ -61,7 +61,7 @@ void main() {
       expect(result, hasLength(1));
       expect(result.first.id, equals('notif-1'));
       expect(result.first.title, equals('Manutenção'));
-      expect(result.first.level, equals(AlertLevel.high));
+      expect(result.first.level, equals(AlertLevel.medium));
     });
 
     test('lança exceção em status != 200', () async {
@@ -90,7 +90,7 @@ void main() {
         token: token,
         title: 'Manutenção',
         message: 'Servidor offline às 22h.',
-        level: AlertLevel.high,
+        level: AlertLevel.medium,
         slaMinutes: 60,
         requiresAcknowledgment: false,
       );

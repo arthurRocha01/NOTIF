@@ -21,7 +21,7 @@ AssignmentModel _makeAssignment({
   String? title,
   String? message,
   AssignmentStatus status = AssignmentStatus.pending,
-  AlertLevel level = AlertLevel.high,
+  AlertLevel level = AlertLevel.medium,
 }) =>
     AssignmentModel(
       id: 'assign-1',

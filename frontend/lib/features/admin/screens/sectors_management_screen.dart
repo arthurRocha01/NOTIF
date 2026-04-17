@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/admin/modals/create_edit_sector_modal.dart';
 import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
+import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
+import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/shared/widgets/empty_state.dart';
 import 'package:notif_app/shared/widgets/loading_indicator.dart';
 
@@ -23,20 +27,40 @@ class _SectorsManagementScreenState
         () => ref.read(adminSectorProvider.notifier).loadSectors());
   }
 
+  int _userCountForSector(String sectorId) {
+    return ref
+        .read(adminUserProvider)
+        .users
+        .where((u) => u.sector == sectorId)
+        .length;
+  }
+
   Future<void> _confirmDelete(String sectorId, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Excluir setor'),
-        content: Text('Deseja excluir "$name"? Esta ação não pode ser desfeita.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            const Text('Excluir setor'),
+          ],
+        ),
+        content: Text(
+            'Deseja excluir "$name"?\nEsta ação não pode ser desfeita.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancelar')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Excluir',
-                  style: TextStyle(color: Colors.red))),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade50,
+              foregroundColor: Colors.red,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Excluir'),
+          ),
         ],
       ),
     );
@@ -61,87 +85,118 @@ class _SectorsManagementScreenState
       }
     });
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text('Setores'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final ok = await CreateEditSectorModal.show(context);
-          if (ok == true && mounted) {
-            ref.read(adminSectorProvider.notifier).loadSectors();
-          }
-        },
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: state.isLoading
-          ? const LoadingIndicator()
-          : state.sectors.isEmpty
-              ? const EmptyState(
-                  icon: Icons.business_outlined,
-                  title: 'Sem setores',
-                  message: 'Nenhum setor cadastrado',
-                )
-              : RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(adminSectorProvider.notifier).loadSectors(),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: state.sectors.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final sector = state.sectors[i];
-                      return Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.grey[200]!),
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                AppColors.primary.withOpacity(0.1),
-                            child: Icon(Icons.business,
-                                color: AppColors.primary, size: 18),
-                          ),
-                          title: Text(sector.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600)),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined,
-                                    size: 20),
-                                onPressed: () async {
-                                  final ok =
-                                      await CreateEditSectorModal.show(context,
-                                          sector: sector);
-                                  if (ok == true && mounted) {
-                                    ref
-                                        .read(adminSectorProvider.notifier)
-                                        .loadSectors();
-                                  }
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline,
-                                    size: 20, color: Colors.red),
-                                onPressed: () =>
-                                    _confirmDelete(sector.id, sector.name),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+    return state.isLoading
+        ? const LoadingIndicator()
+        : state.sectors.isEmpty
+            ? const EmptyState(
+                icon: Icons.business_outlined,
+                title: 'Sem setores',
+                message: 'Nenhum setor cadastrado',
+              )
+            : RefreshIndicator(
+                onRefresh: () =>
+                    ref.read(adminSectorProvider.notifier).loadSectors(),
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: state.sectors.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, i) => _SectorTile(
+                    sector: state.sectors[i],
+                    userCount: _userCountForSector(state.sectors[i].id),
+                    onEdit: () async {
+                      final ok = await CreateEditSectorModal.show(context,
+                          sector: state.sectors[i]);
+                      if (ok == true && mounted) {
+                        ref
+                            .read(adminSectorProvider.notifier)
+                            .loadSectors();
+                      }
                     },
+                    onDelete: () =>
+                        _confirmDelete(state.sectors[i].id, state.sectors[i].name),
                   ),
                 ),
+              );
+  }
+}
+
+// ── _SectorTile ───────────────────────────────────────────────────────────────
+
+class _SectorTile extends StatelessWidget {
+  final SectorModel sector;
+  final int userCount;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _SectorTile({
+    required this.sector,
+    required this.userCount,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+              color: AppColors.shadowLight,
+              blurRadius: 6,
+              offset: Offset(0, 2)),
+        ],
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(LucideIcons.building2,
+              color: AppColors.success, size: 20),
+        ),
+        title: Text(
+          sector.name,
+          style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Row(
+            children: [
+              const Icon(LucideIcons.users,
+                  size: 12, color: AppColors.textTertiary),
+              const SizedBox(width: 4),
+              Text(
+                '$userCount ${userCount == 1 ? 'usuário' : 'usuários'}',
+                style: GoogleFonts.inter(
+                    fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(LucideIcons.pencil,
+                  size: 17, color: AppColors.textSecondary),
+              onPressed: onEdit,
+            ),
+            IconButton(
+              icon: const Icon(LucideIcons.trash2,
+                  size: 17, color: AppColors.error),
+              onPressed: onDelete,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

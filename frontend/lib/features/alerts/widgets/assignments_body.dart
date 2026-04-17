@@ -203,8 +203,8 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
       itemCount: items.length,
       itemBuilder: (_, i) {
         final a = items[i];
-        final canAcknowledge = a.status != AssignmentStatus.acknowledged &&
-            (a.isCritical || a.notificationLevel == AlertLevel.high);
+        final canAcknowledge =
+            a.status != AssignmentStatus.acknowledged && a.isCritical;
         return _AssignmentCard(
           assignment: a,
           onAcknowledge: canAcknowledge

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/features/home/controllers/feed_controller.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'feed_list.dart';
 import 'feed_skeleton.dart';
 
@@ -15,9 +14,6 @@ class FeedContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Acessamos o User Global aqui para passar as permissões se necessário
-    final currentUser = ref.watch(authProvider);
-
     // Se o controller estiver em estado de carregamento inicial
     if (controller.loading && controller.posts.isEmpty) {
       return const FeedSkeleton();

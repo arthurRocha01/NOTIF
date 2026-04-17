@@ -21,7 +21,7 @@ AlertModel _notif({required String id, String? sectorId}) => AlertModel(
       id: id,
       title: 'T',
       message: 'M',
-      level: AlertLevel.high,
+      level: AlertLevel.medium,
       slaMinutes: 60,
       requiresAcknowledgment: false,
       targetSectorId: sectorId,
@@ -38,7 +38,7 @@ AssignmentModel _assign({
       id: id,
       userId: 'u1',
       notificationId: notifId,
-      notificationLevel: AlertLevel.high,
+      notificationLevel: AlertLevel.medium,
       status: status,
       createdAt: createdAt ?? DateTime(2026, 4, 10),
     );

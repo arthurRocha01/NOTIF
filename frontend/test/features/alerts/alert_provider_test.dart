@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
-import 'package:notif_app/features/alerts/models/alert_state.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
@@ -11,7 +10,7 @@ class MockAlertService extends Mock implements AlertService {}
 
 AlertModel _makeNotification({
   String id = 'notif-1',
-  AlertLevel level = AlertLevel.high,
+  AlertLevel level = AlertLevel.medium,
 }) =>
     AlertModel(
       id: id,
@@ -25,7 +24,7 @@ AlertModel _makeNotification({
 
 AssignmentModel _makeAssignment({
   String id = 'assign-1',
-  AlertLevel level = AlertLevel.high,
+  AlertLevel level = AlertLevel.medium,
   AssignmentStatus status = AssignmentStatus.pending,
 }) =>
     AssignmentModel(
@@ -151,7 +150,7 @@ void main() {
       when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(
-                  level: AlertLevel.high,
+                  level: AlertLevel.medium,
                   status: AssignmentStatus.pending,
                 ),
               ]);
@@ -378,7 +377,7 @@ void main() {
             token: 'tok',
             title: 'Novo',
             message: 'Mensagem',
-            level: AlertLevel.high,
+            level: AlertLevel.medium,
             slaMinutes: 60,
             requiresAcknowledgment: false,
           );
@@ -409,7 +408,7 @@ void main() {
             token: 'tok',
             title: 'Novo',
             message: 'Mensagem',
-            level: AlertLevel.high,
+            level: AlertLevel.medium,
             slaMinutes: 60,
             requiresAcknowledgment: false,
           );

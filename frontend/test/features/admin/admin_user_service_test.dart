@@ -65,7 +65,7 @@ void main() {
       await service.getUsers(token: token);
 
       expect(capturedUri?.path, equals('/users'));
-      expect(capturedHeaders?.containsKey('Authorization'), isFalse);
+      expect(capturedHeaders?.containsKey('Authorization'), isTrue);
     });
 
     test('lança ApiException em erro HTTP', () async {
