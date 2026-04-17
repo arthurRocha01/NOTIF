@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
@@ -36,6 +38,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   final AlertService _alertService;
   final FcmService _fcmService;
   String? _errorMessage;
+  StreamSubscription<String>? _tokenRefreshSub;
 
   AuthNotifier(
     this._service,
@@ -62,6 +65,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         sector: match.name,
         role: user.role,
         avatar: user.avatar,
+        fcmToken: user.fcmToken,
       );
     } catch (_) {
       return user;
@@ -80,6 +84,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       _syncDeliveriesSilently(state!.id, token);
       _fcmService.requestPermission().catchError((_) {});
       _syncFcmTokenSilently(state!);
+      _startTokenRefreshListener();
       return true;
     } on ApiException catch (e) {
       _errorMessage = e.message;
@@ -103,6 +108,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       _syncDeliveriesSilently(state!.id, token);
       _fcmService.requestPermission().catchError((_) {});
       _syncFcmTokenSilently(state!);
+      _startTokenRefreshListener();
     } catch (_) {
       ApiClient.clearToken();
       await _storage.clearAll();
@@ -110,10 +116,46 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   }
 
   void logout() {
+    _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
     ApiClient.clearToken();
     _storage.clearAll();
     _errorMessage = null;
     state = null;
+  }
+
+  @override
+  void dispose() {
+    _tokenRefreshSub?.cancel();
+    super.dispose();
+  }
+
+  void _startTokenRefreshListener() {
+    try {
+      _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = _fcmService.onTokenRefresh.listen((newToken) async {
+        final current = state;
+        if (current == null) return;
+        try {
+          await _service.updateFcmToken(
+            userId: current.id,
+            fcmToken: newToken,
+            token: ApiClient.currentToken,
+          );
+          if (state != null) {
+            state = UserModel(
+              id: state!.id,
+              name: state!.name,
+              email: state!.email,
+              sector: state!.sector,
+              role: state!.role,
+              avatar: state!.avatar,
+              fcmToken: newToken,
+            );
+          }
+        } catch (_) {}
+      });
+    } catch (_) {}
   }
 
   void _syncDeliveriesSilently(String userId, String token) {

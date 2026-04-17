@@ -114,6 +114,9 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
   @override
   Widget build(BuildContext context) {
     final sectors = ref.watch(sectorProvider).sectors;
+    // Guard against race condition: if sectors haven't loaded yet, the UUID stored
+    // in _sectorId won't be found in the items list, causing a dropdown assertion.
+    final dropdownSectorId = sectors.any((s) => s.id == _sectorId) ? _sectorId : null;
 
     return Padding(
       padding:
@@ -226,7 +229,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
                 const SizedBox(height: AppSpacing.md),
                 _DropdownField(
                   label: 'Setor',
-                  value: _sectorId,
+                  value: dropdownSectorId,
                   hint: 'Selecione um setor',
                   items: sectors
                       .map((s) => DropdownMenuItem(

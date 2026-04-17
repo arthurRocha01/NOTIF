@@ -29,7 +29,7 @@ class _SectorsManagementScreenState
 
   int _userCountForSector(String sectorId) {
     return ref
-        .read(adminUserProvider)
+        .watch(adminUserProvider)
         .users
         .where((u) => u.sector == sectorId)
         .length;
@@ -77,13 +77,6 @@ class _SectorsManagementScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(adminSectorProvider);
-
-    ref.listen(adminSectorProvider, (_, next) {
-      if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(next.errorMessage!)));
-      }
-    });
 
     return state.isLoading
         ? const LoadingIndicator()

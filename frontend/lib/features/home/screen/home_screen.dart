@@ -51,6 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (!mounted) return;
+    ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);
@@ -61,6 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _handleNotificationTap(RemoteMessage message) {
     if (!mounted) return;
+    ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);

@@ -44,6 +44,7 @@ ProviderContainer _makeContainer({
         token: any(named: 'token'),
       )).thenAnswer((_) async {});
   when(() => fcmService.requestPermission()).thenAnswer((_) async {});
+  when(() => fcmService.onTokenRefresh).thenAnswer((_) => const Stream.empty());
   when(() => storage.saveToken(any())).thenAnswer((_) async {});
   when(() => storage.saveEmail(any())).thenAnswer((_) async {});
   when(() => storage.clearAll()).thenAnswer((_) async {});

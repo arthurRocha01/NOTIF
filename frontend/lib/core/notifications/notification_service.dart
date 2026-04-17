@@ -3,7 +3,34 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
-Future<void> _backgroundMessageHandler(RemoteMessage message) async {}
+Future<void> _backgroundMessageHandler(RemoteMessage message) async {
+  // Notification messages are displayed by the system automatically.
+  // Only handle data-only messages (no notification field).
+  if (message.notification != null) return;
+
+  final localNotifications = FlutterLocalNotificationsPlugin();
+  await localNotifications.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    ),
+  );
+
+  await localNotifications.show(
+    message.hashCode,
+    message.data['title'] as String? ?? 'Nova notificação',
+    message.data['message'] as String?,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'notif_alerts_critical',
+        'Alertas NOTIF',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('notice_notif'),
+        enableVibration: true,
+      ),
+    ),
+  );
+}
 
 class NotificationService {
   static final _instance = NotificationService._();
@@ -61,6 +88,29 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       onNotificationTap?.call(message);
     });
+  }
+
+  Future<void> showLocalNotification({
+    required String title,
+    String? body,
+    int id = 0,
+  }) async {
+    if (!_supported) return;
+    await _localNotifications.show(
+      id,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          importance: Importance.max,
+          priority: Priority.high,
+          sound: RawResourceAndroidNotificationSound('notice_notif'),
+          enableVibration: true,
+        ),
+      ),
+    );
   }
 
   Future<RemoteMessage?> getInitialMessage() =>
