@@ -6,7 +6,6 @@ import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/admin/modals/create_edit_user_modal.dart';
 import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/shared/widgets/empty_state.dart';
 import 'package:notif_app/shared/widgets/loading_indicator.dart';
 
@@ -29,7 +28,6 @@ class _UsersManagementScreenState
     super.initState();
     Future.microtask(() {
       ref.read(adminUserProvider.notifier).loadUsers();
-      ref.read(sectorProvider.notifier).loadSectors();
     });
   }
 

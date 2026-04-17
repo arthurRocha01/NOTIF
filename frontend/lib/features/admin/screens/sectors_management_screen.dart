@@ -97,13 +97,8 @@ class _SectorsManagementScreenState
                     sector: state.sectors[i],
                     userCount: _userCountForSector(state.sectors[i].id),
                     onEdit: () async {
-                      final ok = await CreateEditSectorModal.show(context,
+                      await CreateEditSectorModal.show(context,
                           sector: state.sectors[i]);
-                      if (ok == true && mounted) {
-                        ref
-                            .read(adminSectorProvider.notifier)
-                            .loadSectors();
-                      }
                     },
                     onDelete: () =>
                         _confirmDelete(state.sectors[i].id, state.sectors[i].name),

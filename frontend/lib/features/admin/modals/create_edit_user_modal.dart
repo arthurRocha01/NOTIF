@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/constants/app_spacing.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
 import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/shared/widgets/notif_button.dart';
 import 'package:notif_app/shared/widgets/notif_input.dart';
 
@@ -113,7 +113,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
 
   @override
   Widget build(BuildContext context) {
-    final sectors = ref.watch(sectorProvider).sectors;
+    final sectors = ref.watch(adminSectorProvider).sectors;
     // Guard against race condition: if sectors haven't loaded yet, the UUID stored
     // in _sectorId won't be found in the items list, causing a dropdown assertion.
     final dropdownSectorId = sectors.any((s) => s.id == _sectorId) ? _sectorId : null;

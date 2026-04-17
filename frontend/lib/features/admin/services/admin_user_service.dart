@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -21,6 +22,14 @@ class AdminUserService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       };
+
+  Map<String, dynamic>? _tryDecode(String body) {
+    try {
+      return body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   UserModel _parseUser(Map<String, dynamic> data) => UserModel(
         id: data['id'] as String,
@@ -46,8 +55,11 @@ class AdminUserService {
             .map((e) => _parseUser(e as Map<String, dynamic>))
             .toList();
       }
-      throw ApiException('Erro ao buscar usuários',
-          statusCode: response.statusCode);
+      final body = _tryDecode(response.body);
+      throw ApiException(
+        body?['message']?.toString() ?? 'Erro ao buscar usuários',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
@@ -82,14 +94,17 @@ class AdminUserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao criar usuário',
-          statusCode: response.statusCode);
+      final body = _tryDecode(response.body);
+      throw ApiException(
+        body?['message']?.toString() ?? 'Erro ao criar usuário',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
-    } on Exception {
-      throw ApiException('Tempo limite excedido. Tente novamente.');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -118,14 +133,17 @@ class AdminUserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return _parseUser(jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao atualizar usuário',
-          statusCode: response.statusCode);
+      final errBody = _tryDecode(response.body);
+      throw ApiException(
+        errBody?['message']?.toString() ?? 'Erro ao atualizar usuário',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
-    } on Exception {
-      throw ApiException('Tempo limite excedido. Tente novamente.');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -142,15 +160,20 @@ class AdminUserService {
           .timeout(_timeout);
       if (response.statusCode == 200 ||
           response.statusCode == 204 ||
-          response.statusCode == 201) return;
-      throw ApiException('Erro ao deletar usuário',
-          statusCode: response.statusCode);
+          response.statusCode == 201) {
+        return;
+      }
+      final body = _tryDecode(response.body);
+      throw ApiException(
+        body?['message']?.toString() ?? 'Erro ao deletar usuário',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
-    } on Exception {
-      throw ApiException('Tempo limite excedido. Tente novamente.');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 }

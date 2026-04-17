@@ -18,6 +18,14 @@ class AdminSectorService {
   })  : _httpClient = httpClient ?? http.Client(),
         _baseUrl = baseUrl ?? ApiClient.baseUrl;
 
+  Map<String, dynamic>? _tryDecode(String body) {
+    try {
+      return body.isNotEmpty ? jsonDecode(body) as Map<String, dynamic> : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Map<String, String> _headers(String token) => {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -36,8 +44,11 @@ class AdminSectorService {
         return SectorModel.fromJson(
             jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao criar setor',
-          statusCode: response.statusCode);
+      final errBody = _tryDecode(response.body);
+      throw ApiException(
+        errBody?['message']?.toString() ?? 'Erro ao criar setor',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
@@ -62,8 +73,11 @@ class AdminSectorService {
         return SectorModel.fromJson(
             jsonDecode(response.body) as Map<String, dynamic>);
       }
-      throw ApiException('Erro ao atualizar setor',
-          statusCode: response.statusCode);
+      final errBody = _tryDecode(response.body);
+      throw ApiException(
+        errBody?['message']?.toString() ?? 'Erro ao atualizar setor',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {
@@ -88,8 +102,11 @@ class AdminSectorService {
           response.statusCode == 201) {
         return;
       }
-      throw ApiException('Erro ao deletar setor',
-          statusCode: response.statusCode);
+      final errBody = _tryDecode(response.body);
+      throw ApiException(
+        errBody?['message']?.toString() ?? 'Erro ao deletar setor',
+        statusCode: response.statusCode,
+      );
     } on ApiException {
       rethrow;
     } on SocketException {

@@ -52,10 +52,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
           heroTag: 'fab-sectors',
           backgroundColor: const Color(0xFF16A34A),
           onPressed: () async {
-            final ok = await CreateEditSectorModal.show(context);
-            if (ok == true && mounted) {
-              ref.read(adminSectorProvider.notifier).loadSectors();
-            }
+            await CreateEditSectorModal.show(context);
           },
           child: const Icon(Icons.add, color: Colors.white),
         );

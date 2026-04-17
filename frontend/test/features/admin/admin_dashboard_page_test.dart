@@ -14,7 +14,6 @@ import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/login/services/fcm_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
