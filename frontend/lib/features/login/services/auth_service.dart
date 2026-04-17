@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,13 +16,17 @@ class AuthService {
   })  : _httpClient = httpClient ?? http.Client(),
         _baseUrl = baseUrl ?? ApiClient.baseUrl;
 
+  static const _timeout = Duration(seconds: 20);
+
   Future<String> login(String email, String password) async {
     try {
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+      final response = await _httpClient
+          .post(
+            Uri.parse('$_baseUrl/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(_timeout);
 
       dynamic body;
       try {
@@ -38,6 +43,8 @@ class AuthService {
       throw ApiException(message, statusCode: response.statusCode);
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -47,14 +54,16 @@ class AuthService {
     required String token,
   }) async {
     try {
-      final response = await _httpClient.patch(
-        Uri.parse('$_baseUrl/users/$userId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'fcmToken': fcmToken}),
-      );
+      final response = await _httpClient
+          .patch(
+            Uri.parse('$_baseUrl/users/$userId'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'fcmToken': fcmToken}),
+          )
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       dynamic body;
       try {
@@ -66,6 +75,8 @@ class AuthService {
       );
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -79,14 +90,16 @@ class AuthService {
       final body = <String, String>{'password': newPassword};
       if (currentPassword != null) body['currentPassword'] = currentPassword;
 
-      final response = await _httpClient.patch(
-        Uri.parse('$_baseUrl/users/$userId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(body),
-      );
+      final response = await _httpClient
+          .patch(
+            Uri.parse('$_baseUrl/users/$userId'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       dynamic responseBody;
       try {
@@ -99,18 +112,22 @@ class AuthService {
       );
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
   Future<UserModel> fetchUser(String email, String token) async {
     try {
-      final response = await _httpClient.get(
-        Uri.parse('$_baseUrl/users/by-email/$email'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+      final response = await _httpClient
+          .get(
+            Uri.parse('$_baseUrl/users/by-email/$email'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -131,6 +148,8 @@ class AuthService {
       throw ApiException('Usuário não encontrado', statusCode: response.statusCode);
     } on SocketException {
       throw ApiException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw ApiException('Servidor demorando para responder. Tente novamente.');
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,6 +20,8 @@ class SectorService {
   final http.Client _httpClient;
   final String _baseUrl;
 
+  static const _timeout = Duration(seconds: 20);
+
   SectorService({
     http.Client? httpClient,
     String? baseUrl,
@@ -32,10 +35,9 @@ class SectorService {
 
   Future<List<SectorModel>> getSectors({required String token}) async {
     try {
-      final response = await _httpClient.get(
-        Uri.parse('$_baseUrl/sectors'),
-        headers: _headers(token),
-      );
+      final response = await _httpClient
+          .get(Uri.parse('$_baseUrl/sectors'), headers: _headers(token))
+          .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list
@@ -56,6 +58,9 @@ class SectorService {
       rethrow;
     } on SocketException {
       throw const SectorServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw const SectorServiceException(
+          'Servidor demorando para responder. Tente novamente.');
     }
   }
 }

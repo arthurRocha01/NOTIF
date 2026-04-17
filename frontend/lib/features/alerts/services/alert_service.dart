@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -20,6 +21,8 @@ class AlertService {
   final http.Client _httpClient;
   final String _baseUrl;
 
+  static const _timeout = Duration(seconds: 20);
+
   AlertService({
     http.Client? httpClient,
     String? baseUrl,
@@ -33,10 +36,9 @@ class AlertService {
 
   Future<List<AlertModel>> getNotifications({required String token}) async {
     try {
-      final response = await _httpClient.get(
-        Uri.parse('$_baseUrl/notifications'),
-        headers: _headers(token),
-      );
+      final response = await _httpClient
+          .get(Uri.parse('$_baseUrl/notifications'), headers: _headers(token))
+          .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list
@@ -50,6 +52,8 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -73,11 +77,10 @@ class AlertService {
         if (sectorId != null) 'sectorId': sectorId,
       };
 
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/notifications'),
-        headers: _headers(token),
-        body: jsonEncode(payload),
-      );
+      final response = await _httpClient
+          .post(Uri.parse('$_baseUrl/notifications'),
+              headers: _headers(token), body: jsonEncode(payload))
+          .timeout(_timeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AlertModel.fromJson(
@@ -90,15 +93,16 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
   Future<List<AssignmentModel>> getMyAssignments({required String token}) async {
     try {
-      final response = await _httpClient.get(
-        Uri.parse('$_baseUrl/assignments'),
-        headers: _headers(token),
-      );
+      final response = await _httpClient
+          .get(Uri.parse('$_baseUrl/assignments'), headers: _headers(token))
+          .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list
@@ -112,6 +116,8 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -120,11 +126,10 @@ class AlertService {
     required String token,
   }) async {
     try {
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/assignments/$assignmentId/view'),
-        headers: _headers(token),
-        body: jsonEncode({}),
-      );
+      final response = await _httpClient
+          .post(Uri.parse('$_baseUrl/assignments/$assignmentId/view'),
+              headers: _headers(token), body: jsonEncode({}))
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
       throw AlertServiceException(
@@ -133,6 +138,8 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -141,11 +148,10 @@ class AlertService {
     required String token,
   }) async {
     try {
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/assignments/$assignmentId/acknowledge'),
-        headers: _headers(token),
-        body: jsonEncode({}),
-      );
+      final response = await _httpClient
+          .post(Uri.parse('$_baseUrl/assignments/$assignmentId/acknowledge'),
+              headers: _headers(token), body: jsonEncode({}))
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
       throw AlertServiceException(
@@ -154,6 +160,8 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
@@ -162,11 +170,10 @@ class AlertService {
     required String token,
   }) async {
     try {
-      final response = await _httpClient.post(
-        Uri.parse('$_baseUrl/assignments/sync/$userId'),
-        headers: _headers(token),
-        body: jsonEncode({}),
-      );
+      final response = await _httpClient
+          .post(Uri.parse('$_baseUrl/assignments/sync/$userId'),
+              headers: _headers(token), body: jsonEncode({}))
+          .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
       throw AlertServiceException(
@@ -175,6 +182,8 @@ class AlertService {
       );
     } on SocketException {
       throw AlertServiceException('Sem conexão com a internet');
+    } on TimeoutException {
+      throw AlertServiceException('Servidor demorando para responder. Tente novamente.');
     }
   }
 
