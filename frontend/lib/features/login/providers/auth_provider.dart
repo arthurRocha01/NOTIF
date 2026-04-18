@@ -109,9 +109,17 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       _fcmService.requestPermission().catchError((_) {});
       _syncFcmTokenSilently(state!);
       _startTokenRefreshListener();
-    } catch (_) {
+    } on ApiException catch (e) {
       ApiClient.clearToken();
-      await _storage.clearAll();
+      // Só limpa credenciais salvas se o JWT foi explicitamente rejeitado (401).
+      // Erros transitórios (500, timeout) não invalidam o token — mantém storage
+      // para que a próxima abertura do app tente restaurar novamente.
+      if (e.statusCode == 401) {
+        await _storage.clearAll();
+      }
+    } catch (_) {
+      // Erros de rede, timeout, etc. — token pode ainda ser válido.
+      ApiClient.clearToken();
     }
   }
 

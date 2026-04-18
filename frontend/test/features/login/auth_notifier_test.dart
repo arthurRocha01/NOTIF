@@ -310,5 +310,29 @@ void main() {
       expect(container.read(authProvider), isNull);
       verify(() => mockStorage.clearAll()).called(1);
     });
+
+    test('não limpa storage quando fetchUser falha com erro 500', () async {
+      when(() => mockStorage.getToken()).thenAnswer((_) async => 'token-valido');
+      when(() => mockStorage.getEmail()).thenAnswer((_) async => 'joao@test.com');
+      when(() => mockService.fetchUser(any(), any()))
+          .thenThrow(ApiException('Internal Server Error', statusCode: 500));
+
+      await container.read(authProvider.notifier).tryRestoreSession();
+
+      expect(container.read(authProvider), isNull);
+      verifyNever(() => mockStorage.clearAll());
+    });
+
+    test('não limpa storage quando fetchUser falha por erro de rede', () async {
+      when(() => mockStorage.getToken()).thenAnswer((_) async => 'token-valido');
+      when(() => mockStorage.getEmail()).thenAnswer((_) async => 'joao@test.com');
+      when(() => mockService.fetchUser(any(), any()))
+          .thenThrow(ApiException('Sem conexão com a internet'));
+
+      await container.read(authProvider.notifier).tryRestoreSession();
+
+      expect(container.read(authProvider), isNull);
+      verifyNever(() => mockStorage.clearAll());
+    });
   });
 }
