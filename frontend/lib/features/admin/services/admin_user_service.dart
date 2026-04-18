@@ -88,6 +88,7 @@ class AdminUserService {
               'password': password,
               'role': role,
               'sectorId': sectorId,
+              'fcmToken': null,
             }),
           )
           .timeout(_timeout);
