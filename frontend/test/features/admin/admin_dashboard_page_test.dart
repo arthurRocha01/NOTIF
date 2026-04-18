@@ -174,7 +174,7 @@ void main() {
       );
     });
 
-    testWidgets('exibe contagem de funcionários', (tester) async {
+    testWidgets('exibe contagem de colaboradores', (tester) async {
       await tester.pumpWidget(_buildSubject());
       await tester.pump();
 
@@ -205,6 +205,96 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Carlos'), findsOneWidget);
+    });
+  });
+
+  group('AdminDashboardPage — estado vazio', () {
+    testWidgets('todos os stat cards mostram zero quando listas estão vazias',
+        (tester) async {
+      await tester.pumpWidget(_buildSubject(users: [], sectors: []));
+      await tester.pump();
+
+      for (final key in ['stat-total', 'stat-supervisors', 'stat-employees', 'stat-sectors']) {
+        expect(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.text('0'),
+          ),
+          findsOneWidget,
+          reason: '$key deve exibir 0',
+        );
+      }
+    });
+  });
+
+  group('AdminDashboardPage — quick access counts', () {
+    testWidgets('card Usuários exibe contagem total', (tester) async {
+      await tester.pumpWidget(_buildSubject());
+      await tester.pump();
+
+      // _defaultUsers tem 5 usuários
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('quick-users')),
+          matching: find.text('5'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('card Setores exibe contagem de setores', (tester) async {
+      await tester.pumpWidget(_buildSubject());
+      await tester.pump();
+
+      // _defaultSectors tem 4 setores
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('quick-sectors')),
+          matching: find.text('4'),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('AdminDashboardPage — header', () {
+    testWidgets('exibe "Admin" no saudação quando usuário é null', (tester) async {
+      final mockAuth = MockAuthService();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith((ref) {
+              final notifier = AuthNotifier(
+                mockAuth,
+                _FakeTokenStorage(),
+                _FakeSectorService(),
+                _FakeAlertService(),
+                _FakeFcmService(),
+              );
+              // estado null = não autenticado
+              // ignore: invalid_use_of_protected_member
+              notifier.state = null;
+              return notifier;
+            }),
+            adminUserProvider
+                .overrideWith((_) => _StubAdminUserNotifier(_defaultUsers)),
+            adminSectorProvider.overrideWith(
+                (_) => _StubAdminSectorNotifier(_defaultSectors)),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: AdminDashboardPage(
+                onNavigateToUsers: () {},
+                onNavigateToSectors: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('Olá, Admin'), findsOneWidget);
     });
   });
 
