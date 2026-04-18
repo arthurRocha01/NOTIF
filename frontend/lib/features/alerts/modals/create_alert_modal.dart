@@ -47,6 +47,14 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(sectorProvider.notifier).loadSectors(),
+    );
+  }
+
+  @override
   void dispose() {
     _titleCtrl.dispose();
     _messageCtrl.dispose();
