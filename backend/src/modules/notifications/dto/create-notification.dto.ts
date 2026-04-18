@@ -56,9 +56,9 @@ export class CreateNotificationDto {
   })
   requiresAcknowledgment?: boolean;
 
+  @IsOptional()
   @IsUUID('4', { message: 'O ID do setor é inválido' })
-  @IsNotEmpty({ message: 'O setor de destino é obrigatório' })
-  sectorId: string;
+  sectorId?: string;
 
   @IsOptional()
   @IsUUID('4', { message: 'O ID do autor é inválido' })

@@ -151,12 +151,24 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                       label: 'Título',
                       hint: 'Ex: Manutenção do Servidor',
                       isRequired: true,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Informe o título';
+                        if (v.trim().length < 5) return 'Mínimo 5 caracteres';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: AppSpacing.md),
                     NotifInput(
                       controller: _messageCtrl,
                       label: 'Mensagem',
+                      hint: 'Descreva o alerta com detalhes...',
                       maxLines: 3,
+                      isRequired: true,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Informe a mensagem';
+                        if (v.trim().length < 10) return 'Mínimo 10 caracteres';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _buildSectorHeader(),

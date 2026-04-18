@@ -30,15 +30,18 @@ export class NotificationService {
       dto.slaMinutes,
       dto.sectorId,
       dto.authorId,
+      dto.requiresAcknowledgment,
     );
 
     await this.notificationRepo.save(newNotification);
 
-    await this.sendTokensBySector(
-      dto.sectorId,
-      newNotification.getTitle(),
-      newNotification.getMessage(),
-    );
+    if (dto.sectorId) {
+      await this.sendTokensBySector(
+        dto.sectorId,
+        newNotification.getTitle(),
+        newNotification.getMessage(),
+      );
+    }
 
     return newNotification;
   }

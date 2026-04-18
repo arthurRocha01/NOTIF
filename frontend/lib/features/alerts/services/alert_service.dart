@@ -74,7 +74,7 @@ class AlertService {
         'slaMinutes': slaMinutes,
         'requiresAcknowledgment':
             level == AlertLevel.critical ? true : requiresAcknowledgment,
-        'sectorId': sectorId,
+        if (sectorId != null) 'sectorId': sectorId,
       };
 
       final response = await _httpClient
