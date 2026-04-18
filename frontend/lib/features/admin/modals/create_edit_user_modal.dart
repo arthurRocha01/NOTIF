@@ -39,7 +39,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
   bool get _isEditing => widget.user != null;
 
   static const _roles = [
-    ('EMPLOYEE', 'Funcionário'),
+    ('EMPLOYEE', 'Colaborador'),
     ('SUPERVISOR', 'Supervisor'),
   ];
 

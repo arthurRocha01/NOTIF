@@ -30,7 +30,7 @@ class UserModel {
       case UserRole.supervisor:
         return "Supervisor";
       case UserRole.employee:
-        return "Funcionário";
+        return "Colaborador";
     }
   }
 }

@@ -80,7 +80,7 @@ void main() {
 
     testWidgets('exibe cargo do usuário', (tester) async {
       await tester.pumpWidget(_makeTestable(user: user));
-      expect(find.textContaining('Funcionário'), findsOneWidget);
+      expect(find.textContaining('Colaborador'), findsOneWidget);
     });
 
     testWidgets('exibe botão de trocar senha', (tester) async {

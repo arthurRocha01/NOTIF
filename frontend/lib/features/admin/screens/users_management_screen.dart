@@ -95,7 +95,7 @@ class _UsersManagementScreenState
   String _roleLabel(UserRole role) => switch (role) {
         UserRole.supervisor => 'Supervisor',
         UserRole.admin => 'Admin',
-        _ => 'Funcionário',
+        _ => 'Colaborador',
       };
 
   @override
@@ -154,7 +154,7 @@ class _UsersManagementScreenState
                     ),
                     const SizedBox(width: 6),
                     _RoleChip(
-                      label: 'Funcionário',
+                      label: 'Colaborador',
                       selected: _roleFilter == UserRole.employee,
                       color: AppColors.textSecondary,
                       onTap: () => setState(() => _roleFilter == UserRole.employee

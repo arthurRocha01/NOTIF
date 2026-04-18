@@ -198,7 +198,7 @@ class AdminDashboardPage extends ConsumerWidget {
         ),
         _StatCard(
           key: const Key('stat-employees'),
-          label: 'Funcionários',
+          label: 'Colaboradores',
           value: employees.toString(),
           icon: LucideIcons.user,
           color: AppColors.info,
