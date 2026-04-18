@@ -31,10 +31,10 @@ export class Notification {
     slaMinutes: number,
     targetSectorId: string,
     authorId: string,
+    requiresAcknowledgment: boolean = true,
   ) {
     const id = randomUUID();
     const createdAt = new Date();
-    const requiresAcknowledgment = true;
 
     return new Notification(
       id,
