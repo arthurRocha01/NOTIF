@@ -285,7 +285,7 @@ void main() {
 
   group('dashboardProvider — filtro de período', () {
     test('filtro week exclui assignments com mais de 7 dias', () {
-      final now = DateTime(2026, 4, 14);
+      final now = DateTime.now();
       final c = _make(
         alertState: AlertState(
           notifications: [_notif(id: 'n1', sectorId: 'ti')],
@@ -306,7 +306,7 @@ void main() {
     });
 
     test('filtro month exclui assignments com mais de 30 dias', () {
-      final now = DateTime(2026, 4, 14);
+      final now = DateTime.now();
       final c = _make(
         alertState: AlertState(
           notifications: [_notif(id: 'n1', sectorId: 'ti')],
@@ -326,7 +326,7 @@ void main() {
     });
 
     test('filtro all não exclui nenhum assignment', () {
-      final now = DateTime(2026, 4, 14);
+      final now = DateTime.now();
       final c = _make(
         alertState: AlertState(
           notifications: [_notif(id: 'n1', sectorId: 'ti')],

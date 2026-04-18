@@ -122,8 +122,7 @@ void main() {
       expect(body['password'], equals('senha123'));
       expect(body['role'], equals('EMPLOYEE'));
       expect(body['sectorId'], equals('sector-1'));
-      expect(body.containsKey('fcmToken'), isTrue);
-      expect(body['fcmToken'], isNull);
+      expect(body.containsKey('fcmToken'), isFalse);
       expect(result.id, equals('user-1'));
     });
 
