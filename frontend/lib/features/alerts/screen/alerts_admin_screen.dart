@@ -26,6 +26,9 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   // null = "Todos"; valor = UUID do setor selecionado
   String? _selectedSectorId;
 
+  // null = "Todos os níveis"
+  AlertLevel? _selectedLevel;
+
   @override
   void initState() {
     super.initState();
@@ -50,10 +53,12 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
       final matchesSector = _selectedSectorId == null ||
           alert.isGlobal ||
           alert.targetSectorId == _selectedSectorId;
+      final matchesLevel =
+          _selectedLevel == null || alert.level == _selectedLevel;
       final query = _searchCtrl.text.toLowerCase();
       final matchesSearch = alert.title.toLowerCase().contains(query) ||
           alert.message.toLowerCase().contains(query);
-      return matchesSector && matchesSearch;
+      return matchesSector && matchesLevel && matchesSearch;
     }).toList();
   }
 
@@ -235,8 +240,16 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
           else if (filtered.isEmpty)
             _buildEmptyState()
           else
-            ...filtered.map(
-                (a) => MonitoringAlertCard(key: ValueKey(a.id), alert: a)),
+            ...filtered.map((a) => MonitoringAlertCard(
+                  key: ValueKey(a.id),
+                  alert: a,
+                  sectorName: a.isGlobal
+                      ? null
+                      : sectorState.sectors
+                          .where((s) => s.id == a.targetSectorId)
+                          .map((s) => s.name)
+                          .firstOrNull,
+                )),
         ],
       ),
     );
@@ -334,6 +347,29 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
           ),
         ),
         const SizedBox(height: 10),
+        // ── Chips de nível ────────────────────────────────────────────────
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _SectorChip(
+                label: 'Todos',
+                isSelected: _selectedLevel == null,
+                onTap: () => setState(() => _selectedLevel = null),
+              ),
+              ...AlertLevel.values.map((level) => Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: _SectorChip(
+                      label: level.label,
+                      isSelected: _selectedLevel == level,
+                      selectedColor: level.color,
+                      onTap: () => setState(() => _selectedLevel = level),
+                    ),
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
         // ── Chips de setor ────────────────────────────────────────────────
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -517,39 +553,37 @@ class _SectorChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color? selectedColor;
 
   const _SectorChip({
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.selectedColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = selectedColor ?? const Color(0xFF4A6CF7);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4A6CF7) : Colors.white,
+          color: isSelected ? activeColor : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF4A6CF7)
-                : const Color(0xFFE2E8F0),
+            color: isSelected ? activeColor : const Color(0xFFE2E8F0),
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight:
-                isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected
-                ? Colors.white
-                : const Color(0xFF64748B),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),

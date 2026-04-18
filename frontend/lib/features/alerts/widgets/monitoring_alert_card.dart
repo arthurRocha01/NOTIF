@@ -7,8 +7,9 @@ import '../../../core/utils/date_formatter.dart';
 
 class MonitoringAlertCard extends StatelessWidget {
   final AlertModel alert;
+  final String? sectorName;
 
-  const MonitoringAlertCard({super.key, required this.alert});
+  const MonitoringAlertCard({super.key, required this.alert, this.sectorName});
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +130,9 @@ class MonitoringAlertCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            alert.isGlobal ? 'Global' : 'Setor específico',
+                            alert.isGlobal
+                                ? 'Global'
+                                : sectorName ?? 'Setor específico',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: const Color(0xFF94A3B8),
