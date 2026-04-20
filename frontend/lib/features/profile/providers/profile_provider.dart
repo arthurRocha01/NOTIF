@@ -4,20 +4,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ProfileState {
   final Uint8List? avatarBytes;
   final String displayName;
+  final int followersCount;
+  final int followingCount;
 
   const ProfileState({
     this.avatarBytes,
     this.displayName = '',
+    this.followersCount = 12,
+    this.followingCount = 5,
   });
 
   ProfileState copyWith({
     Uint8List? avatarBytes,
     bool clearAvatar = false,
     String? displayName,
+    int? followersCount,
+    int? followingCount,
   }) {
     return ProfileState(
       avatarBytes: clearAvatar ? null : (avatarBytes ?? this.avatarBytes),
       displayName: displayName ?? this.displayName,
+      followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
     );
   }
 }

@@ -118,7 +118,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
               tabs: [
                 _buildTabLabel(
-                  'Notificações',
+                  'Painel',
                   count: criticalCount,
                   badgeColor: const Color(0xFFDC2626),
                   badgeBg: const Color(0xFFFEE2E2),

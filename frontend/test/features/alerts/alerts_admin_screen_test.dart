@@ -88,11 +88,11 @@ AlertModel _makeAlert({
 
 void main() {
   group('AlertAdminScreen tabs', () {
-    testWidgets('exibe a aba Notificações', (tester) async {
+    testWidgets('exibe a aba Painel', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
-      expect(find.text('Notificações'), findsOneWidget);
+      expect(find.text('Painel'), findsOneWidget);
     });
 
     testWidgets('não exibe a aba Histórico', (tester) async {

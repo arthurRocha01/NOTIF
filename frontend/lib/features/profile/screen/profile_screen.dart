@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
+import 'package:notif_app/features/home/controllers/feed_controller.dart';
+import 'package:notif_app/features/home/widgets/post_card.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
@@ -59,6 +61,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final profile = ref.watch(profileProvider);
+    final feed = ref.watch(feedProvider);
+    final myPosts = feed.posts.where((p) => p.isOwn).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -73,11 +77,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Cabeçalho com avatar ──────────────────────────────────────
+            // ── Cabeçalho ────────────────────────────────────────────────
             Container(
               width: double.infinity,
               color: const Color(0xFF0F172A),
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 32),
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 28),
               child: Column(
                 children: [
                   GestureDetector(
@@ -115,6 +119,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       '${user.roleLabel} · ${user.sector}',
                       style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
                     ),
+                  const SizedBox(height: 20),
+                  // ── Stats ──────────────────────────────────────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _StatItem(value: myPosts.length, label: 'posts'),
+                      _StatDivider(),
+                      _StatItem(value: profile.followersCount, label: 'seguidores'),
+                      _StatDivider(),
+                      _StatItem(value: profile.followingCount, label: 'seguindo'),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -222,12 +238,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ],
                   ]),
+
+                  // ── Publicações ─────────────────────────────────────────
+                  if (myPosts.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    ProfileSectionHeader(label: 'PUBLICAÇÕES'),
+                    const SizedBox(height: 8),
+                  ],
                 ],
               ),
             ),
+
+            // Posts fora do Padding para ocupar largura total
+            ...myPosts.map((post) => PostCard(
+                  key: ValueKey('profile_post_${post.id}'),
+                  post: post,
+                  onLike: () => ref.read(feedProvider.notifier).toggleLike(post),
+                  onDelete: () => ref.read(feedProvider.notifier).delete(post),
+                )),
+            if (myPosts.isNotEmpty) const SizedBox(height: 24),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Stat item ─────────────────────────────────────────────────────────────
+
+class _StatItem extends StatelessWidget {
+  final int value;
+  final String label;
+  const _StatItem({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white60, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 28,
+      color: Colors.white24,
     );
   }
 }
