@@ -1,5 +1,3 @@
-import 'package:file_picker/file_picker.dart';
-
 class CommentModel {
   final String userName;
   final String content;
@@ -13,12 +11,11 @@ class PostModel {
   final String userId;
   final String userName;
   final String userRole;
-  final PlatformFile? userAvatar;
+  final String title;
   final String content;
-  final PlatformFile? image;
   final int likesCount;
   final int commentsCount;
-  final List<CommentModel> comments; // 👈 Adicionado
+  final List<CommentModel> comments;
   final bool isLiked;
   final bool isOwn;
   final DateTime createdAt;
@@ -28,12 +25,11 @@ class PostModel {
     required this.userId,
     required this.userName,
     required this.userRole,
-    this.userAvatar,
+    required this.title,
     required this.content,
-    this.image,
     required this.likesCount,
     required this.commentsCount,
-    this.comments = const [], // 👈 Inicializado vazio
+    this.comments = const [],
     required this.isLiked,
     required this.isOwn,
     required this.createdAt,
@@ -50,9 +46,8 @@ class PostModel {
       userId: userId,
       userName: userName,
       userRole: userRole,
-      userAvatar: userAvatar,
+      title: title,
       content: content,
-      image: image,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount,
       comments: comments ?? this.comments,

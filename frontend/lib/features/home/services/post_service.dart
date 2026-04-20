@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/home/model/post_model.dart';
 
@@ -13,6 +12,7 @@ class PostService {
         userId: 'user-sup-01',
         userName: 'Roberta Lima',
         userRole: 'Supervisora · Operações',
+        title: 'Protocolo de segurança atualizado',
         content:
             'Atenção a todos os colaboradores: o protocolo de segurança foi atualizado. '
             'Por favor, revisem o documento fixado no mural e confirmem o recebimento até sexta-feira.',
@@ -39,6 +39,7 @@ class PostService {
         userId: 'user-emp-02',
         userName: 'Carlos Mendes',
         userRole: 'Técnico · Manutenção',
+        title: 'Revisão preventiva do setor B concluída',
         content:
             'Concluí a revisão preventiva das máquinas do setor B. '
             'Tudo dentro do esperado. Relatório disponível no sistema.',
@@ -53,6 +54,7 @@ class PostService {
         userId: 'user-emp-03',
         userName: 'Ana Souza',
         userRole: 'Analista · Qualidade',
+        title: 'Reunião de alinhamento de metas — amanhã às 9h',
         content:
             'Lembrete: amanhã às 9h temos a reunião de alinhamento de metas do trimestre. '
             'Sala 3, presença obrigatória para todos do setor.',
@@ -74,6 +76,7 @@ class PostService {
         userId: 'user-sup-02',
         userName: 'Marcos Ferreira',
         userRole: 'Gestor · Logística',
+        title: 'Recorde de entregas no mês — parabéns ao time!',
         content:
             'Parabéns ao time de logística pelo recorde de entregas no mês! '
             'Resultado direto do esforço de cada um. Continuem assim!',
@@ -91,8 +94,8 @@ class PostService {
   }
 
   Future<PostModel> createPost({
+    required String title,
     required String content,
-    required List<PlatformFile> attachments,
     required UserModel? user,
   }) async {
     final post = PostModel(
@@ -100,8 +103,8 @@ class PostService {
       userId: user?.id ?? '0',
       userName: user?.name ?? 'Utilizador',
       userRole: user?.roleLabel ?? 'Colaborador',
+      title: title,
       content: content,
-      image: attachments.isNotEmpty ? attachments.first : null,
       likesCount: 0,
       commentsCount: 0,
       isLiked: false,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/home/model/post_model.dart';
 import '../services/post_service.dart';
+
+final feedProvider = ChangeNotifierProvider((ref) => FeedController());
 
 class FeedController extends ChangeNotifier {
   final PostService _service = PostService();
@@ -10,9 +12,7 @@ class FeedController extends ChangeNotifier {
   List<PostModel> posts = [];
   bool loading = false;
 
-
   int pageIndex = 0;
-
   int notifications = 3;
 
   Future<void> loadPosts() async {
@@ -21,7 +21,7 @@ class FeedController extends ChangeNotifier {
     try {
       posts = await _service.fetchPosts();
     } catch (e) {
-      debugPrint("Erro ao carregar posts: $e");
+      debugPrint('Erro ao carregar posts: $e');
     } finally {
       loading = false;
       notifyListeners();
@@ -35,21 +35,21 @@ class FeedController extends ChangeNotifier {
   }
 
   Future<void> publish({
+    required String title,
     required String content,
-    required List<PlatformFile> attachments,
     required UserModel? currentUser,
   }) async {
     try {
       final post = await _service.createPost(
+        title: title,
         content: content,
-        attachments: attachments,
         user: currentUser,
       );
       posts = [post, ...posts];
       pageIndex = 0;
       notifyListeners();
     } catch (e) {
-      debugPrint("Erro ao publicar: $e");
+      debugPrint('Erro ao publicar: $e');
     }
   }
 

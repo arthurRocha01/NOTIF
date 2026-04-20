@@ -19,8 +19,6 @@ import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:notif_app/shared/widgets/home_app_bar.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
-final feedProvider = ChangeNotifierProvider((ref) => FeedController());
-
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -216,11 +214,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => PublishModal(
-        onPublish: (content, files) async {
+        onPublish: (title, content) async {
           final nav = Navigator.of(context);
           await controller.publish(
+            title: title,
             content: content,
-            attachments: files,
             currentUser: user,
           );
           nav.pop();
