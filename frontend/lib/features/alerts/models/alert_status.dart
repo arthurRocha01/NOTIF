@@ -4,12 +4,14 @@ import 'package:lucide_icons/lucide_icons.dart';
 enum AlertLevel {
   low,
   medium,
+  high,
   critical;
 
   String get label {
     switch (this) {
       case AlertLevel.low:      return 'Baixo';
       case AlertLevel.medium:   return 'Médio';
+      case AlertLevel.high:     return 'Alto';
       case AlertLevel.critical: return 'Crítico';
     }
   }
@@ -20,6 +22,7 @@ enum AlertLevel {
     switch (this) {
       case AlertLevel.low:      return const Color(0xFF10B981);
       case AlertLevel.medium:   return const Color(0xFFF59E0B);
+      case AlertLevel.high:     return const Color(0xFFEA580C);
       case AlertLevel.critical: return const Color(0xFFDC2626);
     }
   }
@@ -28,6 +31,7 @@ enum AlertLevel {
     switch (this) {
       case AlertLevel.low:      return const Color(0xFFD1FAE5);
       case AlertLevel.medium:   return const Color(0xFFFEF3C7);
+      case AlertLevel.high:     return const Color(0xFFFFEDD5);
       case AlertLevel.critical: return const Color(0xFFFEE2E2);
     }
   }
@@ -36,6 +40,7 @@ enum AlertLevel {
     switch (this) {
       case AlertLevel.low:      return LucideIcons.bell;
       case AlertLevel.medium:   return LucideIcons.info;
+      case AlertLevel.high:     return LucideIcons.alertTriangle;
       case AlertLevel.critical: return LucideIcons.alertOctagon;
     }
   }
@@ -44,7 +49,7 @@ enum AlertLevel {
     switch (value?.toUpperCase()) {
       case 'LOW':      return AlertLevel.low;
       case 'MEDIUM':   return AlertLevel.medium;
-      case 'HIGH':     return AlertLevel.medium;
+      case 'HIGH':     return AlertLevel.high;
       case 'CRITICAL': return AlertLevel.critical;
       default:         return AlertLevel.low;
     }
