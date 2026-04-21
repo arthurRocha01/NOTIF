@@ -77,9 +77,9 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     try {
       final token = await _service.login(email, password);
       ApiClient.setToken(token);
+      final raw = await _service.fetchUser(email, token);
       await _storage.saveToken(token);
       await _storage.saveEmail(email);
-      final raw = await _service.fetchUser(email, token);
       state = await _resolveUser(raw);
       _syncDeliveriesSilently(state!.id, token);
       _fcmService.requestPermission().catchError((_) {});
@@ -87,10 +87,12 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       _startTokenRefreshListener();
       return true;
     } on ApiException catch (e) {
+      ApiClient.clearToken();
       _errorMessage = e.message;
       state = null;
       return false;
     } catch (_) {
+      ApiClient.clearToken();
       _errorMessage = 'Erro inesperado. Tente novamente.';
       state = null;
       return false;
