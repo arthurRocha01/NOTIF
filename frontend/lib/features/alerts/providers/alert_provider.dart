@@ -96,10 +96,16 @@ class AlertNotifier extends StateNotifier<AlertState> {
         notifications: [created, ...state.notifications],
       );
       return true;
+    } on AlertServiceException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(errorMessage: e.message);
+      return false;
     } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(errorMessage: e.message);
       return false;
     } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro inesperado. Tente novamente.');
       return false;
     }
   }

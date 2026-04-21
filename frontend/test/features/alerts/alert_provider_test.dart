@@ -4,6 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 
 class MockAlertService extends Mock implements AlertService {}
@@ -414,6 +415,69 @@ void main() {
           );
 
       expect(ok, isFalse);
+    });
+
+    test('popula errorMessage no estado em falha', () async {
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenThrow(AlertServiceException('Erro ao criar notificação'));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container.read(alertProvider.notifier).createNotification(
+            token: 'tok',
+            title: 'Novo',
+            message: 'Mensagem',
+            level: AlertLevel.medium,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+          );
+
+      expect(
+        container.read(alertProvider).errorMessage,
+        equals('Erro ao criar notificação'),
+      );
+    });
+
+    test('chama onUnauthorized quando serviço retorna 401', () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container.read(alertProvider.notifier).createNotification(
+            token: 'tok',
+            title: 'Novo',
+            message: 'Mensagem',
+            level: AlertLevel.medium,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+          );
+
+      expect(unauthorizedCalled, isTrue);
     });
   });
 }
