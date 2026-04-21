@@ -541,4 +541,111 @@ void main() {
       expect(unauthorizedCalled, isTrue);
     });
   });
+
+  group('AlertNotifier.createNotificationForAllSectors', () {
+    test('cria uma notificação por setor e adiciona todas ao estado', () async {
+      final notif1 = _makeNotification(id: 'notif-s1');
+      final notif2 = _makeNotification(id: 'notif-s2');
+
+      var callCount = 0;
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenAnswer((_) async {
+        callCount++;
+        return callCount == 1 ? notif1 : notif2;
+      });
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final ok = await container
+          .read(alertProvider.notifier)
+          .createNotificationForAllSectors(
+            token: 'tok',
+            authorId: 'user-123',
+            title: 'Global',
+            message: 'Mensagem global',
+            level: AlertLevel.medium,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+            sectorIds: ['sector-1', 'sector-2'],
+          );
+
+      expect(ok, isTrue);
+      expect(callCount, equals(2));
+      final ids = container.read(alertProvider).notifications.map((n) => n.id);
+      expect(ids, containsAll(['notif-s1', 'notif-s2']));
+    });
+
+    test('retorna false e seta errorMessage se alguma criação falhar', () async {
+      when(() => mockService.createNotification(
+                token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
+                title: any(named: 'title'),
+                message: any(named: 'message'),
+                level: any(named: 'level'),
+                slaMinutes: any(named: 'slaMinutes'),
+                requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+                sectorId: any(named: 'sectorId'),
+              ))
+          .thenThrow(AlertServiceException('Erro ao criar'));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final ok = await container
+          .read(alertProvider.notifier)
+          .createNotificationForAllSectors(
+            token: 'tok',
+            authorId: 'user-123',
+            title: 'Global',
+            message: 'Mensagem global',
+            level: AlertLevel.medium,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+            sectorIds: ['sector-1', 'sector-2'],
+          );
+
+      expect(ok, isFalse);
+      expect(container.read(alertProvider).errorMessage, equals('Erro ao criar'));
+    });
+
+    test('retorna false quando sectorIds está vazio', () async {
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final ok = await container
+          .read(alertProvider.notifier)
+          .createNotificationForAllSectors(
+            token: 'tok',
+            authorId: 'user-123',
+            title: 'Global',
+            message: 'Mensagem global',
+            level: AlertLevel.medium,
+            slaMinutes: 60,
+            requiresAcknowledgment: false,
+            sectorIds: [],
+          );
+
+      expect(ok, isFalse);
+      verifyNever(() => mockService.createNotification(
+            token: any(named: 'token'),
+            authorId: any(named: 'authorId'),
+            title: any(named: 'title'),
+            message: any(named: 'message'),
+            level: any(named: 'level'),
+            slaMinutes: any(named: 'slaMinutes'),
+            requiresAcknowledgment: any(named: 'requiresAcknowledgment'),
+            sectorId: any(named: 'sectorId'),
+          ));
+    });
+  });
 }

@@ -80,16 +80,34 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     setState(() => _isLoading = true);
 
     final user = ref.read(authProvider);
-    final ok = await ref.read(alertProvider.notifier).createNotification(
-          title: _titleCtrl.text.trim(),
-          message: _messageCtrl.text.trim(),
-          level: _level,
-          slaMinutes: _slaMinutes,
-          requiresAcknowledgment:
-              _level == AlertLevel.critical ? true : _requiresAcknowledgment,
-          authorId: user?.id ?? '',
-          sectorId: _sendToAll ? null : _selectedSector?.id,
-        );
+    final title = _titleCtrl.text.trim();
+    final message = _messageCtrl.text.trim();
+    final requiresAck = _level == AlertLevel.critical ? true : _requiresAcknowledgment;
+    final authorId = user?.id ?? '';
+
+    final bool ok;
+    if (_sendToAll) {
+      final sectorIds = ref.read(sectorProvider).sectors.map((s) => s.id).toList();
+      ok = await ref.read(alertProvider.notifier).createNotificationForAllSectors(
+            title: title,
+            message: message,
+            level: _level,
+            slaMinutes: _slaMinutes,
+            requiresAcknowledgment: requiresAck,
+            authorId: authorId,
+            sectorIds: sectorIds,
+          );
+    } else {
+      ok = await ref.read(alertProvider.notifier).createNotification(
+            title: title,
+            message: message,
+            level: _level,
+            slaMinutes: _slaMinutes,
+            requiresAcknowledgment: requiresAck,
+            authorId: authorId,
+            sectorId: _selectedSector!.id,
+          );
+    }
 
     if (!mounted) return;
     setState(() => _isLoading = false);
