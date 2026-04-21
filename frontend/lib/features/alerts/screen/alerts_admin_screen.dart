@@ -33,12 +33,6 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ref.read(alertProvider.notifier).loadNotifications();
-      ref.read(sectorProvider.notifier).loadSectors();
-      await ref.read(alertProvider.notifier).loadAssignments();
-      ref.read(alertProvider.notifier).markAllPendingAsViewed();
-    });
   }
 
   @override

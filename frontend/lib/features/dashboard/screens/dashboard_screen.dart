@@ -23,11 +23,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(alertProvider.notifier).loadNotifications();
-      ref.read(alertProvider.notifier).loadAssignments();
-      ref.read(sectorProvider.notifier).loadSectors();
-    });
   }
 
   Future<void> _refresh() async {

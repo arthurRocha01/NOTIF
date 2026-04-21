@@ -63,19 +63,13 @@ void main() {
     );
   }
 
-  testWidgets('chama loadNotifications e loadAssignments ao inicializar',
+  testWidgets('não chama loads ao inicializar (delegado ao HomeScreen)',
       (tester) async {
     await tester.pumpWidget(buildSubject());
     await tester.pump();
 
-    expect(alertNotifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
-  });
-
-  testWidgets('chama loadSectors ao inicializar', (tester) async {
-    await tester.pumpWidget(buildSubject());
-    await tester.pump();
-
-    expect(sectorNotifier.calls, contains('loadSectors'));
+    expect(alertNotifier.calls, isEmpty);
+    expect(sectorNotifier.calls, isEmpty);
   });
 
   testWidgets('botão de refresh chama loadNotifications e loadAssignments',

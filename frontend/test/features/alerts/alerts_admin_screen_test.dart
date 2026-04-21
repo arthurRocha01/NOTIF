@@ -111,7 +111,7 @@ void main() {
   });
 
   group('AlertAdminScreen init', () {
-    testWidgets('chama loadNotifications e loadAssignments ao inicializar',
+    testWidgets('não chama loads ao inicializar (delegado ao HomeScreen)',
         (tester) async {
       final notifier = _TrackingAlertNotifier(MockAlertService());
       final sectorService = MockSectorService();
@@ -126,7 +126,7 @@ void main() {
       ));
       await tester.pump();
 
-      expect(notifier.calls, containsAll(['loadNotifications', 'loadAssignments']));
+      expect(notifier.calls, isEmpty);
     });
   });
 

@@ -11,6 +11,7 @@ import 'package:notif_app/features/alerts/screen/alerts_user_screen.dart';
 import 'package:notif_app/features/alerts/widgets/critical_alert_overlay.dart';
 import 'package:notif_app/features/alerts/widgets/in_app_banner_overlay.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
+import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/home/controllers/feed_controller.dart';
 import 'package:notif_app/features/home/widgets/feed/feed_content.dart';
 import 'package:notif_app/features/home/widgets/home_bottom_nav.dart';
@@ -35,6 +36,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     Future.microtask(() => ref.read(feedProvider).loadPosts());
     _initNotificationHandlers();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final alert = ref.read(alertProvider.notifier);
+      final sector = ref.read(sectorProvider.notifier);
+      await alert.loadNotifications();
+      await alert.loadAssignments();
+      await sector.loadSectors();
+      final user = ref.read(authProvider);
+      if (user?.isSupervisor ?? false) {
+        alert.markAllPendingAsViewed();
+      }
+    });
   }
 
   void _initNotificationHandlers() {
