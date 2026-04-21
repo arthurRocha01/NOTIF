@@ -50,6 +50,7 @@ class SectorNotifier extends StateNotifier<SectorState> {
   String get _token => ApiClient.currentToken;
 
   Future<void> loadSectors({String? token}) async {
+    if (state.isLoading) return;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final sectors = await _service.getSectors(token: token ?? _token);

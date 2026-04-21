@@ -18,6 +18,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
   String get _token => ApiClient.currentToken;
 
   Future<void> loadNotifications({String? token}) async {
+    if (state.isLoadingNotifications) return;
     state = state.copyWith(isLoadingNotifications: true, clearError: true);
     try {
       final notifications =
@@ -46,6 +47,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
   }
 
   Future<void> loadAssignments({String? token}) async {
+    if (state.isLoadingAssignments) return;
     state = state.copyWith(isLoadingAssignments: true, clearError: true);
     try {
       final assignments =

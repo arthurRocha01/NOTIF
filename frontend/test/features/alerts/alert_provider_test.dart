@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -325,6 +327,57 @@ void main() {
             assignmentId: any(named: 'assignmentId'),
             token: any(named: 'token'),
           ));
+    });
+  });
+
+  group('AlertNotifier — guard de loading duplicado', () {
+    test('loadNotifications não chama service se já está carregando', () async {
+      final completer = Completer<List<AlertModel>>();
+      when(() => mockService.getNotifications(token: any(named: 'token')))
+          .thenAnswer((_) => completer.future);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      // dispara primeira chamada (fica em andamento)
+      final first = container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      // dispara segunda chamada enquanto a primeira ainda está pendente
+      await container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      completer.complete([]);
+      await first;
+
+      // service deve ter sido chamado apenas uma vez
+      verify(() => mockService.getNotifications(token: any(named: 'token')))
+          .called(1);
+    });
+
+    test('loadAssignments não chama service se já está carregando', () async {
+      final completer = Completer<List<AssignmentModel>>();
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) => completer.future);
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      final first = container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      completer.complete([]);
+      await first;
+
+      verify(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .called(1);
     });
   });
 
