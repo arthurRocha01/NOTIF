@@ -59,6 +59,7 @@ class AlertService {
 
   Future<AlertModel> createNotification({
     required String token,
+    required String authorId,
     required String title,
     required String message,
     required AlertLevel level,
@@ -74,6 +75,7 @@ class AlertService {
         'slaMinutes': slaMinutes,
         'requiresAcknowledgment':
             level == AlertLevel.critical ? true : requiresAcknowledgment,
+        'authorId': authorId,
         if (sectorId != null) 'sectorId': sectorId,
       };
 

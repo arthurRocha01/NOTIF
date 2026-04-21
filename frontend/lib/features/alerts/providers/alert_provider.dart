@@ -81,12 +81,14 @@ class AlertNotifier extends StateNotifier<AlertState> {
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
+    required String authorId,
     String? sectorId,
     String? token,
   }) async {
     try {
       final created = await _service.createNotification(
         token: token ?? _token,
+        authorId: authorId,
         title: title,
         message: message,
         level: level,

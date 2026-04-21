@@ -415,6 +415,7 @@ void main() {
 
       when(() => mockService.createNotification(
                 token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
                 title: any(named: 'title'),
                 message: any(named: 'message'),
                 level: any(named: 'level'),
@@ -429,6 +430,7 @@ void main() {
 
       final ok = await container.read(alertProvider.notifier).createNotification(
             token: 'tok',
+            authorId: 'user-123',
             title: 'Novo',
             message: 'Mensagem',
             level: AlertLevel.medium,
@@ -446,6 +448,7 @@ void main() {
     test('retorna false em falha', () async {
       when(() => mockService.createNotification(
                 token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
                 title: any(named: 'title'),
                 message: any(named: 'message'),
                 level: any(named: 'level'),
@@ -460,6 +463,7 @@ void main() {
 
       final ok = await container.read(alertProvider.notifier).createNotification(
             token: 'tok',
+            authorId: 'user-123',
             title: 'Novo',
             message: 'Mensagem',
             level: AlertLevel.medium,
@@ -473,6 +477,7 @@ void main() {
     test('popula errorMessage no estado em falha', () async {
       when(() => mockService.createNotification(
                 token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
                 title: any(named: 'title'),
                 message: any(named: 'message'),
                 level: any(named: 'level'),
@@ -487,6 +492,7 @@ void main() {
 
       await container.read(alertProvider.notifier).createNotification(
             token: 'tok',
+            authorId: 'user-123',
             title: 'Novo',
             message: 'Mensagem',
             level: AlertLevel.medium,
@@ -506,6 +512,7 @@ void main() {
 
       when(() => mockService.createNotification(
                 token: any(named: 'token'),
+                authorId: any(named: 'authorId'),
                 title: any(named: 'title'),
                 message: any(named: 'message'),
                 level: any(named: 'level'),
@@ -523,6 +530,7 @@ void main() {
 
       await container.read(alertProvider.notifier).createNotification(
             token: 'tok',
+            authorId: 'user-123',
             title: 'Novo',
             message: 'Mensagem',
             level: AlertLevel.medium,

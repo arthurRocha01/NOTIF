@@ -88,6 +88,7 @@ void main() {
 
       final result = await service.createNotification(
         token: token,
+        authorId: 'user-admin',
         title: 'Manutenção',
         message: 'Servidor offline às 22h.',
         level: AlertLevel.medium,
@@ -111,6 +112,7 @@ void main() {
 
       final result = await service.createNotification(
         token: token,
+        authorId: 'user-admin',
         title: 'Global',
         message: 'Aviso geral',
         level: AlertLevel.low,
@@ -132,6 +134,7 @@ void main() {
       expect(
         () => service.createNotification(
           token: token,
+          authorId: 'user-admin',
           title: 'X',
           message: 'Y',
           level: AlertLevel.low,

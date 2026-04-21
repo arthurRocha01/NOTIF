@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
+import '../../login/providers/auth_provider.dart';
 import '../widgets/urgency_selector.dart';
 import '../../../shared/widgets/notif_input.dart';
 import '../../../shared/widgets/notif_button.dart';
@@ -78,6 +79,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
     setState(() => _isLoading = true);
 
+    final user = ref.read(authProvider);
     final ok = await ref.read(alertProvider.notifier).createNotification(
           title: _titleCtrl.text.trim(),
           message: _messageCtrl.text.trim(),
@@ -85,6 +87,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
           slaMinutes: _slaMinutes,
           requiresAcknowledgment:
               _level == AlertLevel.critical ? true : _requiresAcknowledgment,
+          authorId: user?.id ?? '',
           sectorId: _sendToAll ? null : _selectedSector?.id,
         );
 
