@@ -16,7 +16,7 @@ void main() {
 
   setUp(() {
     mockClient = MockHttpClient();
-    sut = AuthService(httpClient: mockClient);
+    sut = AuthService(httpClient: mockClient, retryDelays: const []);
     registerFallbackValue(Uri());
   });
 
@@ -415,6 +415,183 @@ void main() {
       final user = await sut.fetchUser('joao@test.com', 'jwt-token-123');
 
       expect(user.fcmToken, isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Retry — fetchUser
+  // ---------------------------------------------------------------------------
+  group('AuthService.fetchUser — retry em cold start', () {
+    late MockHttpClient retryClient;
+    late AuthService retrySut;
+
+    const _userJson = '{"id":"uuid-123","name":"João","email":"joao@test.com","role":"EMPLOYEE","sectorId":"sec-1"}';
+
+    setUp(() {
+      retryClient = MockHttpClient();
+      retrySut = AuthService(
+        httpClient: retryClient,
+        retryDelays: const [Duration.zero, Duration.zero, Duration.zero],
+      );
+      registerFallbackValue(Uri());
+    });
+
+    test('retenta em 500 e retorna sucesso na 2ª tentativa', () async {
+      var calls = 0;
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async {
+        calls++;
+        return calls == 1
+            ? http.Response('err', 500)
+            : http.Response(_userJson, 200);
+      });
+
+      final user = await retrySut.fetchUser('joao@test.com', 'token');
+
+      expect(user.id, equals('uuid-123'));
+      expect(calls, equals(2));
+    });
+
+    test('retenta em 502 e retorna sucesso na 3ª tentativa', () async {
+      var calls = 0;
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async {
+        calls++;
+        return calls < 3
+            ? http.Response('err', 502)
+            : http.Response(_userJson, 200);
+      });
+
+      final user = await retrySut.fetchUser('joao@test.com', 'token');
+
+      expect(user.id, equals('uuid-123'));
+      expect(calls, equals(3));
+    });
+
+    test('lança ApiException após esgotar 3 retentativas em 500 persistente', () async {
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response('err', 500));
+
+      await expectLater(
+        () => retrySut.fetchUser('joao@test.com', 'token'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 500)),
+      );
+
+      verify(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .called(4);
+    });
+
+    test('NÃO retenta em 401', () async {
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async =>
+              http.Response('{"message":"Unauthorized"}', 401));
+
+      await expectLater(
+        () => retrySut.fetchUser('joao@test.com', 'token'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 401)),
+      );
+
+      verify(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .called(1);
+    });
+
+    test('NÃO retenta em 404', () async {
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async =>
+              http.Response('{"message":"Not Found"}', 404));
+
+      await expectLater(
+        () => retrySut.fetchUser('joao@test.com', 'token'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 404)),
+      );
+
+      verify(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .called(1);
+    });
+
+    test('NÃO retenta em SocketException', () async {
+      when(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .thenThrow(const SocketException('No internet'));
+
+      await expectLater(
+        () => retrySut.fetchUser('joao@test.com', 'token'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.message, 'message', contains('internet'))),
+      );
+
+      verify(() => retryClient.get(any(), headers: any(named: 'headers')))
+          .called(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Retry — login
+  // ---------------------------------------------------------------------------
+  group('AuthService.login — retry em cold start', () {
+    late MockHttpClient retryClient;
+    late AuthService retrySut;
+
+    setUp(() {
+      retryClient = MockHttpClient();
+      retrySut = AuthService(
+        httpClient: retryClient,
+        retryDelays: const [Duration.zero, Duration.zero, Duration.zero],
+      );
+      registerFallbackValue(Uri());
+    });
+
+    test('retenta em 500 e retorna token na 2ª tentativa', () async {
+      var calls = 0;
+      when(() => retryClient.post(any(),
+              headers: any(named: 'headers'), body: any(named: 'body')))
+          .thenAnswer((_) async {
+        calls++;
+        return calls == 1
+            ? http.Response('err', 500)
+            : http.Response(
+                jsonEncode({'access_token': 'jwt-token-123'}), 200);
+      });
+
+      final token = await retrySut.login('user@test.com', 'senha');
+
+      expect(token, equals('jwt-token-123'));
+      expect(calls, equals(2));
+    });
+
+    test('lança ApiException após esgotar tentativas em 500 persistente', () async {
+      when(() => retryClient.post(any(),
+              headers: any(named: 'headers'), body: any(named: 'body')))
+          .thenAnswer((_) async => http.Response('err', 500));
+
+      await expectLater(
+        () => retrySut.login('user@test.com', 'senha'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 500)),
+      );
+
+      verify(() => retryClient.post(any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'))).called(4);
+    });
+
+    test('NÃO retenta em 401', () async {
+      when(() => retryClient.post(any(),
+              headers: any(named: 'headers'), body: any(named: 'body')))
+          .thenAnswer((_) async =>
+              http.Response('{"message":"Unauthorized"}', 401));
+
+      await expectLater(
+        () => retrySut.login('wrong@test.com', 'errada'),
+        throwsA(isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 401)),
+      );
+
+      verify(() => retryClient.post(any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'))).called(1);
     });
   });
 }
