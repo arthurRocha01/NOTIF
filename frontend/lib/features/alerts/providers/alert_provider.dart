@@ -177,8 +177,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
                 : a)
             .toList(),
       );
-    } on ApiException catch (e) {
+    } on AlertServiceException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(errorMessage: e.message);
     } catch (_) {}
   }
 
@@ -200,8 +201,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
                 : a)
             .toList(),
       );
-    } on ApiException catch (e) {
+    } on AlertServiceException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+      state = state.copyWith(errorMessage: e.message);
     } catch (_) {}
   }
 
@@ -212,7 +214,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
         userId: userId,
         token: token ?? _token,
       );
-    } on ApiException catch (e) {
+    } on AlertServiceException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
     } catch (_) {}
   }

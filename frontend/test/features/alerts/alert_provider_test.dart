@@ -381,6 +381,136 @@ void main() {
     });
   });
 
+  group('AlertNotifier.markAsViewed — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAsViewed(assignmentId: 'assign-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+
+    test('propaga errorMessage ao estado em erro não-401', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Servidor indisponível', statusCode: 500));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAsViewed(assignmentId: 'assign-1', token: 'tok');
+
+      expect(
+        container.read(alertProvider).errorMessage,
+        equals('Servidor indisponível'),
+      );
+    });
+  });
+
+  group('AlertNotifier.acknowledge — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+
+    test('propaga errorMessage ao estado em erro não-401', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Servidor indisponível', statusCode: 500));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      expect(
+        container.read(alertProvider).errorMessage,
+        equals('Servidor indisponível'),
+      );
+    });
+  });
+
+  group('AlertNotifier.syncDeliveries — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.syncDeliveries(
+                userId: any(named: 'userId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .syncDeliveries(userId: 'user-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
   group('AlertNotifier.syncDeliveries', () {
     test('chama service.syncDeliveries sem alterar estado de assignments', () async {
       when(() => mockService.getMyAssignments(token: any(named: 'token')))
