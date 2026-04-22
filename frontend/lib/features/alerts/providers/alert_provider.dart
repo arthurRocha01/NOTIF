@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/api/api_client.dart' show ApiClient;
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_state.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
@@ -28,13 +28,8 @@ class AlertNotifier extends StateNotifier<AlertState> {
         notifications: notifications,
         isLoadingNotifications: false,
       );
-    } on ApiException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
-      state = state.copyWith(
-        isLoadingNotifications: false,
-        errorMessage: e.message,
-      );
     } on AlertServiceException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
       state = state.copyWith(
         isLoadingNotifications: false,
         errorMessage: e.message,
@@ -57,13 +52,8 @@ class AlertNotifier extends StateNotifier<AlertState> {
         assignments: assignments,
         isLoadingAssignments: false,
       );
-    } on ApiException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
-      state = state.copyWith(
-        isLoadingAssignments: false,
-        errorMessage: e.message,
-      );
     } on AlertServiceException catch (e) {
+      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
       state = state.copyWith(
         isLoadingAssignments: false,
         errorMessage: e.message,
@@ -102,10 +92,6 @@ class AlertNotifier extends StateNotifier<AlertState> {
       );
       return true;
     } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
-      state = state.copyWith(errorMessage: e.message);
-      return false;
-    } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
       state = state.copyWith(errorMessage: e.message);
       return false;
@@ -149,10 +135,6 @@ class AlertNotifier extends StateNotifier<AlertState> {
       );
       return true;
     } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
-      state = state.copyWith(errorMessage: e.message);
-      return false;
-    } on ApiException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
       state = state.copyWith(errorMessage: e.message);
       return false;

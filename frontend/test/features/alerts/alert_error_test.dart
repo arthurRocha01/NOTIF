@@ -97,13 +97,12 @@ void main() {
       ApiClient.onUnauthorized = null;
     });
 
-    test('callback é invocado quando _handleResponse recebe 401', () async {
+    test('callback é invocado quando AlertService lança AlertServiceException 401', () async {
       bool called = false;
       ApiClient.onUnauthorized = () => called = true;
 
-      // simula um 401 via ApiException com statusCode 401
       when(() => mockService.getNotifications(token: any(named: 'token')))
-          .thenThrow(ApiException('Não autorizado', statusCode: 401));
+          .thenThrow(AlertServiceException('Não autorizado', statusCode: 401));
 
       final container = _makeContainer(mockService);
       addTearDown(container.dispose);

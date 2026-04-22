@@ -381,6 +381,52 @@ void main() {
     });
   });
 
+  group('AlertNotifier.loadNotifications — onUnauthorized', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getNotifications(token: any(named: 'token')))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
+  group('AlertNotifier.loadAssignments — onUnauthorized', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
   group('AlertNotifier.markAsViewed — tratamento de erros', () {
     test('chama onUnauthorized quando serviço lança AlertServiceException 401',
         () async {
