@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { AssignmentService } from '../application/assignment.service';
 import { AssignmentResponseDto } from '../dto/assignment-response.dto';
-import { CreateAssignmentDto } from '../dto/create-assignment.dto';
 
 @Controller('assignments')
 export class AssignmentController {
@@ -32,13 +31,8 @@ export class AssignmentController {
     );
   }
 
-  @Post()
-  async create(
-    @Body() dto: CreateAssignmentDto,
-  ): Promise<AssignmentResponseDto> {
-    const assignment = await this.assignmentService.createAssignment(dto);
-    return AssignmentResponseDto.fromDomain(assignment);
-  }
+  // @Post() — criação interna: assignments são gerados automaticamente pelo NotificationService
+  // @Delete — mantido para administração
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {

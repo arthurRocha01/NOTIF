@@ -14,5 +14,6 @@ import { NotificationRepository } from '../notifications/infrastructure/notifica
     NotificationRepository,
   ],
   controllers: [AssignmentController, AssigmentInterationController],
+  exports: [AssignmentService],
 })
 export class AssignmentsModule {}
