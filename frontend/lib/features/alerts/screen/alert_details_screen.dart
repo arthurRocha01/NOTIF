@@ -19,7 +19,7 @@ class AlertDetailsScreen extends ConsumerWidget {
     final status  = assignment.status;
     final isDone    = status == AssignmentStatus.acknowledged;
     final isOverdue = status == AssignmentStatus.overdue;
-    final canAcknowledge = !isDone && assignment.isCritical;
+    final canAcknowledge = !isDone && assignment.canAcknowledge;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),

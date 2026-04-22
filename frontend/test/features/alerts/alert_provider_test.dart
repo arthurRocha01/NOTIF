@@ -672,6 +672,86 @@ void main() {
     });
   });
 
+  group('AssignmentModel.requiresAcknowledgment', () {
+    test('fromJson parseia requiresAcknowledgment true', () {
+      final json = {
+        'id': 'a1',
+        'userId': 'u1',
+        'notificationId': 'n1',
+        'notificationLevel': 'medium',
+        'status': 'pending',
+        'createdAt': '2026-04-22T10:00:00.000Z',
+        'requiresAcknowledgment': true,
+      };
+      final model = AssignmentModel.fromJson(json);
+      expect(model.requiresAcknowledgment, isTrue);
+    });
+
+    test('fromJson usa null quando campo ausente', () {
+      final json = {
+        'id': 'a1',
+        'userId': 'u1',
+        'notificationId': 'n1',
+        'notificationLevel': 'medium',
+        'status': 'pending',
+        'createdAt': '2026-04-22T10:00:00.000Z',
+      };
+      final model = AssignmentModel.fromJson(json);
+      expect(model.requiresAcknowledgment, isNull);
+    });
+
+    test('canAcknowledge true quando isCritical', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.critical,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: false,
+      );
+      expect(model.canAcknowledge, isTrue);
+    });
+
+    test('canAcknowledge true quando requiresAcknowledgment=true não-crítico', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.medium,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: true,
+      );
+      expect(model.canAcknowledge, isTrue);
+    });
+
+    test('canAcknowledge false quando não-crítico e requiresAcknowledgment null', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.medium,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+      );
+      expect(model.canAcknowledge, isFalse);
+    });
+
+    test('canAcknowledge false quando não-crítico e requiresAcknowledgment=false', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.low,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: false,
+      );
+      expect(model.canAcknowledge, isFalse);
+    });
+  });
+
   group('AlertNotifier.createNotificationForAllSectors', () {
     test('cria uma notificação por setor e adiciona todas ao estado', () async {
       final notif1 = _makeNotification(id: 'notif-s1');

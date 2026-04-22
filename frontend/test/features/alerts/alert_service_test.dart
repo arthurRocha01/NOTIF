@@ -264,4 +264,57 @@ void main() {
       );
     });
   });
+
+  group('AlertService — POST sem body', () {
+    test('markAsViewed não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.markAsViewed(assignmentId: 'assign-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
+    });
+
+    test('acknowledge não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.acknowledge(assignmentId: 'assign-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
+    });
+
+    test('syncDeliveries não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.syncDeliveries(userId: 'user-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
+    });
+  });
 }

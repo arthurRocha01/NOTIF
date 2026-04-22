@@ -204,7 +204,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
       itemBuilder: (_, i) {
         final a = items[i];
         final canAcknowledge =
-            a.status != AssignmentStatus.acknowledged && a.isCritical;
+            a.status != AssignmentStatus.acknowledged && a.canAcknowledge;
         return _AssignmentCard(
           assignment: a,
           onAcknowledge: canAcknowledge
