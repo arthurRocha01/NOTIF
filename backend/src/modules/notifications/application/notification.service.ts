@@ -5,6 +5,7 @@ import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { FcmService } from '../infrastructure/fcm.service';
 import { UserService } from '../../users/application/user.service';
+import { AssignmentService } from '../../assignments/application/assignment.service';
 
 @Injectable()
 export class NotificationService {
@@ -12,6 +13,7 @@ export class NotificationService {
     private readonly notificationRepo: NotificationRepository,
     private readonly usersService: UserService,
     private readonly fcmService: FcmService,
+    private readonly assignmentService: AssignmentService,
   ) {}
 
   async listNotifications(): Promise<Notification[]> {
@@ -36,37 +38,39 @@ export class NotificationService {
     await this.notificationRepo.save(newNotification);
 
     if (dto.sectorId) {
-      await this.sendTokensBySector(
-        dto.sectorId,
-        newNotification.getTitle(),
-        newNotification.getMessage(),
+      const usersInSector = await this.usersService.listUsersBySectorId(dto.sectorId);
+
+      await Promise.all(
+        usersInSector.map((user) =>
+          this.assignmentService.createAssignment({
+            userId: user.getId(),
+            notificationId: newNotification.getId(),
+            notificationLevel: newNotification.getLevel(),
+          }),
+        ),
       );
+
+      await this.sendFcmToSector(usersInSector, newNotification.getTitle(), newNotification.getMessage());
     }
 
     return newNotification;
   }
 
-  private async sendTokensBySector(
-    sectorId: string,
+  private async sendFcmToSector(
+    users: Awaited<ReturnType<UserService['listUsersBySectorId']>>,
     title: string,
     message: string,
   ) {
-    const usersInSector = await this.usersService.listUsersBySectorId(sectorId);
-
-    const tokens = usersInSector
+    const tokens = users
       .map((user) => user.getFcmToken())
       .filter((token): token is string => Boolean(token));
 
-    if (tokens?.length > 0) {
-      const failedTokens = await this.fcmService.sendMulticast(
-        tokens,
-        title,
-        message,
-      );
+    if (tokens.length === 0) return;
 
-      if (failedTokens?.length > 0) {
-        await this.usersService.removeTokensByUser(failedTokens);
-      }
+    const failedTokens = await this.fcmService.sendMulticast(tokens, title, message);
+
+    if (failedTokens?.length > 0) {
+      await this.usersService.removeTokensByUser(failedTokens);
     }
   }
 
