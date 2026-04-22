@@ -12,16 +12,6 @@ class AlertUserScreen extends ConsumerStatefulWidget {
 
 class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final notifier = ref.read(alertProvider.notifier);
-      await notifier.loadAssignments();
-      notifier.markAllPendingAsViewed();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final state = ref.watch(alertProvider);
 
