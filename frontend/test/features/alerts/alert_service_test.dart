@@ -147,6 +147,24 @@ void main() {
   });
 
   group('AlertService.getMyAssignments', () {
+    test('chama GET /assignments/user/:userId com o userId correto', () async {
+      when(() => mockClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response(
+                jsonEncode([assignmentJson]),
+                200,
+              ));
+
+      await service.getMyAssignments(userId: 'user-1', token: token);
+
+      final captured = verify(
+        () => mockClient.get(captureAny(), headers: any(named: 'headers')),
+      ).captured;
+      expect(
+        (captured.single as Uri).toString(),
+        equals('$baseUrl/assignments/user/user-1'),
+      );
+    });
+
     test('retorna lista de AssignmentModel em sucesso', () async {
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer((_) async => http.Response(
@@ -154,7 +172,7 @@ void main() {
                 200,
               ));
 
-      final result = await service.getMyAssignments(token: token);
+      final result = await service.getMyAssignments(userId: 'user-1', token: token);
 
       expect(result, hasLength(1));
       expect(result.first.id, equals('assign-1'));
@@ -166,7 +184,7 @@ void main() {
           .thenAnswer((_) async => http.Response('{"message":"Unauthorized"}', 401));
 
       expect(
-        () => service.getMyAssignments(token: token),
+        () => service.getMyAssignments(userId: 'user-1', token: token),
         throwsA(isA<AlertServiceException>()),
       );
     });

@@ -52,7 +52,7 @@ void main() {
     });
 
     test('errorMessage é populado quando loadAssignments falha', () async {
-      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
           .thenThrow(AlertServiceException('Sem conexão'));
 
       final container = _makeContainer(mockService);
@@ -60,7 +60,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(token: 'tok');
+          .loadAssignments(userId: 'user-1', token: 'tok');
 
       expect(
         container.read(alertProvider).errorMessage,

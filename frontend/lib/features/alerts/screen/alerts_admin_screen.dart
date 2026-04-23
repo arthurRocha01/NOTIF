@@ -6,6 +6,7 @@ import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
 import 'package:notif_app/features/alerts/widgets/assignments_body.dart';
+import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
@@ -142,8 +143,9 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   isLoading: state.isLoadingAssignments,
                   isBlocked: state.isBlocked,
                   isSupervisor: true,
-                  onRefresh: () =>
-                      ref.read(alertProvider.notifier).loadAssignments(),
+                  onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(
+                        userId: ref.read(authProvider)?.id ?? '',
+                      ),
                   onAcknowledge: (id) => ref
                       .read(alertProvider.notifier)
                       .acknowledge(assignmentId: id),

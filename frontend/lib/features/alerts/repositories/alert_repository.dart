@@ -30,8 +30,11 @@ class AlertRepository {
         sectorId: sectorId,
       );
 
-  Future<List<AssignmentModel>> fetchMyAssignments({required String token}) =>
-      _service.getMyAssignments(token: token);
+  Future<List<AssignmentModel>> fetchMyAssignments({
+    required String userId,
+    required String token,
+  }) =>
+      _service.getMyAssignments(userId: userId, token: token);
 
   Future<void> markAsViewed({
     required String assignmentId,

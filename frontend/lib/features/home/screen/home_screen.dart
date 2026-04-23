@@ -39,10 +39,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
-      await alert.loadNotifications();
-      await alert.loadAssignments();
-      await sector.loadSectors();
       final user = ref.read(authProvider);
+      await alert.loadNotifications();
+      await alert.loadAssignments(userId: user?.id ?? '');
+      await sector.loadSectors();
       if (user?.isSupervisor ?? false) {
         alert.markAllPendingAsViewed();
       }
@@ -61,7 +61,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (!mounted) return;
-    ref.read(alertProvider.notifier).loadAssignments();
+    ref.read(alertProvider.notifier).loadAssignments(
+      userId: ref.read(authProvider)?.id ?? '',
+    );
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);
@@ -72,7 +74,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _handleNotificationTap(RemoteMessage message) {
     if (!mounted) return;
-    ref.read(alertProvider.notifier).loadAssignments();
+    ref.read(alertProvider.notifier).loadAssignments(
+      userId: ref.read(authProvider)?.id ?? '',
+    );
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);
