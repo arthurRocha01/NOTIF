@@ -40,10 +40,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
       final user = ref.read(authProvider);
-      await alert.loadNotifications();
+      if (user?.isSupervisor == true || user?.isAdmin == true) {
+        await alert.loadNotifications();
+      }
       await alert.loadAssignments(userId: user?.id ?? '');
       await sector.loadSectors();
-      if (user?.isSupervisor ?? false) {
+      if (user?.isSupervisor == true) {
         alert.markAllPendingAsViewed();
       }
     });

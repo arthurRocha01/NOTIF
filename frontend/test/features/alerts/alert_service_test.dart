@@ -147,7 +147,7 @@ void main() {
   });
 
   group('AlertService.getMyAssignments', () {
-    test('chama GET /assignments/user/:userId com o userId correto', () async {
+    test('chama GET /assignments (sem userId na URL)', () async {
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer((_) async => http.Response(
                 jsonEncode([assignmentJson]),
@@ -161,8 +161,27 @@ void main() {
       ).captured;
       expect(
         (captured.single as Uri).toString(),
-        equals('$baseUrl/assignments/user/user-1'),
+        equals('$baseUrl/assignments'),
       );
+    });
+
+    test('filtra client-side: retorna só assignments do userId', () async {
+      final otherAssignment = {
+        ...assignmentJson,
+        'id': 'assign-99',
+        'userId': 'user-99',
+      };
+      when(() => mockClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response(
+                jsonEncode([assignmentJson, otherAssignment]),
+                200,
+              ));
+
+      final result = await service.getMyAssignments(userId: 'user-1', token: token);
+
+      expect(result, hasLength(1));
+      expect(result.first.id, equals('assign-1'));
+      expect(result.first.userId, equals('user-1'));
     });
 
     test('retorna lista de AssignmentModel em sucesso', () async {

@@ -106,12 +106,13 @@ class AlertService {
   }) async {
     try {
       final response = await _httpClient
-          .get(Uri.parse('$_baseUrl/assignments/user/$userId'), headers: _headers(token))
+          .get(Uri.parse('$_baseUrl/assignments'), headers: _headers(token))
           .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
         return list
             .map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>))
+            .where((a) => a.userId == userId)
             .toList();
       }
       final body = _tryDecode(response.body);
