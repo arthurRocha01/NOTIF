@@ -83,7 +83,6 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
         await notifier.updateUser(
           userId: widget.user!.id,
           name: _nameCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
           role: _role,
           sectorId: _sectorId,
         );

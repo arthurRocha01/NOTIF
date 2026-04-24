@@ -57,7 +57,7 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
           name: _nameCtrl.text.trim(),
         );
       } else {
-        await notifier.createSector(name: _nameCtrl.text.trim());
+        await notifier.createSector(_nameCtrl.text.trim());
       }
 
       final error = ref.read(adminSectorProvider).errorMessage;

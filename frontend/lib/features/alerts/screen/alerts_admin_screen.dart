@@ -145,7 +145,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
                   onAcknowledge: (id) => ref
                       .read(alertProvider.notifier)
-                      .acknowledge(assignmentId: id),
+                      .acknowledge(id),
                 ),
               ],
             ),

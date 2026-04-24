@@ -5,8 +5,6 @@ import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
-// ── State ──────────────────────────────────────────────────────────────────
-
 class AdminSectorState {
   final List<SectorModel> sectors;
   final bool isLoading;
@@ -32,8 +30,6 @@ class AdminSectorState {
   }
 }
 
-// ── Providers ─────────────────────────────────────────────────────────────
-
 final adminSectorServiceProvider =
     Provider<AdminSectorService>((ref) => AdminSectorService());
 
@@ -45,8 +41,6 @@ final adminSectorProvider =
   );
 });
 
-// ── Notifier ──────────────────────────────────────────────────────────────
-
 class AdminSectorNotifier extends StateNotifier<AdminSectorState> {
   final AdminSectorService _service;
   final SectorService _sectorService;
@@ -54,30 +48,26 @@ class AdminSectorNotifier extends StateNotifier<AdminSectorState> {
   AdminSectorNotifier(this._service, this._sectorService)
       : super(const AdminSectorState());
 
-  String get _token => ApiClient.currentToken;
-
   Future<void> loadSectors() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final sectors = await _sectorService.getSectors(token: _token);
+      final sectors = await _sectorService.getSectors();
       state = state.copyWith(sectors: sectors, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Erro ao carregar setores',
-      );
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+    } catch (_) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Erro ao carregar setores');
     }
   }
 
-  Future<void> createSector({required String name}) async {
+  Future<void> createSector(String name) async {
     try {
-      final sector = await _service.createSector(token: _token, name: name);
-      state = state.copyWith(
-          sectors: [...state.sectors, sector], clearError: true);
-    } catch (e) {
-      state = state.copyWith(
-        errorMessage: e is ApiException ? e.message : 'Erro ao criar setor',
-      );
+      final sector = await _service.createSector(name);
+      state = state.copyWith(sectors: [...state.sectors, sector], clearError: true);
+    } on ApiException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro ao criar setor');
     }
   }
 
@@ -86,32 +76,29 @@ class AdminSectorNotifier extends StateNotifier<AdminSectorState> {
     required String name,
   }) async {
     try {
-      final updated = await _service.updateSector(
-          token: _token, sectorId: sectorId, name: name);
+      final updated = await _service.updateSector(sectorId: sectorId, name: name);
       state = state.copyWith(
-        sectors: state.sectors
-            .map((s) => s.id == sectorId ? updated : s)
-            .toList(),
+        sectors: state.sectors.map((s) => s.id == sectorId ? updated : s).toList(),
         clearError: true,
       );
-    } catch (e) {
-      state = state.copyWith(
-        errorMessage: e is ApiException ? e.message : 'Erro ao atualizar setor',
-      );
+    } on ApiException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro ao atualizar setor');
     }
   }
 
   Future<void> deleteSector(String sectorId) async {
     try {
-      await _service.deleteSector(token: _token, sectorId: sectorId);
+      await _service.deleteSector(sectorId);
       state = state.copyWith(
         sectors: state.sectors.where((s) => s.id != sectorId).toList(),
         clearError: true,
       );
-    } catch (e) {
-      state = state.copyWith(
-        errorMessage: e is ApiException ? e.message : 'Erro ao deletar setor',
-      );
+    } on ApiException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro ao deletar setor');
     }
   }
 }

@@ -36,7 +36,7 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
         isBlocked: state.isBlocked,
         onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
         onAcknowledge: (id) =>
-            ref.read(alertProvider.notifier).acknowledge(assignmentId: id),
+            ref.read(alertProvider.notifier).acknowledge(id),
       ),
     );
   }

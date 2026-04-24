@@ -3,8 +3,6 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
-// ── State ──────────────────────────────────────────────────────────────────
-
 class SectorState {
   final List<SectorModel> sectors;
   final bool isLoading;
@@ -30,32 +28,24 @@ class SectorState {
   }
 }
 
-// ── Providers ─────────────────────────────────────────────────────────────
+final sectorServiceProvider = Provider<SectorService>((ref) => SectorService());
 
-final sectorServiceProvider =
-    Provider<SectorService>((ref) => SectorService());
-
-final sectorProvider =
-    StateNotifierProvider<SectorNotifier, SectorState>((ref) {
+final sectorProvider = StateNotifierProvider<SectorNotifier, SectorState>((ref) {
   return SectorNotifier(ref.read(sectorServiceProvider));
 });
-
-// ── Notifier ──────────────────────────────────────────────────────────────
 
 class SectorNotifier extends StateNotifier<SectorState> {
   final SectorService _service;
 
   SectorNotifier(this._service) : super(const SectorState());
 
-  String get _token => ApiClient.currentToken;
-
-  Future<void> loadSectors({String? token}) async {
+  Future<void> loadSectors() async {
     if (state.isLoading) return;
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final sectors = await _service.getSectors(token: token ?? _token);
+      final sectors = await _service.getSectors();
       state = state.copyWith(sectors: sectors, isLoading: false);
-    } on SectorServiceException catch (e) {
+    } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (_) {
       state = state.copyWith(

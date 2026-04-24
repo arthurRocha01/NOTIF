@@ -12,9 +12,7 @@ import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService());
-
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
 final authProvider = StateNotifierProvider<AuthNotifier, UserModel?>((ref) {
@@ -46,14 +44,15 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     this._sectorService,
     this._alertService,
     this._fcmService,
-  ) : super(null);
+  ) : super(null) {
+    ApiClient.onUnauthorized = () => logout();
+  }
 
   String? get errorMessage => _errorMessage;
 
   Future<UserModel> _resolveUser(UserModel user) async {
     try {
-      final sectors =
-          await _sectorService.getSectors(token: ApiClient.currentToken);
+      final sectors = await _sectorService.getSectors();
       final match = sectors.firstWhere(
         (s) => s.id == user.sector,
         orElse: () => throw StateError('not found'),
@@ -77,11 +76,11 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     try {
       final token = await _service.login(email, password);
       ApiClient.setToken(token);
-      final raw = await _service.fetchUser(email, token);
+      final raw = await _service.fetchUser(email);
       await _storage.saveToken(token);
       await _storage.saveEmail(email);
       state = await _resolveUser(raw);
-      _syncDeliveriesSilently(state!.id, token);
+      _syncDeliveriesSilently(state!.id);
       _fcmService.requestPermission().catchError((_) {});
       _syncFcmTokenSilently(state!);
       _startTokenRefreshListener();
@@ -105,22 +104,18 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     if (token == null || email == null) return;
     try {
       ApiClient.setToken(token);
-      final raw = await _service.fetchUser(email, token);
+      final raw = await _service.fetchUser(email);
       state = await _resolveUser(raw);
-      _syncDeliveriesSilently(state!.id, token);
+      _syncDeliveriesSilently(state!.id);
       _fcmService.requestPermission().catchError((_) {});
       _syncFcmTokenSilently(state!);
       _startTokenRefreshListener();
     } on ApiException catch (e) {
       ApiClient.clearToken();
-      // Só limpa credenciais salvas se o JWT foi explicitamente rejeitado (401).
-      // Erros transitórios (500, timeout) não invalidam o token — mantém storage
-      // para que a próxima abertura do app tente restaurar novamente.
       if (e.statusCode == 401) {
         await _storage.clearAll();
       }
     } catch (_) {
-      // Erros de rede, timeout, etc. — token pode ainda ser válido.
       ApiClient.clearToken();
     }
   }
@@ -147,11 +142,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         final current = state;
         if (current == null) return;
         try {
-          await _service.updateFcmToken(
-            userId: current.id,
-            fcmToken: newToken,
-            token: ApiClient.currentToken,
-          );
+          await _service.updateFcmToken(userId: current.id, fcmToken: newToken);
           if (state != null) {
             state = UserModel(
               id: state!.id,
@@ -168,10 +159,8 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     } catch (_) {}
   }
 
-  void _syncDeliveriesSilently(String userId, String token) {
-    _alertService
-        .syncDeliveries(userId: userId, token: token)
-        .catchError((_) {});
+  void _syncDeliveriesSilently(String userId) {
+    _alertService.syncDeliveries(userId).catchError((_) {});
   }
 
   void _syncFcmTokenSilently(UserModel user) {
@@ -181,11 +170,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   Future<void> _syncFcmToken(UserModel user) async {
     final deviceToken = await _fcmService.getToken();
     if (deviceToken == null || deviceToken == user.fcmToken) return;
-    await _service.updateFcmToken(
-      userId: user.id,
-      fcmToken: deviceToken,
-      token: ApiClient.currentToken,
-    );
+    await _service.updateFcmToken(userId: user.id, fcmToken: deviceToken);
     if (state != null) {
       state = UserModel(
         id: state!.id,
