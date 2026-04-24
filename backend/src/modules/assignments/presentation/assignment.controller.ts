@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Req } from '@nestjs/common';
 import { AssignmentService } from '../application/assignment.service';
 import { AssignmentResponseDto } from '../dto/assignment-response.dto';
 
@@ -12,6 +12,12 @@ export class AssignmentController {
     return assignments.map((assignment) =>
       AssignmentResponseDto.fromDomain(assignment),
     );
+  }
+
+  @Get('mine')
+  async findMine(@Req() req: any): Promise<AssignmentResponseDto[]> {
+    const assignments = await this.assignmentService.listMyAssignments(req.user.userId);
+    return assignments.map((a) => AssignmentResponseDto.fromDomain(a));
   }
 
   @Get(':id')

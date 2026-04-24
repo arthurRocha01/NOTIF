@@ -24,7 +24,7 @@ class _TrackingAlertNotifier extends AlertNotifier {
   }
 
   @override
-  Future<void> loadAssignments({required String userId, String? token}) async {
+  Future<void> loadAssignments({String? token}) async {
     calls.add('loadAssignments');
   }
 }

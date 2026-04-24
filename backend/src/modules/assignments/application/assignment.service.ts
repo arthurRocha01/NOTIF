@@ -13,6 +13,10 @@ export class AssignmentService {
     return await this.assignmentRepo.findall();
   }
 
+  async listMyAssignments(userId: string): Promise<NotificationAssignment[]> {
+    return await this.assignmentRepo.findAllByUserId(userId);
+  }
+
   async getAssigmentDetails(
     id: string,
   ): Promise<NotificationAssignment | null> {

@@ -93,7 +93,7 @@ void main() {
 
   group('AlertNotifier.loadAssignments', () {
     test('carrega assignments e atualiza estado', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
 
       final container = _makeContainer(mockService);
@@ -101,7 +101,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       final state = container.read(alertProvider);
       expect(state.assignments, hasLength(1));
@@ -112,7 +112,7 @@ void main() {
 
   group('AlertNotifier.isBlocked', () {
     test('isBlocked true quando há assignment CRITICAL não acknowledged', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(
                   level: AlertLevel.critical,
@@ -125,13 +125,13 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       expect(container.read(alertProvider).isBlocked, isTrue);
     });
 
     test('isBlocked false quando CRITICAL está acknowledged', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(
                   level: AlertLevel.critical,
@@ -144,13 +144,13 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       expect(container.read(alertProvider).isBlocked, isFalse);
     });
 
     test('isBlocked false quando não há assignments críticos', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(
                   level: AlertLevel.medium,
@@ -163,7 +163,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       expect(container.read(alertProvider).isBlocked, isFalse);
     });
@@ -171,7 +171,7 @@ void main() {
 
   group('AlertNotifier.acknowledge', () {
     test('atualiza assignment local para ACKNOWLEDGED após sucesso', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.acknowledge(
                 assignmentId: any(named: 'assignmentId'),
@@ -184,7 +184,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .acknowledge(assignmentId: 'assign-1', token: 'tok');
@@ -198,7 +198,7 @@ void main() {
     });
 
     test('define acknowledgedAt localmente após sucesso', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.acknowledge(
                 assignmentId: any(named: 'assignmentId'),
@@ -211,7 +211,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       final before = DateTime.now();
       await container
@@ -234,7 +234,7 @@ void main() {
 
   group('AlertNotifier.markAsViewed', () {
     test('atualiza status para VIEWED e define viewedAt localmente', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment(status: AssignmentStatus.pending)]);
       when(() => mockService.markAsViewed(
                 assignmentId: any(named: 'assignmentId'),
@@ -247,7 +247,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       final before = DateTime.now();
       await container
@@ -271,7 +271,7 @@ void main() {
 
   group('AlertNotifier.markAllPendingAsViewed', () {
     test('chama markAsViewed para cada assignment com status PENDING', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(id: 'a1', status: AssignmentStatus.pending),
                 _makeAssignment(id: 'a2', status: AssignmentStatus.pending),
@@ -288,7 +288,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .markAllPendingAsViewed(token: 'tok');
@@ -308,7 +308,7 @@ void main() {
     });
 
     test('não chama service quando não há assignments PENDING', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [
                 _makeAssignment(id: 'a1', status: AssignmentStatus.viewed),
               ]);
@@ -318,7 +318,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .markAllPendingAsViewed(token: 'tok');
@@ -359,7 +359,7 @@ void main() {
 
     test('loadAssignments não chama service se já está carregando', () async {
       final completer = Completer<List<AssignmentModel>>();
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) => completer.future);
 
       final container = _makeContainer(mockService);
@@ -367,16 +367,16 @@ void main() {
 
       final first = container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       completer.complete([]);
       await first;
 
-      verify(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      verify(() => mockService.getMyAssignments(token: any(named: 'token')))
           .called(1);
     });
   });
@@ -410,7 +410,7 @@ void main() {
       bool unauthorizedCalled = false;
       ApiClient.onUnauthorized = () => unauthorizedCalled = true;
 
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
 
       final container = _makeContainer(mockService);
@@ -421,7 +421,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
 
       expect(unauthorizedCalled, isTrue);
     });
@@ -433,7 +433,7 @@ void main() {
       bool unauthorizedCalled = false;
       ApiClient.onUnauthorized = () => unauthorizedCalled = true;
 
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.markAsViewed(
                 assignmentId: any(named: 'assignmentId'),
@@ -447,7 +447,7 @@ void main() {
         container.dispose();
       });
 
-      await container.read(alertProvider.notifier).loadAssignments(userId: 'user-1', token: 'tok');
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .markAsViewed(assignmentId: 'assign-1', token: 'tok');
@@ -456,7 +456,7 @@ void main() {
     });
 
     test('propaga errorMessage ao estado em erro não-401', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.markAsViewed(
                 assignmentId: any(named: 'assignmentId'),
@@ -467,7 +467,7 @@ void main() {
       final container = _makeContainer(mockService);
       addTearDown(container.dispose);
 
-      await container.read(alertProvider.notifier).loadAssignments(userId: 'user-1', token: 'tok');
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .markAsViewed(assignmentId: 'assign-1', token: 'tok');
@@ -485,7 +485,7 @@ void main() {
       bool unauthorizedCalled = false;
       ApiClient.onUnauthorized = () => unauthorizedCalled = true;
 
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.acknowledge(
                 assignmentId: any(named: 'assignmentId'),
@@ -499,7 +499,7 @@ void main() {
         container.dispose();
       });
 
-      await container.read(alertProvider.notifier).loadAssignments(userId: 'user-1', token: 'tok');
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .acknowledge(assignmentId: 'assign-1', token: 'tok');
@@ -508,7 +508,7 @@ void main() {
     });
 
     test('propaga errorMessage ao estado em erro não-401', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.acknowledge(
                 assignmentId: any(named: 'assignmentId'),
@@ -519,7 +519,7 @@ void main() {
       final container = _makeContainer(mockService);
       addTearDown(container.dispose);
 
-      await container.read(alertProvider.notifier).loadAssignments(userId: 'user-1', token: 'tok');
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .acknowledge(assignmentId: 'assign-1', token: 'tok');
@@ -559,7 +559,7 @@ void main() {
 
   group('AlertNotifier.syncDeliveries', () {
     test('chama service.syncDeliveries sem alterar estado de assignments', () async {
-      when(() => mockService.getMyAssignments(userId: any(named: 'userId'), token: any(named: 'token')))
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
           .thenAnswer((_) async => [_makeAssignment()]);
       when(() => mockService.syncDeliveries(
                 userId: any(named: 'userId'),
@@ -572,7 +572,7 @@ void main() {
 
       await container
           .read(alertProvider.notifier)
-          .loadAssignments(userId: 'user-1', token: 'tok');
+          .loadAssignments(token: 'tok');
       await container
           .read(alertProvider.notifier)
           .syncDeliveries(userId: 'user-1', token: 'tok');

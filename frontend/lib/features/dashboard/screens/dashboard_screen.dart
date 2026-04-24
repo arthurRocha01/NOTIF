@@ -10,7 +10,6 @@ import 'package:notif_app/features/dashboard/widgets/dashboard_bar_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_donut_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_kpi_row.dart';
 import 'package:notif_app/features/dashboard/widgets/highlight_card.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -27,9 +26,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _refresh() async {
-    final userId = ref.read(authProvider)?.id ?? '';
     ref.read(alertProvider.notifier).loadNotifications();
-    ref.read(alertProvider.notifier).loadAssignments(userId: userId);
+    ref.read(alertProvider.notifier).loadAssignments();
     ref.read(sectorProvider.notifier).loadSectors();
   }
 

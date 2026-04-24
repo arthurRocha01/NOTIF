@@ -42,12 +42,12 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<void> loadAssignments({required String userId, String? token}) async {
+  Future<void> loadAssignments({String? token}) async {
     if (state.isLoadingAssignments) return;
     state = state.copyWith(isLoadingAssignments: true, clearError: true);
     try {
       final assignments =
-          await _service.getMyAssignments(userId: userId, token: token ?? _token);
+          await _service.getMyAssignments(token: token ?? _token);
       state = state.copyWith(
         assignments: assignments,
         isLoadingAssignments: false,

@@ -37,6 +37,17 @@ export class NotificationAssignmentRepository implements INotificationAssignment
     );
   }
 
+  async findAllByUserId(userId: string): Promise<NotificationAssignment[]> {
+    const assignments = await this.prisma.notificationAssignment.findMany({
+      where: { userId },
+      include: { notification: true },
+    });
+
+    return assignments.map((a) =>
+      NotificationAssignmentMapper.toDomain(a, a.notification),
+    );
+  }
+
   async findByUserId(userId: string): Promise<NotificationAssignment[]> {
     const assignments = await this.prisma.notificationAssignment.findMany({
       where: { userId: userId, deliveredAt: null },

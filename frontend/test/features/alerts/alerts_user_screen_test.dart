@@ -17,7 +17,7 @@ class _TrackingAlertNotifier extends AlertNotifier {
   }
 
   @override
-  Future<void> loadAssignments({required String userId, String? token}) async {
+  Future<void> loadAssignments({String? token}) async {
     calls.add('loadAssignments');
   }
 
@@ -33,7 +33,7 @@ class _StubAlertNotifier extends AlertNotifier {
   }
 
   @override
-  Future<void> loadAssignments({required String userId, String? token}) async {}
+  Future<void> loadAssignments({String? token}) async {}
 
   @override
   Future<void> markAllPendingAsViewed({String? token}) async {}

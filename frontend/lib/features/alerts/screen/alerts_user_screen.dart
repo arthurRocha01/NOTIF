@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
 import '../providers/alert_provider.dart';
 import '../widgets/assignments_body.dart';
 
@@ -35,9 +34,7 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
         assignments: state.assignments,
         isLoading: state.isLoadingAssignments,
         isBlocked: state.isBlocked,
-        onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(
-              userId: ref.read(authProvider)?.id ?? '',
-            ),
+        onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
         onAcknowledge: (id) =>
             ref.read(alertProvider.notifier).acknowledge(assignmentId: id),
       ),
