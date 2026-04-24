@@ -22,7 +22,7 @@ export class AssignmentResponseDto {
     status: AssignmentStatus;
     createdAt: Date;
     dueAt: Date | null;
-    deleviredAt: Date | null;
+    deliveredAt: Date | null;
     viewedAt: Date | null;
     acknowledgedAt: Date | null;
   }) {
@@ -33,7 +33,7 @@ export class AssignmentResponseDto {
     this.status = props.status;
     this.createdAt = props.createdAt;
     this.dueAt = props.dueAt;
-    this.deliveredAt = props.deleviredAt;
+    this.deliveredAt = props.deliveredAt;
     this.viewedAt = props.viewedAt;
     this.acknowledgedAt = props.acknowledgedAt;
   }
@@ -47,7 +47,7 @@ export class AssignmentResponseDto {
       status: assignment.getStatus(),
       createdAt: assignment.getCreatedAt(),
       dueAt: assignment.getDueAt(),
-      deleviredAt: assignment.getDeliveredAt(),
+      deliveredAt: assignment.getDeliveredAt(),
       viewedAt: assignment.getViewedAt(),
       acknowledgedAt: assignment.getAcknowledgedAt(),
     });

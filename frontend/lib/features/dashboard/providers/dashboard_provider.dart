@@ -74,7 +74,7 @@ final dashboardProvider = Provider<DashboardData>((ref) {
   final filter      = ref.watch(dashboardFilterProvider);
 
   final notifications = alertState.notifications;
-  var   assignments   = alertState.assignments;
+  var   assignments   = alertState.allAssignments;
 
   // ── 1. Filtro de período ────────────────────────────────────────────────
   if (filter.period != DashboardPeriod.all) {

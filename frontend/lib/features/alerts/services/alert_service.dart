@@ -39,6 +39,13 @@ class AlertService {
         .toList();
   }
 
+  Future<List<AssignmentModel>> getAllAssignments() async {
+    final data = await ApiClient.get('/assignments');
+    return (data as List<dynamic>)
+        .map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> markAsViewed(String assignmentId) async {
     await ApiClient.post('/assignments/$assignmentId/view', {});
   }

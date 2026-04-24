@@ -116,7 +116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 4),
                   if (user != null)
                     Text(
-                      '${user.roleLabel} · ${user.sector}',
+                      '${user.roleLabel} · ${user.sectorName.isNotEmpty ? user.sectorName : '—'}',
                       style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
                     ),
                   const SizedBox(height: 20),

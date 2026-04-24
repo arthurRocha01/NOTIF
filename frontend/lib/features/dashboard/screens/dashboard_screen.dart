@@ -23,12 +23,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
   Future<void> _refresh() async {
-    ref.read(alertProvider.notifier).loadNotifications();
-    ref.read(alertProvider.notifier).loadAssignments();
-    ref.read(sectorProvider.notifier).loadSectors();
+    await Future.wait([
+      ref.read(alertProvider.notifier).loadNotifications(),
+      ref.read(alertProvider.notifier).loadAllAssignments(),
+      ref.read(sectorProvider.notifier).loadSectors(),
+    ]);
   }
 
   @override
@@ -38,8 +41,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final filter     = ref.watch(dashboardFilterProvider);
     final sectors    = ref.watch(sectorProvider).sectors;
 
-    final isLoading =
-        alertState.isLoadingNotifications || alertState.isLoadingAssignments;
+    final isLoading = alertState.isLoadingNotifications ||
+        alertState.isLoadingAllAssignments;
 
     return RefreshIndicator(
       onRefresh: _refresh,

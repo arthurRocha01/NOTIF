@@ -167,6 +167,25 @@ class AlertNotifier extends StateNotifier<AlertState> {
     } catch (_) {}
   }
 
+  Future<void> loadAllAssignments() async {
+    if (state.isLoadingAllAssignments) return;
+    state = state.copyWith(isLoadingAllAssignments: true, clearError: true);
+    try {
+      final all = await _service.getAllAssignments();
+      state = state.copyWith(allAssignments: all, isLoadingAllAssignments: false);
+    } on ApiException catch (e) {
+      state = state.copyWith(
+        isLoadingAllAssignments: false,
+        errorMessage: e.message,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingAllAssignments: false,
+        errorMessage: 'Erro inesperado. Tente novamente.',
+      );
+    }
+  }
+
   Future<void> syncDeliveries(String userId) async {
     try {
       await _service.syncDeliveries(userId);

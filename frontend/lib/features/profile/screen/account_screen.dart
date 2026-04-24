@@ -43,7 +43,7 @@ class AccountScreen extends ConsumerWidget {
             ProfileInfoRow(
               icon: LucideIcons.building2,
               label: 'Setor',
-              value: user?.sector ?? '—',
+              value: user?.sectorName.isNotEmpty == true ? user!.sectorName : '—',
             ),
             ProfileInfoRow(
               icon: LucideIcons.briefcase,
