@@ -62,5 +62,5 @@ export class CreateNotificationDto {
 
   @IsOptional()
   @IsUUID('4', { message: 'O ID do autor é inválido' })
-  authorId?: string;
+  authorId?: string; // adaptar ao guard
 }

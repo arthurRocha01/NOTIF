@@ -100,10 +100,12 @@ class AlertService {
     }
   }
 
-  Future<List<AssignmentModel>> getMyAssignments({required String token}) async {
+  Future<List<AssignmentModel>> getMyAssignments({
+    required String token,
+  }) async {
     try {
       final response = await _httpClient
-          .get(Uri.parse('$_baseUrl/assignments'), headers: _headers(token))
+          .get(Uri.parse('$_baseUrl/assignments/mine'), headers: _headers(token))
           .timeout(_timeout);
       if (response.statusCode == 200) {
         final list = jsonDecode(response.body) as List<dynamic>;
@@ -130,7 +132,7 @@ class AlertService {
     try {
       final response = await _httpClient
           .post(Uri.parse('$_baseUrl/assignments/$assignmentId/view'),
-              headers: _headers(token), body: jsonEncode({}))
+              headers: _headers(token))
           .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
@@ -152,7 +154,7 @@ class AlertService {
     try {
       final response = await _httpClient
           .post(Uri.parse('$_baseUrl/assignments/$assignmentId/acknowledge'),
-              headers: _headers(token), body: jsonEncode({}))
+              headers: _headers(token))
           .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);
@@ -174,7 +176,7 @@ class AlertService {
     try {
       final response = await _httpClient
           .post(Uri.parse('$_baseUrl/assignments/sync/$userId'),
-              headers: _headers(token), body: jsonEncode({}))
+              headers: _headers(token))
           .timeout(_timeout);
       if (response.statusCode == 200 || response.statusCode == 201) return;
       final body = _tryDecode(response.body);

@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+.dart_tool/
+.pub-cache/
+.pub/
+
+# Build output
+dist/
+build/
+coverage/
+.next/
+out/
+
+# Frontend: only lib/ is source — ignore everything else
+frontend/android/
+frontend/ios/
+frontend/linux/
+frontend/macos/
+frontend/web/
+frontend/windows/
+frontend/build/
+
+# Backend: generated/compiled files
+backend/dist/
+backend/coverage/
+backend/prisma/migrations/
+
+# Lock files
+package-lock.json
+yarn.lock
+pubspec.lock
+
+# IDE and tooling
+.vscode/
+.idea/
+*.vsix
+
+# Firebase credentials
+backend/notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json
+
+# Backups and temp files
+*.bkp
+*.bak
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+
+# Test output
+test-results/

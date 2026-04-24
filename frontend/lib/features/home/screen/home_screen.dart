@@ -39,11 +39,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
-      await alert.loadNotifications();
+      final user = ref.read(authProvider);
+      if (user?.isSupervisor == true || user?.isAdmin == true) {
+        await alert.loadNotifications();
+      }
       await alert.loadAssignments();
       await sector.loadSectors();
-      final user = ref.read(authProvider);
-      if (user?.isSupervisor ?? false) {
+      if (user?.isSupervisor == true) {
         alert.markAllPendingAsViewed();
       }
     });
@@ -78,6 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _showCriticalOverlay(message);
     } else {
       ref.read(feedProvider).changePage(2);
+      ref.read(alertProvider.notifier).markAllPendingAsViewed();
     }
   }
 
@@ -173,6 +176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           break;
         case 2:
           controller.changePage(2);
+          ref.read(alertProvider.notifier).markAllPendingAsViewed();
           break;
       }
     }

@@ -381,6 +381,182 @@ void main() {
     });
   });
 
+  group('AlertNotifier.loadNotifications — onUnauthorized', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getNotifications(token: any(named: 'token')))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .loadNotifications(token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
+  group('AlertNotifier.loadAssignments — onUnauthorized', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .loadAssignments(token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
+  group('AlertNotifier.markAsViewed — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAsViewed(assignmentId: 'assign-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+
+    test('propaga errorMessage ao estado em erro não-401', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.markAsViewed(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Servidor indisponível', statusCode: 500));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .markAsViewed(assignmentId: 'assign-1', token: 'tok');
+
+      expect(
+        container.read(alertProvider).errorMessage,
+        equals('Servidor indisponível'),
+      );
+    });
+  });
+
+  group('AlertNotifier.acknowledge — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+
+    test('propaga errorMessage ao estado em erro não-401', () async {
+      when(() => mockService.getMyAssignments(token: any(named: 'token')))
+          .thenAnswer((_) async => [_makeAssignment()]);
+      when(() => mockService.acknowledge(
+                assignmentId: any(named: 'assignmentId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Servidor indisponível', statusCode: 500));
+
+      final container = _makeContainer(mockService);
+      addTearDown(container.dispose);
+
+      await container.read(alertProvider.notifier).loadAssignments(token: 'tok');
+      await container
+          .read(alertProvider.notifier)
+          .acknowledge(assignmentId: 'assign-1', token: 'tok');
+
+      expect(
+        container.read(alertProvider).errorMessage,
+        equals('Servidor indisponível'),
+      );
+    });
+  });
+
+  group('AlertNotifier.syncDeliveries — tratamento de erros', () {
+    test('chama onUnauthorized quando serviço lança AlertServiceException 401',
+        () async {
+      bool unauthorizedCalled = false;
+      ApiClient.onUnauthorized = () => unauthorizedCalled = true;
+
+      when(() => mockService.syncDeliveries(
+                userId: any(named: 'userId'),
+                token: any(named: 'token'),
+              ))
+          .thenThrow(AlertServiceException('Unauthorized', statusCode: 401));
+
+      final container = _makeContainer(mockService);
+      addTearDown(() {
+        ApiClient.onUnauthorized = null;
+        container.dispose();
+      });
+
+      await container
+          .read(alertProvider.notifier)
+          .syncDeliveries(userId: 'user-1', token: 'tok');
+
+      expect(unauthorizedCalled, isTrue);
+    });
+  });
+
   group('AlertNotifier.syncDeliveries', () {
     test('chama service.syncDeliveries sem alterar estado de assignments', () async {
       when(() => mockService.getMyAssignments(token: any(named: 'token')))
@@ -539,6 +715,86 @@ void main() {
           );
 
       expect(unauthorizedCalled, isTrue);
+    });
+  });
+
+  group('AssignmentModel.requiresAcknowledgment', () {
+    test('fromJson parseia requiresAcknowledgment true', () {
+      final json = {
+        'id': 'a1',
+        'userId': 'u1',
+        'notificationId': 'n1',
+        'notificationLevel': 'medium',
+        'status': 'pending',
+        'createdAt': '2026-04-22T10:00:00.000Z',
+        'requiresAcknowledgment': true,
+      };
+      final model = AssignmentModel.fromJson(json);
+      expect(model.requiresAcknowledgment, isTrue);
+    });
+
+    test('fromJson usa null quando campo ausente', () {
+      final json = {
+        'id': 'a1',
+        'userId': 'u1',
+        'notificationId': 'n1',
+        'notificationLevel': 'medium',
+        'status': 'pending',
+        'createdAt': '2026-04-22T10:00:00.000Z',
+      };
+      final model = AssignmentModel.fromJson(json);
+      expect(model.requiresAcknowledgment, isNull);
+    });
+
+    test('canAcknowledge true quando isCritical', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.critical,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: false,
+      );
+      expect(model.canAcknowledge, isTrue);
+    });
+
+    test('canAcknowledge true quando requiresAcknowledgment=true não-crítico', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.medium,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: true,
+      );
+      expect(model.canAcknowledge, isTrue);
+    });
+
+    test('canAcknowledge false quando não-crítico e requiresAcknowledgment null', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.medium,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+      );
+      expect(model.canAcknowledge, isFalse);
+    });
+
+    test('canAcknowledge false quando não-crítico e requiresAcknowledgment=false', () {
+      final model = AssignmentModel(
+        id: 'a1',
+        userId: 'u1',
+        notificationId: 'n1',
+        notificationLevel: AlertLevel.low,
+        status: AssignmentStatus.pending,
+        createdAt: DateTime(2026, 4, 22),
+        requiresAcknowledgment: false,
+      );
+      expect(model.canAcknowledge, isFalse);
     });
   });
 

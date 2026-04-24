@@ -147,6 +147,24 @@ void main() {
   });
 
   group('AlertService.getMyAssignments', () {
+    test('chama GET /assignments/mine (sem userId na URL)', () async {
+      when(() => mockClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer((_) async => http.Response(
+                jsonEncode([assignmentJson]),
+                200,
+              ));
+
+      await service.getMyAssignments(token: token);
+
+      final captured = verify(
+        () => mockClient.get(captureAny(), headers: any(named: 'headers')),
+      ).captured;
+      expect(
+        (captured.single as Uri).toString(),
+        equals('$baseUrl/assignments/mine'),
+      );
+    });
+
     test('retorna lista de AssignmentModel em sucesso', () async {
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer((_) async => http.Response(
@@ -262,6 +280,59 @@ void main() {
         () => service.syncDeliveries(userId: 'user-1', token: token),
         throwsA(isA<AlertServiceException>()),
       );
+    });
+  });
+
+  group('AlertService — POST sem body', () {
+    test('markAsViewed não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.markAsViewed(assignmentId: 'assign-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
+    });
+
+    test('acknowledge não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.acknowledge(assignmentId: 'assign-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
+    });
+
+    test('syncDeliveries não envia body no POST', () async {
+      when(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          )).thenAnswer((_) async => http.Response('{}', 200));
+
+      await service.syncDeliveries(userId: 'user-1', token: token);
+
+      final captured = verify(() => mockClient.post(
+            any(),
+            headers: any(named: 'headers'),
+            body: captureAny(named: 'body'),
+          )).captured;
+      expect(captured.single, isNull);
     });
   });
 }

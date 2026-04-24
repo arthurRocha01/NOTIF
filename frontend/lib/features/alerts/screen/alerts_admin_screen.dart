@@ -142,8 +142,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   isLoading: state.isLoadingAssignments,
                   isBlocked: state.isBlocked,
                   isSupervisor: true,
-                  onRefresh: () =>
-                      ref.read(alertProvider.notifier).loadAssignments(),
+                  onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
                   onAcknowledge: (id) => ref
                       .read(alertProvider.notifier)
                       .acknowledge(assignmentId: id),
