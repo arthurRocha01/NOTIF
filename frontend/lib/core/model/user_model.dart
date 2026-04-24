@@ -6,7 +6,8 @@ class UserModel {
   final String id;
   final String name;
   final String email;
-  final String sector;
+  final String sectorId;
+  final String sectorName;
   final UserRole role;
   final PlatformFile? avatar;
   final String? fcmToken;
@@ -15,7 +16,8 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
-    required this.sector,
+    required this.sectorId,
+    this.sectorName = '',
     required this.role,
     this.avatar,
     this.fcmToken,
@@ -25,7 +27,7 @@ class UserModel {
         id: data['id'] as String,
         name: data['name'] as String,
         email: data['email'] as String,
-        sector: data['sectorId'] as String? ?? '',
+        sectorId: data['sectorId'] as String? ?? '',
         role: data['role'] == 'ADMIN'
             ? UserRole.admin
             : data['role'] == 'SUPERVISOR'
@@ -34,16 +36,39 @@ class UserModel {
         fcmToken: data['fcmToken'] as String?,
       );
 
+  UserModel copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? sectorId,
+    String? sectorName,
+    UserRole? role,
+    PlatformFile? avatar,
+    String? fcmToken,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      sectorId: sectorId ?? this.sectorId,
+      sectorName: sectorName ?? this.sectorName,
+      role: role ?? this.role,
+      avatar: avatar ?? this.avatar,
+      fcmToken: fcmToken ?? this.fcmToken,
+    );
+  }
+
   bool get isSupervisor => role == UserRole.supervisor;
   bool get isAdmin => role == UserRole.admin;
+
   String get roleLabel {
     switch (role) {
       case UserRole.admin:
-        return "Administrador";
+        return 'Administrador';
       case UserRole.supervisor:
-        return "Supervisor";
+        return 'Supervisor';
       case UserRole.employee:
-        return "Colaborador";
+        return 'Colaborador';
     }
   }
 }

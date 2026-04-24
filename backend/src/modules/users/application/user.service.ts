@@ -61,6 +61,10 @@ export class UserService {
 
     if (dto.name) user.changeName(dto.name);
     if (dto.fcmToken) user.changeFcmToken(dto.fcmToken);
+    if (dto.password) {
+      const hash = await bcrypt.hash(dto.password, 10);
+      user.changePassword(hash);
+    }
 
     await this.userRepo.update(user);
 

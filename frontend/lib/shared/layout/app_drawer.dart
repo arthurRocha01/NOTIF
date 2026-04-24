@@ -70,7 +70,7 @@ class AppDrawer extends ConsumerWidget {
                           const SizedBox(height: 2),
                           // H2: roleLabel ("Supervisor") e setor humanizado
                           Text(
-                            '${user.roleLabel}${user.sector.isNotEmpty ? " · ${user.sector}" : ""}',
+                            '${user.roleLabel}${user.sectorName.isNotEmpty ? " · ${user.sectorName}" : ""}',
                             style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
                           ),
                         ],

@@ -60,7 +60,7 @@ class AlertModel {
       level: AlertLevel.fromBackend(json['level']?.toString()),
       slaMinutes: json['slaMinutes'] as int? ?? 0,
       requiresAcknowledgment: json['requiresAcknowledgment'] as bool? ?? false,
-      targetSectorId: json['targetSectorId'] as String?,
+      targetSectorId: json['sectorId'] as String?,
       authorId: json['authorId'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])

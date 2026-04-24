@@ -332,7 +332,7 @@ class _UserTile extends StatelessWidget {
             Text(user.email,
                 style: GoogleFonts.inter(
                     fontSize: 12, color: AppColors.textSecondary)),
-            if (user.sector.isNotEmpty) ...[
+            if (user.sectorName.isNotEmpty) ...[
               const SizedBox(height: 2),
               Row(
                 children: [
@@ -340,7 +340,7 @@ class _UserTile extends StatelessWidget {
                       size: 11, color: AppColors.textTertiary),
                   const SizedBox(width: 3),
                   Text(
-                    user.sector,
+                    user.sectorName,
                     style: GoogleFonts.inter(
                         fontSize: 11, color: AppColors.textTertiary),
                   ),

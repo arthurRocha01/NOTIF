@@ -116,4 +116,8 @@ export class User {
 
     this.fcmToken = fcmToken;
   }
+
+  changePassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+  }
 }

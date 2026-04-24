@@ -54,18 +54,10 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     try {
       final sectors = await _sectorService.getSectors();
       final match = sectors.firstWhere(
-        (s) => s.id == user.sector,
+        (s) => s.id == user.sectorId,
         orElse: () => throw StateError('not found'),
       );
-      return UserModel(
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        sector: match.name,
-        role: user.role,
-        avatar: user.avatar,
-        fcmToken: user.fcmToken,
-      );
+      return user.copyWith(sectorName: match.name);
     } catch (_) {
       return user;
     }
@@ -144,15 +136,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         try {
           await _service.updateFcmToken(userId: current.id, fcmToken: newToken);
           if (state != null) {
-            state = UserModel(
-              id: state!.id,
-              name: state!.name,
-              email: state!.email,
-              sector: state!.sector,
-              role: state!.role,
-              avatar: state!.avatar,
-              fcmToken: newToken,
-            );
+            state = state!.copyWith(fcmToken: newToken);
           }
         } catch (_) {}
       });
@@ -172,15 +156,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     if (deviceToken == null || deviceToken == user.fcmToken) return;
     await _service.updateFcmToken(userId: user.id, fcmToken: deviceToken);
     if (state != null) {
-      state = UserModel(
-        id: state!.id,
-        name: state!.name,
-        email: state!.email,
-        sector: state!.sector,
-        role: state!.role,
-        avatar: state!.avatar,
-        fcmToken: deviceToken,
-      );
+      state = state!.copyWith(fcmToken: deviceToken);
     }
   }
 }

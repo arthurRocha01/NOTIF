@@ -206,7 +206,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileInfoRow(
                       icon: LucideIcons.building2,
                       label: 'Setor',
-                      value: user?.sector.isNotEmpty == true ? user!.sector : '—',
+                      value: user?.sectorName.isNotEmpty == true ? user!.sectorName : '—',
                       isLast: true,
                     ),
                   ]),
