@@ -69,6 +69,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _showCriticalOverlay(message);
     } else {
       _showBanner(message);
+      NotificationService().showLocalNotification(
+        title: message.notification?.title ?? message.data['title'] ?? 'Nova notificação',
+        body: message.notification?.body ?? message.data['message'],
+        id: message.hashCode,
+        level: message.data['level'] as String?,
+      );
     }
   }
 

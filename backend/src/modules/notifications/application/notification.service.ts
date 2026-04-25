@@ -6,6 +6,7 @@ import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { FcmService } from '../infrastructure/fcm.service';
 import { UserService } from '../../users/application/user.service';
 import { AssignmentService } from '../../assignments/application/assignment.service';
+import { NotificationAssignment } from '../../assignments/domain/notification-assignment.entity';
 
 @Injectable()
 export class NotificationService {
@@ -41,7 +42,7 @@ export class NotificationService {
       ? await this.usersService.listUsersBySectorId(dto.sectorId)
       : await this.usersService.listUsers();
 
-    await Promise.all(
+    const assignments = await Promise.all(
       targetUsers.map((user) =>
         this.assignmentService.createAssignment({
           userId: user.getId(),
@@ -51,23 +52,65 @@ export class NotificationService {
       ),
     );
 
-    await this.sendFcmToSector(targetUsers, newNotification.getTitle(), newNotification.getMessage());
+    await this.sendFcmToSector(
+      targetUsers,
+      assignments,
+      newNotification.getTitle(),
+      newNotification.getMessage(),
+      newNotification.getId(),
+      newNotification.getLevel(),
+    );
 
     return newNotification;
   }
 
   private async sendFcmToSector(
     users: Awaited<ReturnType<UserService['listUsersBySectorId']>>,
+    assignments: NotificationAssignment[],
     title: string,
     message: string,
+    notificationId: string,
+    level?: string,
   ) {
+    const isCritical = level === 'CRITICAL';
+
+    if (isCritical) {
+      const assignmentByUserId = new Map(assignments.map((a) => [a.getUserId(), a]));
+
+      const failedTokens = (
+        await Promise.all(
+          users.map(async (user) => {
+            const token = user.getFcmToken();
+            if (!token) return null;
+            const assignment = assignmentByUserId.get(user.getId());
+            return this.fcmService.sendToToken(token, title, message, {
+              level: level ?? '',
+              notificationId,
+              assignmentId: assignment?.getId() ?? '',
+            }, level);
+          }),
+        )
+      ).filter((t): t is string => t !== null);
+
+      if (failedTokens.length > 0) {
+        await this.usersService.removeTokensByUser(failedTokens);
+      }
+      return;
+    }
+
     const tokens = users
       .map((user) => user.getFcmToken())
       .filter((token): token is string => Boolean(token));
 
     if (tokens.length === 0) return;
 
-    const failedTokens = await this.fcmService.sendMulticast(tokens, title, message);
+    const failedTokens = await this.fcmService.sendMulticast(
+      tokens,
+      title,
+      message,
+      { level: level ?? '', notificationId },
+      level,
+    );
 
     if (failedTokens?.length > 0) {
       await this.usersService.removeTokensByUser(failedTokens);

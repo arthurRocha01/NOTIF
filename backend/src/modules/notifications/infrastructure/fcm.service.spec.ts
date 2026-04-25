@@ -1,4 +1,5 @@
 const mockSendEachForMulticast = jest.fn();
+const mockSend = jest.fn();
 
 jest.mock('firebase-admin/app', () => ({
   getApps: jest.fn(() => [{}]),
@@ -9,6 +10,7 @@ jest.mock('firebase-admin/app', () => ({
 jest.mock('firebase-admin/messaging', () => ({
   getMessaging: jest.fn(() => ({
     sendEachForMulticast: mockSendEachForMulticast,
+    send: mockSend,
   })),
 }));
 
@@ -20,6 +22,7 @@ describe('FcmService', () => {
 
   beforeEach(async () => {
     mockSendEachForMulticast.mockReset();
+    mockSend.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [FcmService],
@@ -109,6 +112,139 @@ describe('FcmService', () => {
         expect.objectContaining({
           tokens: ['token-x'],
           notification: { title: 'Alerta Crítico', body: 'Leia com atenção' },
+        }),
+      );
+    });
+
+    describe('payload de prioridade', () => {
+      beforeEach(() => {
+        mockSendEachForMulticast.mockResolvedValue({
+          successCount: 1,
+          failureCount: 0,
+          responses: [{ success: true, messageId: 'msg-1' }],
+        });
+      });
+
+      it('envia payload CRITICAL com prioridade máxima no Android', async () => {
+        await service.sendMulticast(['token-x'], 'Título', 'Corpo', undefined, 'CRITICAL');
+
+        expect(mockSendEachForMulticast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            android: expect.objectContaining({
+              priority: 'high',
+              notification: expect.objectContaining({
+                channelId: 'critical',
+                notificationPriority: 'PRIORITY_MAX',
+                defaultSound: true,
+                defaultVibrateTimings: true,
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('envia payload CRITICAL com apns-priority 10', async () => {
+        await service.sendMulticast(['token-x'], 'Título', 'Corpo', undefined, 'CRITICAL');
+
+        expect(mockSendEachForMulticast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            apns: expect.objectContaining({
+              headers: expect.objectContaining({ 'apns-priority': '10' }),
+              payload: expect.objectContaining({
+                aps: expect.objectContaining({ sound: 'default' }),
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('envia payload não-CRITICAL com prioridade normal no Android', async () => {
+        await service.sendMulticast(['token-x'], 'Título', 'Corpo', undefined, 'INFO');
+
+        expect(mockSendEachForMulticast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            android: expect.objectContaining({
+              priority: 'normal',
+              notification: expect.objectContaining({
+                channelId: 'default',
+                notificationPriority: 'PRIORITY_DEFAULT',
+              }),
+            }),
+          }),
+        );
+      });
+
+      it('envia payload não-CRITICAL com apns-priority 5', async () => {
+        await service.sendMulticast(['token-x'], 'Título', 'Corpo', undefined, 'INFO');
+
+        expect(mockSendEachForMulticast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            apns: expect.objectContaining({
+              headers: expect.objectContaining({ 'apns-priority': '5' }),
+            }),
+          }),
+        );
+      });
+
+      it('usa prioridade normal quando level não é fornecido', async () => {
+        await service.sendMulticast(['token-x'], 'Título', 'Corpo');
+
+        expect(mockSendEachForMulticast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            android: expect.objectContaining({ priority: 'normal' }),
+          }),
+        );
+      });
+    });
+  });
+
+  describe('sendToToken', () => {
+    it('retorna null quando envio tem sucesso', async () => {
+      mockSend.mockResolvedValue('message-id');
+
+      const result = await service.sendToToken('token-x', 'Título', 'Corpo');
+
+      expect(result).toBeNull();
+    });
+
+    it('retorna o token quando firebase retorna invalid-registration-token', async () => {
+      const error = Object.assign(new Error(), { code: 'messaging/invalid-registration-token' });
+      mockSend.mockRejectedValue(error);
+
+      const result = await service.sendToToken('token-invalido', 'Título', 'Corpo');
+
+      expect(result).toBe('token-invalido');
+    });
+
+    it('retorna o token quando firebase retorna registration-token-not-registered', async () => {
+      const error = Object.assign(new Error(), { code: 'messaging/registration-token-not-registered' });
+      mockSend.mockRejectedValue(error);
+
+      const result = await service.sendToToken('token-expirado', 'Título', 'Corpo');
+
+      expect(result).toBe('token-expirado');
+    });
+
+    it('retorna null para erros não relacionados a token inválido', async () => {
+      mockSend.mockRejectedValue(new Error('Falha de conexão'));
+
+      const result = await service.sendToToken('token-x', 'Título', 'Corpo');
+
+      expect(result).toBeNull();
+    });
+
+    it('envia payload CRITICAL com prioridade máxima', async () => {
+      mockSend.mockResolvedValue('message-id');
+
+      await service.sendToToken('token-x', 'Título', 'Corpo', undefined, 'CRITICAL');
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          token: 'token-x',
+          android: expect.objectContaining({ priority: 'high' }),
+          apns: expect.objectContaining({
+            headers: expect.objectContaining({ 'apns-priority': '10' }),
+          }),
         }),
       );
     });
