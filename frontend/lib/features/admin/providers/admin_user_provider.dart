@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
 
 class AdminUserState {
@@ -31,21 +32,36 @@ class AdminUserState {
 final adminUserServiceProvider =
     Provider<AdminUserService>((ref) => AdminUserService());
 
+final adminSectorServiceForUsersProvider =
+    Provider<AdminSectorService>((ref) => AdminSectorService());
+
 final adminUserProvider =
     StateNotifierProvider<AdminUserNotifier, AdminUserState>((ref) {
-  return AdminUserNotifier(ref.read(adminUserServiceProvider));
+  return AdminUserNotifier(
+    ref.read(adminUserServiceProvider),
+    ref.read(adminSectorServiceForUsersProvider),
+  );
 });
 
 class AdminUserNotifier extends StateNotifier<AdminUserState> {
   final AdminUserService _service;
+  final AdminSectorService _sectorService;
 
-  AdminUserNotifier(this._service) : super(const AdminUserState());
+  AdminUserNotifier(this._service, this._sectorService)
+      : super(const AdminUserState());
 
   Future<void> loadUsers() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final users = await _service.getUsers();
-      state = state.copyWith(users: users, isLoading: false);
+      final usersFuture = _service.getUsers();
+      final sectorsFuture = _sectorService.getSectors();
+      final users = await usersFuture;
+      final sectors = await sectorsFuture;
+      final sectorMap = {for (final s in sectors) s.id: s.name};
+      final enriched = users
+          .map((u) => u.copyWith(sectorName: sectorMap[u.sectorId] ?? ''))
+          .toList();
+      state = state.copyWith(users: enriched, isLoading: false);
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (_) {

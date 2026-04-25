@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
-import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 class AdminSectorState {
   final List<SectorModel> sectors;
@@ -35,23 +33,18 @@ final adminSectorServiceProvider =
 
 final adminSectorProvider =
     StateNotifierProvider<AdminSectorNotifier, AdminSectorState>((ref) {
-  return AdminSectorNotifier(
-    ref.read(adminSectorServiceProvider),
-    ref.read(sectorServiceProvider),
-  );
+  return AdminSectorNotifier(ref.read(adminSectorServiceProvider));
 });
 
 class AdminSectorNotifier extends StateNotifier<AdminSectorState> {
   final AdminSectorService _service;
-  final SectorService _sectorService;
 
-  AdminSectorNotifier(this._service, this._sectorService)
-      : super(const AdminSectorState());
+  AdminSectorNotifier(this._service) : super(const AdminSectorState());
 
   Future<void> loadSectors() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final sectors = await _sectorService.getSectors();
+      final sectors = await _service.getSectors();
       state = state.copyWith(sectors: sectors, isLoading: false);
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.message);

@@ -65,6 +65,8 @@ export class UserService {
       const hash = await bcrypt.hash(dto.password, 10);
       user.changePassword(hash);
     }
+    if (dto.role) user.changeRole(dto.role);
+    if (dto.sectorId) user.changeSectorId(dto.sectorId);
 
     await this.userRepo.update(user);
 

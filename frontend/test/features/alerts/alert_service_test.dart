@@ -131,7 +131,7 @@ void main() {
       expect(after.status, equals(AssignmentStatus.viewed));
     });
 
-    test('não lança exceção ao chamar markAsViewed em assignment já VIEWED',
+    test('lança ApiException ao chamar markAsViewed em assignment já VIEWED',
         () async {
       final assignments = await alertService.getMyAssignments();
       final viewed = assignments
@@ -141,7 +141,13 @@ void main() {
 
       await expectLater(
         alertService.markAsViewed(viewed.first.id),
-        completes,
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('visualizada'),
+          ),
+        ),
       );
     });
   });
