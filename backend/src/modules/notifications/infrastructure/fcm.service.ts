@@ -41,7 +41,7 @@ export class FcmService {
   private retriveFalideTokens(
     response: BatchResponse,
     tokenOrder: string[],
-  ): string[] | [] {
+  ): string[] {
     const failures: string[] = [];
 
     if (response.failureCount > 0) {
@@ -51,6 +51,6 @@ export class FcmService {
         }
       });
     }
-    return [];
+    return failures;
   }
 }
