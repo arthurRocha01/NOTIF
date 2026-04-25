@@ -6,6 +6,7 @@ import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
 import 'package:notif_app/features/alerts/widgets/assignments_body.dart';
+import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
@@ -33,6 +34,11 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    Future.microtask(() {
+      ref.read(alertProvider.notifier).loadNotifications();
+      ref.read(alertProvider.notifier).loadAssignments();
+      ref.read(sectorProvider.notifier).loadSectors();
+    });
   }
 
   @override
@@ -79,11 +85,17 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
       },
     );
 
+    final currentUserId = ref.watch(authProvider)?.id;
+
+    final myAssignments = state.assignments
+        .where((a) => a.notificationAuthorId != currentUserId)
+        .toList();
+
     final criticalCount = state.notifications
         .where((n) => n.level == AlertLevel.critical)
         .length;
 
-    final pendingAssignments = state.assignments
+    final pendingAssignments = myAssignments
         .where((a) => a.status != AssignmentStatus.acknowledged)
         .length;
 
@@ -138,7 +150,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   sectorState,
                 ),
                 AssignmentsBody(
-                  assignments: state.assignments,
+                  assignments: myAssignments,
                   isLoading: state.isLoadingAssignments,
                   isBlocked: state.isBlocked,
                   isSupervisor: true,

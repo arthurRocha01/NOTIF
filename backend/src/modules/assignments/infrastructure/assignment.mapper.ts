@@ -24,6 +24,11 @@ export class NotificationAssignmentMapper {
       raw.deliveredAt,
       raw.viewedAt,
       raw.acknowledgedAt,
+      notification.title,
+      notification.message,
+      notification.slaMinutes,
+      notification.requiresAcknowledgment,
+      notification.authorId,
     );
   }
 

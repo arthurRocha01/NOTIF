@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
+import '../providers/alert_provider.dart';
 import '../screen/alert_details_screen.dart';
 
 class AssignmentsBody extends StatefulWidget {
@@ -422,14 +424,14 @@ class _BlockingBanner extends StatelessWidget {
 
 // ── Assignment card ───────────────────────────────────────────────────────────
 
-class _AssignmentCard extends StatelessWidget {
+class _AssignmentCard extends ConsumerWidget {
   final AssignmentModel assignment;
   final VoidCallback? onAcknowledge;
 
   const _AssignmentCard({required this.assignment, this.onAcknowledge});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final level    = assignment.notificationLevel;
     final status   = assignment.status;
     final isDone   = status == AssignmentStatus.acknowledged;
@@ -442,9 +444,14 @@ class _AssignmentCard extends StatelessWidget {
             : level.color;
 
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AlertDetailsScreen(assignment: assignment),
-      )),
+      onTap: () {
+        if (assignment.status == AssignmentStatus.pending) {
+          ref.read(alertProvider.notifier).markAsViewed(assignment.id);
+        }
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => AlertDetailsScreen(assignment: assignment),
+        ));
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(

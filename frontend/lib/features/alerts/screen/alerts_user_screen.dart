@@ -12,6 +12,12 @@ class AlertUserScreen extends ConsumerStatefulWidget {
 
 class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(alertProvider.notifier).loadAssignments());
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(alertProvider);
 

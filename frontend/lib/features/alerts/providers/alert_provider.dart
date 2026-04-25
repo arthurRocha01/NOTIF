@@ -92,35 +92,26 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<bool> createNotificationForAllSectors({
+  Future<bool> createGlobalNotification({
     required String title,
     required String message,
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
     required String authorId,
-    required List<String> sectorIds,
   }) async {
-    if (sectorIds.isEmpty) {
-      state = state.copyWith(errorMessage: 'Nenhum setor disponível.');
-      return false;
-    }
     try {
-      final created = <AlertModel>[];
-      for (final sectorId in sectorIds) {
-        final notification = await _service.createNotification(
-          authorId: authorId,
-          title: title,
-          message: message,
-          level: level,
-          slaMinutes: slaMinutes,
-          requiresAcknowledgment: requiresAcknowledgment,
-          sectorId: sectorId,
-        );
-        created.add(notification);
-      }
+      final created = await _service.createNotification(
+        authorId: authorId,
+        title: title,
+        message: message,
+        level: level,
+        slaMinutes: slaMinutes,
+        requiresAcknowledgment: requiresAcknowledgment,
+        sectorId: null,
+      );
       state = state.copyWith(
-        notifications: [...created, ...state.notifications],
+        notifications: [created, ...state.notifications],
       );
       return true;
     } on ApiException catch (e) {

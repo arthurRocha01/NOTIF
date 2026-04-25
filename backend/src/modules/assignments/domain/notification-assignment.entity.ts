@@ -14,6 +14,11 @@ export class NotificationAssignment {
     private deliveredAt: Date | null,
     private viewedAt: Date | null,
     private acknowledgedAt: Date | null,
+    private readonly notificationTitle: string = '',
+    private readonly notificationMessage: string = '',
+    private readonly notificationSlaMinutes: number = 0,
+    private readonly notificationRequiresAcknowledgment: boolean = false,
+    private readonly notificationAuthorId: string = '',
   ) {}
 
   public static create(
@@ -50,6 +55,11 @@ export class NotificationAssignment {
     deliveredAt: Date | null,
     viewedAt: Date | null,
     acknowledgedAt: Date | null,
+    notificationTitle: string = '',
+    notificationMessage: string = '',
+    notificationSlaMinutes: number = 0,
+    notificationRequiresAcknowledgment: boolean = false,
+    notificationAuthorId: string = '',
   ) {
     return new NotificationAssignment(
       id,
@@ -62,6 +72,11 @@ export class NotificationAssignment {
       deliveredAt,
       viewedAt,
       acknowledgedAt,
+      notificationTitle,
+      notificationMessage,
+      notificationSlaMinutes,
+      notificationRequiresAcknowledgment,
+      notificationAuthorId,
     );
   }
 
@@ -103,6 +118,26 @@ export class NotificationAssignment {
 
   public getAcknowledgedAt() {
     return this.acknowledgedAt;
+  }
+
+  public getNotificationTitle() {
+    return this.notificationTitle;
+  }
+
+  public getNotificationMessage() {
+    return this.notificationMessage;
+  }
+
+  public getNotificationSlaMinutes() {
+    return this.notificationSlaMinutes;
+  }
+
+  public getNotificationRequiresAcknowledgment() {
+    return this.notificationRequiresAcknowledgment;
+  }
+
+  public getNotificationAuthorId() {
+    return this.notificationAuthorId;
   }
 
   // Entrega
