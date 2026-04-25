@@ -37,21 +37,21 @@ export class NotificationService {
 
     await this.notificationRepo.save(newNotification);
 
-    if (dto.sectorId) {
-      const usersInSector = await this.usersService.listUsersBySectorId(dto.sectorId);
+    const targetUsers = dto.sectorId
+      ? await this.usersService.listUsersBySectorId(dto.sectorId)
+      : await this.usersService.listUsers();
 
-      await Promise.all(
-        usersInSector.map((user) =>
-          this.assignmentService.createAssignment({
-            userId: user.getId(),
-            notificationId: newNotification.getId(),
-            notificationLevel: newNotification.getLevel(),
-          }),
-        ),
-      );
+    await Promise.all(
+      targetUsers.map((user) =>
+        this.assignmentService.createAssignment({
+          userId: user.getId(),
+          notificationId: newNotification.getId(),
+          notificationLevel: newNotification.getLevel(),
+        }),
+      ),
+    );
 
-      await this.sendFcmToSector(usersInSector, newNotification.getTitle(), newNotification.getMessage());
-    }
+    await this.sendFcmToSector(targetUsers, newNotification.getTitle(), newNotification.getMessage());
 
     return newNotification;
   }
