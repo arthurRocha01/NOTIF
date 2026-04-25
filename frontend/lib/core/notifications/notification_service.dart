@@ -1,6 +1,8 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'browser_notification_stub.dart'
+    if (dart.library.html) 'browser_notification_web.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -52,6 +54,17 @@ class NotificationService {
 
   Future<void> initialize() async {
     FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
+
+    if (kIsWeb) {
+      FirebaseMessaging.onMessage.listen((message) {
+        final n = message.notification;
+        if (n != null) {
+          showBrowserNotification(n.title ?? 'Nova notificação', n.body);
+        }
+        onForegroundMessage?.call(message);
+      });
+      return;
+    }
 
     if (!_supported) return;
 
