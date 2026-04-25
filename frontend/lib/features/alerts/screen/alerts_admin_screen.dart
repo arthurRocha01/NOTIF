@@ -6,7 +6,6 @@ import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
 import 'package:notif_app/features/alerts/widgets/assignments_body.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
@@ -85,11 +84,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
       },
     );
 
-    final currentUserId = ref.watch(authProvider)?.id;
-
-    final myAssignments = state.assignments
-        .where((a) => a.notificationAuthorId != currentUserId)
-        .toList();
+    final myAssignments = state.assignments;
 
     final criticalCount = state.notifications
         .where((n) => n.level == AlertLevel.critical)

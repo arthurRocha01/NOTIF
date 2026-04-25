@@ -227,6 +227,40 @@ void main() {
     });
   });
 
+  group('AlertService.getMyAssignments — isolamento por usuário', () {
+    test('todos os assignments pertencem ao usuário autenticado', () async {
+      final user = await authService.fetchUser(_employeeEmail);
+      final assignments = await alertService.getMyAssignments();
+
+      for (final a in assignments) {
+        expect(
+          a.userId,
+          equals(user.id),
+          reason:
+              'assignment ${a.id} pertence a ${a.userId}, esperado ${user.id}',
+        );
+      }
+    });
+
+    test('supervisor não recebe assignments de outros usuários em getMyAssignments',
+        () async {
+      final supervisorToken = await authService.login(_supervisorEmail, _password);
+      ApiClient.setToken(supervisorToken);
+      final supervisor = await authService.fetchUser(_supervisorEmail);
+
+      final assignments = await alertService.getMyAssignments();
+
+      for (final a in assignments) {
+        expect(
+          a.userId,
+          equals(supervisor.id),
+          reason:
+              'assignment ${a.id} pertence a ${a.userId}, esperado ${supervisor.id}',
+        );
+      }
+    });
+  });
+
   group('AlertService.getAllAssignments — campos enriquecidos (supervisor)', () {
     setUp(() async {
       final token = await authService.login(_supervisorEmail, _password);
