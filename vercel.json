@@ -5,17 +5,38 @@
       "src": "backend/src/main.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": [
-          "backend/notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json",
-          "frontend/build/web/**"
-        ]
+        "includeFiles": ["backend/notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json"]
       }
+    },
+    {
+      "src": "frontend/build/web/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/backend/src/main.ts"
+    },
+    {
+      "src": "^/assets/(.*)",
+      "dest": "/frontend/build/web/assets/$1"
+    },
+    {
+      "src": "^/canvaskit/(.*)",
+      "dest": "/frontend/build/web/canvaskit/$1"
+    },
+    {
+      "src": "^/icons/(.*)",
+      "dest": "/frontend/build/web/icons/$1"
+    },
+    {
+      "src": "^/(.*\\.(?:js|wasm|json|png|ico|wav|ttf|otf|frag|css|map)$)",
+      "dest": "/frontend/build/web/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/build/web/index.html"
     }
   ]
 }

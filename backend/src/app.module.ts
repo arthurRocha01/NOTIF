@@ -11,14 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 import { CriticalBlockGuard } from './modules/assignments/infrastructure/guards/critical-block.guard';
 import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'frontend', 'build', 'web'),
-    }),
     UsersModule,
     PrismaModule,
     AuthModule,
