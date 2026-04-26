@@ -16,9 +16,9 @@ export class AssigmentInterationController {
     return assignments.map(AssignmentResponseDto.fromDomain);
   }
 
-  @Post('sync/:userId')
-  async sync(@Param('userId') userId: string) {
-    const syncedCount = await this.service.syncDeliveries(userId);
+  @Post('sync')
+  async sync(@Req() req: any) {
+    const syncedCount = await this.service.syncDeliveries(req.user.userId);
 
     return {
       message: 'Sincronização concluída',

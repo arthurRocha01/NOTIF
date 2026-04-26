@@ -37,7 +37,6 @@ void main() {
     final admin = await authService.fetchUser(_adminEmail);
 
     final notification = await alertService.createNotification(
-      authorId: admin.id,
       title: 'Aviso Global TDD',
       message: 'Notificação global criada para validar assignments em todos os setores.',
       level: AlertLevel.low,

@@ -86,8 +86,12 @@ void main() {
       final assignments = await alertService.getMyAssignments();
       if (assignments.isEmpty) return;
 
-      // slaMinutes não está em AssignmentModel — vem embutido em notificationSlaMinutes
-      // do backend. Verificamos via getAllAssignments que o campo chega corretamente.
+      for (final a in assignments) {
+        expect(a.notificationSlaMinutes, isNotNull,
+            reason: 'notificationSlaMinutes não deve ser nulo para assignment ${a.id}');
+        expect(a.notificationSlaMinutes! > 0, isTrue,
+            reason: 'notificationSlaMinutes deve ser maior que zero para assignment ${a.id}');
+      }
     });
   });
 
@@ -95,14 +99,14 @@ void main() {
     test('completa sem erro para o employee logado', () async {
       final user = await authService.fetchUser(_employeeEmail);
       await expectLater(
-        alertService.syncDeliveries(user.id),
+        alertService.syncDeliveries(),
         completes,
       );
     });
 
     test('assignments têm deliveredAt preenchido após sync', () async {
       final user = await authService.fetchUser(_employeeEmail);
-      await alertService.syncDeliveries(user.id);
+      await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
       if (assignments.isEmpty) return;
@@ -118,7 +122,7 @@ void main() {
   group('AlertService.markAsViewed', () {
     test('transiciona assignment PENDING para VIEWED', () async {
       final user = await authService.fetchUser(_employeeEmail);
-      await alertService.syncDeliveries(user.id);
+      await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
       final pending = assignments
@@ -158,7 +162,7 @@ void main() {
   group('AlertService.acknowledge', () {
     test('transiciona assignment para ACKNOWLEDGED', () async {
       final user = await authService.fetchUser(_employeeEmail);
-      await alertService.syncDeliveries(user.id);
+      await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
       final pending = assignments
@@ -194,7 +198,6 @@ void main() {
     test('cria notificação global sem erro', () async {
       await expectLater(
         alertService.createNotification(
-          authorId: supervisorId,
           title: 'Aviso Global Teste',
           message: 'Mensagem de aviso global para todos os setores.',
           level: AlertLevel.low,
@@ -208,7 +211,6 @@ void main() {
 
     test('notificação global tem sectorId nulo na resposta', () async {
       final notification = await alertService.createNotification(
-        authorId: supervisorId,
         title: 'Aviso Global Verificação',
         message: 'Verificando que sectorId é null no retorno do backend.',
         level: AlertLevel.low,

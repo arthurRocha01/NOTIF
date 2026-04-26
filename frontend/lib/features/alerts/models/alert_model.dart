@@ -95,6 +95,7 @@ class AssignmentModel {
   final DateTime? acknowledgedAt;
   final bool? requiresAcknowledgment;
   final String? notificationAuthorId;
+  final int? notificationSlaMinutes;
 
   AssignmentModel({
     required this.id,
@@ -111,6 +112,7 @@ class AssignmentModel {
     this.acknowledgedAt,
     this.requiresAcknowledgment,
     this.notificationAuthorId,
+    this.notificationSlaMinutes,
   });
 
   bool get isCritical => notificationLevel == AlertLevel.critical;
@@ -137,6 +139,7 @@ class AssignmentModel {
     DateTime? acknowledgedAt,
     bool? requiresAcknowledgment,
     String? notificationAuthorId,
+    int? notificationSlaMinutes,
   }) {
     return AssignmentModel(
       id: id ?? this.id,
@@ -153,6 +156,7 @@ class AssignmentModel {
       acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
       requiresAcknowledgment: requiresAcknowledgment ?? this.requiresAcknowledgment,
       notificationAuthorId: notificationAuthorId ?? this.notificationAuthorId,
+      notificationSlaMinutes: notificationSlaMinutes ?? this.notificationSlaMinutes,
     );
   }
 
@@ -180,6 +184,7 @@ class AssignmentModel {
           : null,
       requiresAcknowledgment: json['notificationRequiresAcknowledgment'] as bool?,
       notificationAuthorId: json['notificationAuthorId'] as String?,
+      notificationSlaMinutes: json['notificationSlaMinutes'] as int?,
     );
   }
 }

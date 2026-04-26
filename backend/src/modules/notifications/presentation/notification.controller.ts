@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { NotificationService } from '../application/notification.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
@@ -35,8 +36,9 @@ export class NotificationController {
   @Post()
   async create(
     @Body() dto: CreateNotificationDto,
+    @Req() req: any,
   ): Promise<NotificationResponseDto> {
-    const notification = await this.serviceNotification.createNotification(dto);
+    const notification = await this.serviceNotification.createNotification(dto, req.user.userId);
 
     return NotificationResponseDto.fromDomain(notification);
   }

@@ -66,12 +66,10 @@ class AlertNotifier extends StateNotifier<AlertState> {
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
-    required String authorId,
     String? sectorId,
   }) async {
     try {
       final created = await _service.createNotification(
-        authorId: authorId,
         title: title,
         message: message,
         level: level,
@@ -98,11 +96,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
-    required String authorId,
   }) async {
     try {
       final created = await _service.createNotification(
-        authorId: authorId,
         title: title,
         message: message,
         level: level,
@@ -177,9 +173,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<void> syncDeliveries(String userId) async {
+  Future<void> syncDeliveries() async {
     try {
-      await _service.syncDeliveries(userId);
+      await _service.syncDeliveries();
     } catch (_) {}
   }
 

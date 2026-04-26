@@ -40,7 +40,6 @@ void main() {
   group('AlertService.createNotification — resposta da API', () {
     test('retorna AlertModel com id preenchido', () async {
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Notif Criação TDD',
         message: 'Mensagem de teste para validar o retorno da criação.',
         level: AlertLevel.low,
@@ -55,7 +54,6 @@ void main() {
 
     test('campos retornados refletem o que foi enviado', () async {
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Campos Retorno TDD',
         message: 'Mensagem para validar persistência dos campos enviados.',
         level: AlertLevel.high,
@@ -72,7 +70,6 @@ void main() {
 
     test('notificação setorial retorna sectorId preenchido', () async {
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Setorial TDD',
         message: 'Notificação setorial para validar o sectorId no retorno.',
         level: AlertLevel.medium,
@@ -87,7 +84,6 @@ void main() {
 
     test('notificação global retorna sectorId nulo', () async {
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Global TDD',
         message: 'Notificação global para validar ausência de sectorId no retorno.',
         level: AlertLevel.low,
@@ -104,7 +100,6 @@ void main() {
       final antes = DateTime.now().subtract(const Duration(seconds: 5));
 
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Timestamp TDD',
         message: 'Mensagem para validar o timestamp de criação retornado.',
         level: AlertLevel.low,
@@ -118,7 +113,6 @@ void main() {
 
     test('notificação CRITICAL força requiresAcknowledgment verdadeiro', () async {
       final notif = await alertService.createNotification(
-        authorId: adminId,
         title: 'Crítica TDD',
         message: 'Notificação crítica deve sempre exigir confirmação de ciência.',
         level: AlertLevel.critical,

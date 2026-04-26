@@ -25,14 +25,14 @@ export class NotificationService {
     return await this.notificationRepo.findById(id);
   }
 
-  async createNotification(dto: CreateNotificationDto) {
+  async createNotification(dto: CreateNotificationDto, authorId: string) {
     const newNotification = Notification.create(
       dto.title,
       dto.message,
       dto.level,
       dto.slaMinutes,
       dto.sectorId,
-      dto.authorId,
+      authorId,
       dto.requiresAcknowledgment,
     );
 
@@ -121,7 +121,7 @@ export class NotificationService {
     const notification = await this.notificationRepo.findById(id);
 
     if (!notification) {
-      throw new NotFoundException('Usuário já cadastrado');
+      throw new NotFoundException('Notificação não encontrada');
     }
 
     if (dto.title) notification.changeTitle(dto.title);
@@ -138,7 +138,7 @@ export class NotificationService {
     const user = await this.notificationRepo.findById(id);
 
     if (!user) {
-      throw new NotFoundException('Usuário já cadastrado');
+      throw new NotFoundException('Notificação não encontrada');
     }
 
     await this.notificationRepo.delete(id);

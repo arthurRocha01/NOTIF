@@ -11,7 +11,6 @@ class AlertService {
   }
 
   Future<AlertModel> createNotification({
-    required String authorId,
     required String title,
     required String message,
     required AlertLevel level,
@@ -25,7 +24,6 @@ class AlertService {
       'level': level.backendValue,
       'slaMinutes': slaMinutes,
       'requiresAcknowledgment': level == AlertLevel.critical ? true : requiresAcknowledgment,
-      'authorId': authorId,
       if (sectorId != null) 'sectorId': sectorId,
     };
     final data = await ApiClient.post('/notifications', payload);
@@ -61,7 +59,7 @@ class AlertService {
     await ApiClient.post('/assignments/$assignmentId/acknowledge', {});
   }
 
-  Future<void> syncDeliveries(String userId) async {
-    await ApiClient.post('/assignments/sync/$userId', {});
+  Future<void> syncDeliveries() async {
+    await ApiClient.post('/assignments/sync', {});
   }
 }

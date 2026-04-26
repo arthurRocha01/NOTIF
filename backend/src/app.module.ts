@@ -10,6 +10,7 @@ import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 import { CriticalBlockGuard } from './modules/assignments/infrastructure/guards/critical-block.guard';
+import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CriticalBlockGuard } from './modules/assignments/infrastructure/guards/
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: CriticalBlockGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

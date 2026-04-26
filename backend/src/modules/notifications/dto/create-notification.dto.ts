@@ -60,7 +60,4 @@ export class CreateNotificationDto {
   @IsUUID('4', { message: 'O ID do setor é inválido' })
   sectorId?: string;
 
-  @IsOptional()
-  @IsUUID('4', { message: 'O ID do autor é inválido' })
-  authorId?: string; // adaptar ao guard
 }

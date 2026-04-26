@@ -79,15 +79,13 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
     setState(() => _isLoading = true);
 
-    final user = ref.read(authProvider);
-    if (user == null) {
+    if (ref.read(authProvider) == null) {
       setState(() => _isLoading = false);
       return;
     }
     final title = _titleCtrl.text.trim();
     final message = _messageCtrl.text.trim();
     final requiresAck = _level == AlertLevel.critical ? true : _requiresAcknowledgment;
-    final authorId = user.id;
 
     final bool ok;
     if (_sendToAll) {
@@ -97,7 +95,6 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
             level: _level,
             slaMinutes: _slaMinutes,
             requiresAcknowledgment: requiresAck,
-            authorId: authorId,
           );
     } else {
       ok = await ref.read(alertProvider.notifier).createNotification(
@@ -106,7 +103,6 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
             level: _level,
             slaMinutes: _slaMinutes,
             requiresAcknowledgment: requiresAck,
-            authorId: authorId,
             sectorId: _selectedSector!.id,
           );
     }
