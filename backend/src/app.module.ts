@@ -18,7 +18,6 @@ import { join } from 'path';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'frontend', 'build', 'web'),
-      exclude: ['/api/(.*)'],
     }),
     UsersModule,
     PrismaModule,
