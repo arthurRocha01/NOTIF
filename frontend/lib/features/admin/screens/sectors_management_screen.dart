@@ -31,7 +31,7 @@ class _SectorsManagementScreenState
     return ref
         .watch(adminUserProvider)
         .users
-        .where((u) => u.sector == sectorId)
+        .where((u) => u.sectorId == sectorId)
         .length;
   }
 

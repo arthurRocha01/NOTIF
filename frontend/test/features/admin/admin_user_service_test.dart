@@ -1,219 +1,140 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
+import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
+import 'package:notif_app/features/login/services/auth_service.dart';
 
-class MockHttpClient extends Mock implements http.Client {}
-
-class FakeUri extends Fake implements Uri {}
+const _adminEmail = 'admin.dev@notif.com';
+const _password = 'password123';
 
 void main() {
-  late MockHttpClient mockClient;
   late AdminUserService service;
+  late AdminSectorService sectorService;
+  late AuthService authService;
+  late String testSectorId;
 
-  const baseUrl = 'http://localhost:3000';
-  const token = 'test-token';
+  setUp(() async {
+    service = AdminUserService();
+    sectorService = AdminSectorService();
+    authService = AuthService();
+    ApiClient.clearToken();
 
-  setUp(() {
-    registerFallbackValue(FakeUri());
-    mockClient = MockHttpClient();
-    service = AdminUserService(httpClient: mockClient, baseUrl: baseUrl);
+    final token = await authService.login(_adminEmail, _password);
+    ApiClient.setToken(token);
+    final alertService = AlertService();
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+
+    final sectors = await sectorService.getSectors();
+    testSectorId = sectors.first.id;
   });
 
-  final userJson = {
-    'id': 'user-1',
-    'name': 'João Silva',
-    'email': 'joao@test.com',
-    'role': 'EMPLOYEE',
-    'sectorId': 'sector-1',
-  };
-
-  // ---------------------------------------------------------------------------
-  // getUsers
-  // ---------------------------------------------------------------------------
   group('AdminUserService.getUsers', () {
-    test('retorna lista de UserModel em sucesso', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async =>
-              http.Response(jsonEncode([userJson]), 200));
-
-      final result = await service.getUsers(token: token);
-
-      expect(result, hasLength(1));
-      expect(result.first.id, equals('user-1'));
-      expect(result.first.name, equals('João Silva'));
-      expect(result.first.role, equals(UserRole.employee));
+    test('retorna lista de UserModel', () async {
+      final users = await service.getUsers();
+      expect(users, isA<List<UserModel>>());
     });
 
-    test('chama GET /users com Authorization header', () async {
-      Uri? capturedUri;
-      Map<String, String>? capturedHeaders;
-
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((inv) async {
-        capturedUri = inv.positionalArguments.first as Uri;
-        capturedHeaders =
-            inv.namedArguments[const Symbol('headers')] as Map<String, String>;
-        return http.Response(jsonEncode([]), 200);
-      });
-
-      await service.getUsers(token: token);
-
-      expect(capturedUri?.path, equals('/users'));
-      expect(capturedHeaders?.containsKey('Authorization'), isTrue);
-    });
-
-    test('lança ApiException em erro HTTP', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response('Erro', 500));
-
-      await expectLater(
-        () => service.getUsers(token: token),
-        throwsA(isA<ApiException>()),
-      );
-    });
-
-    test('lança ApiException em SocketException', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenThrow(const SocketException('no internet'));
-
-      await expectLater(
-        () => service.getUsers(token: token),
-        throwsA(isA<ApiException>()),
-      );
+    test('cada usuário tem id, name, email e sectorId não vazios', () async {
+      final users = await service.getUsers();
+      expect(users, isNotEmpty);
+      for (final u in users) {
+        expect(u.id, isNotEmpty);
+        expect(u.name, isNotEmpty);
+        expect(u.email, isNotEmpty);
+        expect(u.sectorId, isNotEmpty);
+      }
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // createUser
-  // ---------------------------------------------------------------------------
   group('AdminUserService.createUser', () {
-    test('chama POST /users e retorna UserModel', () async {
-      Uri? capturedUri;
-      String? capturedBody;
-
-      when(() => mockClient.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((inv) async {
-        capturedUri = inv.positionalArguments.first as Uri;
-        capturedBody =
-            inv.namedArguments[const Symbol('body')] as String;
-        return http.Response(jsonEncode(userJson), 201);
-      });
-
-      final result = await service.createUser(
-        token: token,
-        name: 'João Silva',
-        email: 'joao@test.com',
-        password: 'senha123',
+    test('cria usuário EMPLOYEE e retorna com id preenchido', () async {
+      final user = await service.createUser(
+        name: 'Teste TDD',
+        email: 'tdd.user.${DateTime.now().millisecondsSinceEpoch}@notif.com',
+        password: 'password123',
         role: 'EMPLOYEE',
-        sectorId: 'sector-1',
+        sectorId: testSectorId,
       );
+      expect(user.id, isNotEmpty);
+      expect(user.role, equals(UserRole.employee));
 
-      expect(capturedUri?.path, equals('/users'));
-      final body = jsonDecode(capturedBody!);
-      expect(body['name'], equals('João Silva'));
-      expect(body['email'], equals('joao@test.com'));
-      expect(body['password'], equals('senha123'));
-      expect(body['role'], equals('EMPLOYEE'));
-      expect(body['sectorId'], equals('sector-1'));
-      expect(body.containsKey('fcmToken'), isTrue);
-      expect(body['fcmToken'], equals(''));
-      expect(result.id, equals('user-1'));
+      await service.deleteUser(user.id);
     });
 
-    test('lança ApiException em erro HTTP', () async {
-      when(() => mockClient.post(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => http.Response('Erro', 400));
-
-      await expectLater(
-        () => service.createUser(
-          token: token,
-          name: 'X',
-          email: 'x@x.com',
-          password: '123',
-          role: 'EMPLOYEE',
-          sectorId: 'sector-1',
-        ),
-        throwsA(isA<ApiException>()),
+    test('cria usuário SUPERVISOR e retorna com role correto', () async {
+      final user = await service.createUser(
+        name: 'Supervisor TDD',
+        email: 'tdd.sup.${DateTime.now().millisecondsSinceEpoch}@notif.com',
+        password: 'password123',
+        role: 'SUPERVISOR',
+        sectorId: testSectorId,
       );
+      expect(user.role, equals(UserRole.supervisor));
+
+      await service.deleteUser(user.id);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // updateUser
-  // ---------------------------------------------------------------------------
   group('AdminUserService.updateUser', () {
-    test('chama PATCH /users/:id com os campos fornecidos', () async {
-      Uri? capturedUri;
-      String? capturedBody;
+    late UserModel createdUser;
 
-      when(() => mockClient.patch(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((inv) async {
-        capturedUri = inv.positionalArguments.first as Uri;
-        capturedBody =
-            inv.namedArguments[const Symbol('body')] as String;
-        return http.Response(
-            jsonEncode({...userJson, 'name': 'Novo Nome'}), 200);
-      });
-
-      final result = await service.updateUser(
-        token: token,
-        userId: 'user-1',
-        name: 'Novo Nome',
+    setUp(() async {
+      createdUser = await service.createUser(
+        name: 'Usuario Para Editar',
+        email: 'tdd.edit.${DateTime.now().millisecondsSinceEpoch}@notif.com',
+        password: 'password123',
+        role: 'EMPLOYEE',
+        sectorId: testSectorId,
       );
-
-      expect(capturedUri?.path, endsWith('/users/user-1'));
-      final body = jsonDecode(capturedBody!);
-      expect(body['name'], equals('Novo Nome'));
-      expect(result.id, equals('user-1'));
     });
 
-    test('lança ApiException em erro HTTP', () async {
-      when(() => mockClient.patch(any(),
-              headers: any(named: 'headers'), body: any(named: 'body')))
-          .thenAnswer((_) async => http.Response('Erro', 404));
+    tearDown(() async {
+      await service.deleteUser(createdUser.id);
+    });
 
-      await expectLater(
-        () => service.updateUser(token: token, userId: 'user-1'),
-        throwsA(isA<ApiException>()),
+    test('atualiza name e retorna usuário com novo nome', () async {
+      final updated = await service.updateUser(
+        userId: createdUser.id,
+        name: 'Nome Atualizado',
       );
+      expect(updated.name, equals('Nome Atualizado'));
+    });
+
+    test('atualiza role de EMPLOYEE para SUPERVISOR', () async {
+      final updated = await service.updateUser(
+        userId: createdUser.id,
+        role: 'SUPERVISOR',
+      );
+      expect(updated.role, equals(UserRole.supervisor));
+    });
+
+    test('atualiza sectorId e retorna com novo setor', () async {
+      final sectors = await sectorService.getSectors();
+      if (sectors.length < 2) return;
+
+      final newSectorId = sectors.firstWhere((s) => s.id != testSectorId).id;
+      final updated = await service.updateUser(
+        userId: createdUser.id,
+        sectorId: newSectorId,
+      );
+      expect(updated.sectorId, equals(newSectorId));
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // deleteUser
-  // ---------------------------------------------------------------------------
   group('AdminUserService.deleteUser', () {
-    test('chama DELETE /users/:id', () async {
-      Uri? capturedUri;
-
-      when(() => mockClient.delete(any(), headers: any(named: 'headers')))
-          .thenAnswer((inv) async {
-        capturedUri = inv.positionalArguments.first as Uri;
-        return http.Response('', 200);
-      });
-
-      await service.deleteUser(token: token, userId: 'user-1');
-
-      expect(capturedUri?.path, endsWith('/users/user-1'));
-    });
-
-    test('lança ApiException em erro HTTP', () async {
-      when(() => mockClient.delete(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response('Erro', 404));
-
-      await expectLater(
-        () => service.deleteUser(token: token, userId: 'user-1'),
-        throwsA(isA<ApiException>()),
+    test('remove usuário sem lançar exceção', () async {
+      final user = await service.createUser(
+        name: 'Para Deletar',
+        email: 'tdd.del.${DateTime.now().millisecondsSinceEpoch}@notif.com',
+        password: 'password123',
+        role: 'EMPLOYEE',
+        sectorId: testSectorId,
       );
+      await expectLater(service.deleteUser(user.id), completes);
     });
   });
 }

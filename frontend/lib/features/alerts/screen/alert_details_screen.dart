@@ -208,7 +208,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         onPressed: () async {
                           await ref
                               .read(alertProvider.notifier)
-                              .acknowledge(assignmentId: assignment.id);
+                              .acknowledge(assignment.id);
                           if (context.mounted) Navigator.of(context).pop();
                         },
                         icon: const Icon(LucideIcons.checkCircle2, size: 18),

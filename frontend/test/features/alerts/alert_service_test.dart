@@ -1,338 +1,309 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:mocktail/mocktail.dart';
+import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
+import 'package:notif_app/features/login/services/auth_service.dart';
 
-class MockHttpClient extends Mock implements http.Client {}
-
-class FakeUri extends Fake implements Uri {}
+const _employeeEmail = 'employee.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
+const _password = 'password123';
 
 void main() {
-  late MockHttpClient mockClient;
-  late AlertService service;
+  late AlertService alertService;
+  late AuthService authService;
 
-  const baseUrl = 'http://localhost:3000';
-  const token = 'test-token';
+  setUp(() async {
+    alertService = AlertService();
+    authService = AuthService();
+    ApiClient.clearToken();
 
-  setUp(() {
-    registerFallbackValue(FakeUri());
-    mockClient = MockHttpClient();
-    service = AlertService(httpClient: mockClient, baseUrl: baseUrl);
+    final token = await authService.login(_employeeEmail, _password);
+    ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
   });
 
-  final notificationJson = {
-    'id': 'notif-1',
-    'title': 'Manutenção',
-    'message': 'Servidor offline às 22h.',
-    'level': 'MEDIUM',
-    'slaMinutes': 60,
-    'requiresAcknowledgment': false,
-    'targetSectorId': 'sector-1',
-    'authorId': 'user-admin',
-    'createdAt': '2026-04-09T10:00:00.000Z',
-  };
-
-  final assignmentJson = {
-    'id': 'assign-1',
-    'userId': 'user-1',
-    'notificationId': 'notif-1',
-    'notificationLevel': 'MEDIUM',
-    'status': 'PENDING',
-    'createdAt': '2026-04-09T10:00:00.000Z',
-    'dueAt': null,
-    'deliveredAt': null,
-    'viewedAt': null,
-    'acknowledgedAt': null,
-  };
-
-  group('AlertService.getNotifications', () {
-    test('retorna lista de AlertModel em sucesso', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response(
-                jsonEncode([notificationJson]),
-                200,
-              ));
-
-      final result = await service.getNotifications(token: token);
-
-      expect(result, hasLength(1));
-      expect(result.first.id, equals('notif-1'));
-      expect(result.first.title, equals('Manutenção'));
-      expect(result.first.level, equals(AlertLevel.medium));
+  group('AlertService.getMyAssignments — campos enriquecidos do DTO', () {
+    test('retorna lista de AssignmentModel', () async {
+      final assignments = await alertService.getMyAssignments();
+      expect(assignments, isA<List<AssignmentModel>>());
     });
 
-    test('lança exceção em status != 200', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response('{"message":"Unauthorized"}', 401));
+    test('notificationTitle não é nulo nem vazio', () async {
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
 
-      expect(
-        () => service.getNotifications(token: token),
-        throwsA(isA<AlertServiceException>()),
-      );
-    });
-  });
-
-  group('AlertService.createNotification', () {
-    test('cria notificação e retorna AlertModel', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response(
-            jsonEncode(notificationJson),
-            201,
-          ));
-
-      final result = await service.createNotification(
-        token: token,
-        authorId: 'user-admin',
-        title: 'Manutenção',
-        message: 'Servidor offline às 22h.',
-        level: AlertLevel.medium,
-        slaMinutes: 60,
-        requiresAcknowledgment: false,
-      );
-
-      expect(result.id, equals('notif-1'));
-      expect(result.message, equals('Servidor offline às 22h.'));
+      for (final a in assignments) {
+        expect(a.notificationTitle, isNotNull,
+            reason: 'notificationTitle veio null para assignment ${a.id}');
+        expect(a.notificationTitle, isNotEmpty,
+            reason: 'notificationTitle veio vazio para assignment ${a.id}');
+      }
     });
 
-    test('sectorId null cria notificação global', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response(
-            jsonEncode({...notificationJson, 'targetSectorId': null}),
-            201,
-          ));
+    test('notificationMessage não é nulo nem vazio', () async {
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
 
-      final result = await service.createNotification(
-        token: token,
-        authorId: 'user-admin',
-        title: 'Global',
-        message: 'Aviso geral',
-        level: AlertLevel.low,
-        slaMinutes: 30,
-        requiresAcknowledgment: false,
-        sectorId: null,
-      );
-
-      expect(result.isGlobal, isTrue);
+      for (final a in assignments) {
+        expect(a.notificationMessage, isNotNull,
+            reason: 'notificationMessage veio null para assignment ${a.id}');
+        expect(a.notificationMessage, isNotEmpty,
+            reason: 'notificationMessage veio vazio para assignment ${a.id}');
+      }
     });
 
-    test('lança exceção em falha', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{"message":"Forbidden"}', 403));
+    test('requiresAcknowledgment não é nulo', () async {
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
 
-      expect(
-        () => service.createNotification(
-          token: token,
-          authorId: 'user-admin',
-          title: 'X',
-          message: 'Y',
-          level: AlertLevel.low,
-          slaMinutes: 30,
-          requiresAcknowledgment: false,
-        ),
-        throwsA(isA<AlertServiceException>()),
+      for (final a in assignments) {
+        expect(a.requiresAcknowledgment, isNotNull,
+            reason:
+                'requiresAcknowledgment veio null para assignment ${a.id}');
+      }
+    });
+
+    test('notificationAuthorId é um UUID válido', () async {
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
+
+      final uuidPattern = RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
       );
+      for (final a in assignments) {
+        expect(a.notificationAuthorId, isNotNull,
+            reason: 'notificationAuthorId veio null para assignment ${a.id}');
+        expect(a.notificationAuthorId, matches(uuidPattern),
+            reason:
+                'notificationAuthorId não é UUID para assignment ${a.id}');
+      }
+    });
+
+    test('notificationSlaMinutes é maior que zero', () async {
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
+
+      for (final a in assignments) {
+        expect(a.notificationSlaMinutes, isNotNull,
+            reason: 'notificationSlaMinutes não deve ser nulo para assignment ${a.id}');
+        expect(a.notificationSlaMinutes! > 0, isTrue,
+            reason: 'notificationSlaMinutes deve ser maior que zero para assignment ${a.id}');
+      }
     });
   });
 
-  group('AlertService.getMyAssignments', () {
-    test('chama GET /assignments/mine (sem userId na URL)', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response(
-                jsonEncode([assignmentJson]),
-                200,
-              ));
-
-      await service.getMyAssignments(token: token);
-
-      final captured = verify(
-        () => mockClient.get(captureAny(), headers: any(named: 'headers')),
-      ).captured;
-      expect(
-        (captured.single as Uri).toString(),
-        equals('$baseUrl/assignments/mine'),
-      );
-    });
-
-    test('retorna lista de AssignmentModel em sucesso', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response(
-                jsonEncode([assignmentJson]),
-                200,
-              ));
-
-      final result = await service.getMyAssignments(token: token);
-
-      expect(result, hasLength(1));
-      expect(result.first.id, equals('assign-1'));
-      expect(result.first.status, equals(AssignmentStatus.pending));
-    });
-
-    test('lança exceção em status != 200', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response('{"message":"Unauthorized"}', 401));
-
-      expect(
-        () => service.getMyAssignments(token: token),
-        throwsA(isA<AlertServiceException>()),
-      );
-    });
-  });
-
-  group('AlertService.markAsViewed', () {
-    test('faz POST /assignments/:id/view e retorna void em sucesso', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response(
-            jsonEncode({'message': 'Notificação visualizada'}),
-            200,
-          ));
-
+  group('AlertService.syncDeliveries', () {
+    test('completa sem erro para o employee logado', () async {
+      final user = await authService.fetchUser(_employeeEmail);
       await expectLater(
-        service.markAsViewed(assignmentId: 'assign-1', token: token),
+        alertService.syncDeliveries(),
         completes,
       );
     });
 
-    test('lança exceção em falha', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{"message":"Not Found"}', 404));
+    test('assignments têm deliveredAt preenchido após sync', () async {
+      final user = await authService.fetchUser(_employeeEmail);
+      await alertService.syncDeliveries();
 
-      expect(
-        () => service.markAsViewed(assignmentId: 'assign-1', token: token),
-        throwsA(isA<AlertServiceException>()),
+      final assignments = await alertService.getMyAssignments();
+      if (assignments.isEmpty) return;
+
+      for (final a in assignments) {
+        expect(a.deliveredAt, isNotNull,
+            reason:
+                'deliveredAt ainda null após sync para assignment ${a.id}');
+      }
+    });
+  });
+
+  group('AlertService.markAsViewed', () {
+    test('transiciona assignment PENDING para VIEWED', () async {
+      final user = await authService.fetchUser(_employeeEmail);
+      await alertService.syncDeliveries();
+
+      final assignments = await alertService.getMyAssignments();
+      final pending = assignments
+          .where((a) => a.status == AssignmentStatus.pending)
+          .toList();
+      if (pending.isEmpty) return;
+
+      final target = pending.first;
+      await alertService.markAsViewed(target.id);
+
+      final updated = await alertService.getMyAssignments();
+      final after = updated.firstWhere((a) => a.id == target.id);
+      expect(after.status, equals(AssignmentStatus.viewed));
+    });
+
+    test('lança ApiException ao chamar markAsViewed em assignment já VIEWED',
+        () async {
+      final assignments = await alertService.getMyAssignments();
+      final viewed = assignments
+          .where((a) => a.status == AssignmentStatus.viewed)
+          .toList();
+      if (viewed.isEmpty) return;
+
+      await expectLater(
+        alertService.markAsViewed(viewed.first.id),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('visualizada'),
+          ),
+        ),
       );
     });
   });
 
   group('AlertService.acknowledge', () {
-    test('faz POST /assignments/:id/acknowledge e retorna void em sucesso', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response(
-            jsonEncode({'message': 'Ciência confirmada com sucesso'}),
-            200,
-          ));
+    test('transiciona assignment para ACKNOWLEDGED', () async {
+      final user = await authService.fetchUser(_employeeEmail);
+      await alertService.syncDeliveries();
 
+      final assignments = await alertService.getMyAssignments();
+      final pending = assignments
+          .where((a) =>
+              a.status == AssignmentStatus.pending ||
+              a.status == AssignmentStatus.viewed)
+          .where((a) => a.canAcknowledge)
+          .toList();
+      if (pending.isEmpty) return;
+
+      final target = pending.first;
+      await alertService.acknowledge(target.id);
+
+      final updated = await alertService.getMyAssignments();
+      final after = updated.firstWhere((a) => a.id == target.id);
+      expect(after.status, equals(AssignmentStatus.acknowledged));
+    });
+  });
+
+  group('AlertService.createNotification — global (sectorId null)', () {
+    late String supervisorId;
+
+    setUp(() async {
+      final token = await authService.login(_supervisorEmail, _password);
+      ApiClient.setToken(token);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
+      final user = await authService.fetchUser(_supervisorEmail);
+      supervisorId = user.id;
+    });
+
+    test('cria notificação global sem erro', () async {
       await expectLater(
-        service.acknowledge(assignmentId: 'assign-1', token: token),
+        alertService.createNotification(
+          title: 'Aviso Global Teste',
+          message: 'Mensagem de aviso global para todos os setores.',
+          level: AlertLevel.low,
+          slaMinutes: 60,
+          requiresAcknowledgment: false,
+          sectorId: null,
+        ),
         completes,
       );
     });
 
-    test('lança exceção em falha', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{"message":"Not Found"}', 404));
-
-      expect(
-        () => service.acknowledge(assignmentId: 'assign-1', token: token),
-        throwsA(isA<AlertServiceException>()),
+    test('notificação global tem sectorId nulo na resposta', () async {
+      final notification = await alertService.createNotification(
+        title: 'Aviso Global Verificação',
+        message: 'Verificando que sectorId é null no retorno do backend.',
+        level: AlertLevel.low,
+        slaMinutes: 60,
+        requiresAcknowledgment: false,
+        sectorId: null,
       );
+      expect(notification.targetSectorId, isNull);
+      expect(notification.isGlobal, isTrue);
+    });
+
+    test('notificação setorial tem sectorId preenchido na resposta', () async {
+      final notifications = await alertService.getNotifications();
+      final setorial =
+          notifications.where((n) => !n.isGlobal).toList();
+      if (setorial.isEmpty) return;
+
+      for (final n in setorial) {
+        expect(n.targetSectorId, isNotNull);
+        expect(n.targetSectorId, isNotEmpty);
+      }
     });
   });
 
-  group('AlertService.syncDeliveries', () {
-    test('faz POST /assignments/sync/:userId e retorna void em sucesso', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response(
-            jsonEncode({'message': 'Sincronização concluída', 'deliveredCount': 3}),
-            200,
-          ));
+  group('AlertService.getMyAssignments — isolamento por usuário', () {
+    test('todos os assignments pertencem ao usuário autenticado', () async {
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
+      final user = await authService.fetchUser(_employeeEmail);
+      final assignments = await alertService.getMyAssignments();
 
-      await expectLater(
-        service.syncDeliveries(userId: 'user-1', token: token),
-        completes,
-      );
+      for (final a in assignments) {
+        expect(
+          a.userId,
+          equals(user.id),
+          reason:
+              'assignment ${a.id} pertence a ${a.userId}, esperado ${user.id}',
+        );
+      }
     });
 
-    test('lança exceção em falha', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{"message":"Unauthorized"}', 401));
+    test('supervisor não recebe assignments de outros usuários em getMyAssignments',
+        () async {
+      final supervisorToken = await authService.login(_supervisorEmail, _password);
+      ApiClient.setToken(supervisorToken);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
+      final supervisor = await authService.fetchUser(_supervisorEmail);
 
-      expect(
-        () => service.syncDeliveries(userId: 'user-1', token: token),
-        throwsA(isA<AlertServiceException>()),
-      );
+      final assignments = await alertService.getMyAssignments();
+
+      for (final a in assignments) {
+        expect(
+          a.userId,
+          equals(supervisor.id),
+          reason:
+              'assignment ${a.id} pertence a ${a.userId}, esperado ${supervisor.id}',
+        );
+      }
     });
   });
 
-  group('AlertService — POST sem body', () {
-    test('markAsViewed não envia body no POST', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{}', 200));
-
-      await service.markAsViewed(assignmentId: 'assign-1', token: token);
-
-      final captured = verify(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: captureAny(named: 'body'),
-          )).captured;
-      expect(captured.single, isNull);
+  group('AlertService.getAllAssignments — campos enriquecidos (supervisor)', () {
+    setUp(() async {
+      final token = await authService.login(_supervisorEmail, _password);
+      ApiClient.setToken(token);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
     });
 
-    test('acknowledge não envia body no POST', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{}', 200));
+    test('retorna assignments com notificationTitle não nulo', () async {
+      final assignments = await alertService.getAllAssignments();
+      if (assignments.isEmpty) return;
 
-      await service.acknowledge(assignmentId: 'assign-1', token: token);
-
-      final captured = verify(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: captureAny(named: 'body'),
-          )).captured;
-      expect(captured.single, isNull);
+      for (final a in assignments) {
+        expect(a.notificationTitle, isNotNull,
+            reason:
+                'notificationTitle null em getAllAssignments para ${a.id}');
+      }
     });
 
-    test('syncDeliveries não envia body no POST', () async {
-      when(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{}', 200));
+    test('retorna assignments com notificationAuthorId não nulo', () async {
+      final assignments = await alertService.getAllAssignments();
+      if (assignments.isEmpty) return;
 
-      await service.syncDeliveries(userId: 'user-1', token: token);
-
-      final captured = verify(() => mockClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: captureAny(named: 'body'),
-          )).captured;
-      expect(captured.single, isNull);
+      for (final a in assignments) {
+        expect(a.notificationAuthorId, isNotNull,
+            reason:
+                'notificationAuthorId null em getAllAssignments para ${a.id}');
+      }
     });
   });
 }

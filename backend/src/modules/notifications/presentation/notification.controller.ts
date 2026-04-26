@@ -6,11 +6,13 @@ import {
   Param,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { NotificationService } from '../application/notification.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { NotificationResponseDto } from '../dto/notification-response.dto';
 import { UpdateNotificationDto } from '../dto/update-notification.dto';
+import { Roles } from '../../../modules/auth/infrastructure/decorators/roles.decorator';
 
 @Controller('notifications')
 export class NotificationController {
@@ -33,10 +35,12 @@ export class NotificationController {
   }
 
   @Post()
+  @Roles('SUPERVISOR')
   async create(
     @Body() dto: CreateNotificationDto,
+    @Req() req: any,
   ): Promise<NotificationResponseDto> {
-    const notification = await this.serviceNotification.createNotification(dto);
+    const notification = await this.serviceNotification.createNotification(dto, req.user.userId);
 
     return NotificationResponseDto.fromDomain(notification);
   }

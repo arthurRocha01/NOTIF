@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiException implements Exception {
@@ -12,23 +13,19 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'https://notifta.vercel.app';
+  static String get baseUrl =>
+      kIsWeb ? '${Uri.base.origin}/api' : 'http://localhost:5050/api';
   static String? _authToken;
   static void Function()? onUnauthorized;
 
-  // Injetáveis em testes
-  static http.Client? httpClient;
-  static List<Duration>? retryDelays;
+  static const _timeout = Duration(seconds: 20);
+  static const _retryDelays = [
+    Duration(milliseconds: 800),
+    Duration(seconds: 2),
+    Duration(seconds: 4),
+  ];
 
-  static List<Duration> get _retryDelays =>
-      retryDelays ??
-      const [
-        Duration(milliseconds: 800),
-        Duration(seconds: 2),
-        Duration(seconds: 4),
-      ];
-
-  static http.Client get _client => httpClient ?? http.Client();
+  static final _client = http.Client();
 
   static void setToken(String token) => _authToken = token;
   static void clearToken() => _authToken = null;
@@ -40,31 +37,28 @@ class ApiClient {
         if (_authToken != null) 'Authorization': 'Bearer $_authToken',
       };
 
-  static Future<dynamic> get(String path) =>
-      _withRetry(() => _client.get(Uri.parse('$baseUrl$path'), headers: _headers));
+  static Future<dynamic> get(String path) => _withRetry(
+        () => _client.get(Uri.parse('$baseUrl$path'), headers: _headers).timeout(_timeout),
+      );
 
-  static Future<dynamic> post(String path, Map<String, dynamic> body) =>
-      _withRetry(() => _client.post(
-            Uri.parse('$baseUrl$path'),
-            headers: _headers,
-            body: jsonEncode(body),
-          ));
+  static Future<dynamic> post(String path, Map<String, dynamic> body) => _withRetry(
+        () => _client
+            .post(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body))
+            .timeout(_timeout),
+      );
 
-  static Future<dynamic> patch(String path, Map<String, dynamic> body) =>
-      _withRetry(() => _client.patch(
-            Uri.parse('$baseUrl$path'),
-            headers: _headers,
-            body: jsonEncode(body),
-          ));
+  static Future<dynamic> patch(String path, Map<String, dynamic> body) => _withRetry(
+        () => _client
+            .patch(Uri.parse('$baseUrl$path'), headers: _headers, body: jsonEncode(body))
+            .timeout(_timeout),
+      );
 
-  static Future<dynamic> delete(String path) =>
-      _withRetry(() => _client.delete(Uri.parse('$baseUrl$path'), headers: _headers));
+  static Future<dynamic> delete(String path) => _withRetry(
+        () => _client.delete(Uri.parse('$baseUrl$path'), headers: _headers).timeout(_timeout),
+      );
 
-  static Future<dynamic> _withRetry(
-    Future<http.Response> Function() request,
-  ) async {
-    final delays = _retryDelays;
-    for (int attempt = 0; attempt <= delays.length; attempt++) {
+  static Future<dynamic> _withRetry(Future<http.Response> Function() request) async {
+    for (int attempt = 0; attempt <= _retryDelays.length; attempt++) {
       try {
         final response = await request();
         return _handleResponse(response);
@@ -72,9 +66,9 @@ class ApiClient {
         throw ApiException('Sem conexão com a internet');
       } on ApiException catch (e) {
         final isServerError = e.statusCode != null && e.statusCode! >= 500;
-        final hasMoreAttempts = attempt < delays.length;
+        final hasMoreAttempts = attempt < _retryDelays.length;
         if (isServerError && hasMoreAttempts) {
-          await Future.delayed(delays[attempt]);
+          await Future.delayed(_retryDelays[attempt]);
           continue;
         }
         rethrow;

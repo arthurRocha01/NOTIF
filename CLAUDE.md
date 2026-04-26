@@ -1,18 +1,5 @@
 # NOTIF — Contrato de Sessão
 
-## 1. Entendimento de contexto
-
-Antes de qualquer tarefa, leia nessa ordem:
-
-1. `.backend-architecture.md` — arquitetura, fluxos e contratos da API
-2. `.frontend-architecture.md` — stack, estado, navegação e integrações do app
-3. Código fonte relevante para a tarefa (nunca assuma — leia)
-
-Edições são feitas **somente no frontend** (`frontend/`).  
-O backend serve apenas como referência de contrato de API.
-
----
-
 ## 2. TDD obrigatório
 
 Todo desenvolvimento segue o ciclo Red → Green → Refactor:

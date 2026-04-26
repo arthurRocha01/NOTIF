@@ -116,4 +116,16 @@ export class User {
 
     this.fcmToken = fcmToken;
   }
+
+  changePassword(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+  }
+
+  changeRole(role: UserRole): void {
+    this.role = role;
+  }
+
+  changeSectorId(sectorId: string): void {
+    this.sectorId = sectorId;
+  }
 }

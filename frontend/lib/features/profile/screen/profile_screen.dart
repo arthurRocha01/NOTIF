@@ -116,7 +116,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 4),
                   if (user != null)
                     Text(
-                      '${user.roleLabel} · ${user.sector}',
+                      '${user.roleLabel} · ${user.sectorName.isNotEmpty ? user.sectorName : '—'}',
                       style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
                     ),
                   const SizedBox(height: 20),
@@ -125,10 +125,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _StatItem(value: myPosts.length, label: 'posts'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followersCount, label: 'seguidores'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followingCount, label: 'seguindo'),
                     ],
                   ),
                 ],
@@ -206,7 +202,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileInfoRow(
                       icon: LucideIcons.building2,
                       label: 'Setor',
-                      value: user?.sector.isNotEmpty == true ? user!.sector : '—',
+                      value: user?.sectorName.isNotEmpty == true ? user!.sectorName : '—',
                       isLast: true,
                     ),
                   ]),
@@ -292,17 +288,6 @@ class _StatItem extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 28,
-      color: Colors.white24,
     );
   }
 }

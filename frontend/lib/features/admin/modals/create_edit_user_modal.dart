@@ -48,8 +48,8 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.user?.name ?? '');
     _emailCtrl = TextEditingController(text: widget.user?.email ?? '');
-    _sectorId = widget.user?.sector.isNotEmpty == true
-        ? widget.user!.sector
+    _sectorId = widget.user?.sectorId.isNotEmpty == true
+        ? widget.user!.sectorId
         : null;
     if (_isEditing) {
       _role = switch (widget.user!.role) {
@@ -83,7 +83,6 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
         await notifier.updateUser(
           userId: widget.user!.id,
           name: _nameCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
           role: _role,
           sectorId: _sectorId,
         );

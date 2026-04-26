@@ -5,7 +5,6 @@ import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../login/providers/auth_provider.dart';
-import '../../sectors/providers/sector_provider.dart';
 
 class CreateMessageModal extends ConsumerStatefulWidget { // Alterado para Consumer
   const CreateMessageModal({super.key});
@@ -39,15 +38,13 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
     setState(() => _isLoading = true);
 
     final user = ref.read(authProvider);
-    final sectorIds = ref.read(sectorProvider).sectors.map((s) => s.id).toList();
-    final ok = await ref.read(alertProvider.notifier).createNotificationForAllSectors(
+    if (user == null) return;
+    final ok = await ref.read(alertProvider.notifier).createGlobalNotification(
           title: _titleCtrl.text.trim(),
           message: _contentCtrl.text.trim(),
           level: AlertLevel.low,
           slaMinutes: 60,
           requiresAcknowledgment: false,
-          authorId: user?.id ?? '',
-          sectorIds: sectorIds,
         );
 
     if (!mounted) return;

@@ -33,6 +33,11 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    Future.microtask(() {
+      ref.read(alertProvider.notifier).loadNotifications();
+      ref.read(alertProvider.notifier).loadAssignments();
+      ref.read(sectorProvider.notifier).loadSectors();
+    });
   }
 
   @override
@@ -79,11 +84,13 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
       },
     );
 
+    final myAssignments = state.assignments;
+
     final criticalCount = state.notifications
         .where((n) => n.level == AlertLevel.critical)
         .length;
 
-    final pendingAssignments = state.assignments
+    final pendingAssignments = myAssignments
         .where((a) => a.status != AssignmentStatus.acknowledged)
         .length;
 
@@ -138,14 +145,14 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                   sectorState,
                 ),
                 AssignmentsBody(
-                  assignments: state.assignments,
+                  assignments: myAssignments,
                   isLoading: state.isLoadingAssignments,
                   isBlocked: state.isBlocked,
                   isSupervisor: true,
                   onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
                   onAcknowledge: (id) => ref
                       .read(alertProvider.notifier)
-                      .acknowledge(assignmentId: id),
+                      .acknowledge(id),
                 ),
               ],
             ),

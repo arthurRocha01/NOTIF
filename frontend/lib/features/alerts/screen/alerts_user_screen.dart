@@ -12,6 +12,12 @@ class AlertUserScreen extends ConsumerStatefulWidget {
 
 class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(alertProvider.notifier).loadAssignments());
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(alertProvider);
 
@@ -36,7 +42,7 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
         isBlocked: state.isBlocked,
         onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
         onAcknowledge: (id) =>
-            ref.read(alertProvider.notifier).acknowledge(assignmentId: id),
+            ref.read(alertProvider.notifier).acknowledge(id),
       ),
     );
   }

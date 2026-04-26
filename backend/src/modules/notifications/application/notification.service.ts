@@ -6,6 +6,8 @@ import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { FcmService } from '../infrastructure/fcm.service';
 import { UserService } from '../../users/application/user.service';
 import { AssignmentService } from '../../assignments/application/assignment.service';
+import { NotificationAssignment } from '../../assignments/domain/notification-assignment.entity';
+import { UserRole } from '../../users/domain/types';
 
 @Injectable()
 export class NotificationService {
@@ -24,50 +26,96 @@ export class NotificationService {
     return await this.notificationRepo.findById(id);
   }
 
-  async createNotification(dto: CreateNotificationDto) {
+  async createNotification(dto: CreateNotificationDto, authorId: string) {
     const newNotification = Notification.create(
       dto.title,
       dto.message,
       dto.level,
       dto.slaMinutes,
       dto.sectorId,
-      dto.authorId,
+      authorId,
       dto.requiresAcknowledgment,
     );
 
     await this.notificationRepo.save(newNotification);
 
-    if (dto.sectorId) {
-      const usersInSector = await this.usersService.listUsersBySectorId(dto.sectorId);
+    const allUsers = dto.sectorId
+      ? await this.usersService.listUsersBySectorId(dto.sectorId)
+      : await this.usersService.listUsers();
 
-      await Promise.all(
-        usersInSector.map((user) =>
-          this.assignmentService.createAssignment({
-            userId: user.getId(),
-            notificationId: newNotification.getId(),
-            notificationLevel: newNotification.getLevel(),
-          }),
-        ),
-      );
+    const targetUsers = allUsers.filter(
+      (u) => u.getId() !== authorId && u.getRole() !== UserRole.ADMIN,
+    );
 
-      await this.sendFcmToSector(usersInSector, newNotification.getTitle(), newNotification.getMessage());
-    }
+    const assignments = await Promise.all(
+      targetUsers.map((user) =>
+        this.assignmentService.createAssignment({
+          userId: user.getId(),
+          notificationId: newNotification.getId(),
+          notificationLevel: newNotification.getLevel(),
+        }),
+      ),
+    );
+
+    await this.sendFcmToSector(
+      targetUsers,
+      assignments,
+      newNotification.getTitle(),
+      newNotification.getMessage(),
+      newNotification.getId(),
+      newNotification.getLevel(),
+    );
 
     return newNotification;
   }
 
   private async sendFcmToSector(
     users: Awaited<ReturnType<UserService['listUsersBySectorId']>>,
+    assignments: NotificationAssignment[],
     title: string,
     message: string,
+    notificationId: string,
+    level?: string,
   ) {
+    const isCritical = level === 'CRITICAL';
+
+    if (isCritical) {
+      const assignmentByUserId = new Map(assignments.map((a) => [a.getUserId(), a]));
+
+      const failedTokens = (
+        await Promise.all(
+          users.map(async (user) => {
+            const token = user.getFcmToken();
+            if (!token) return null;
+            const assignment = assignmentByUserId.get(user.getId());
+            return this.fcmService.sendToToken(token, title, message, {
+              level: level ?? '',
+              notificationId,
+              assignmentId: assignment?.getId() ?? '',
+            }, level);
+          }),
+        )
+      ).filter((t): t is string => t !== null);
+
+      if (failedTokens.length > 0) {
+        await this.usersService.removeTokensByUser(failedTokens);
+      }
+      return;
+    }
+
     const tokens = users
       .map((user) => user.getFcmToken())
       .filter((token): token is string => Boolean(token));
 
     if (tokens.length === 0) return;
 
-    const failedTokens = await this.fcmService.sendMulticast(tokens, title, message);
+    const failedTokens = await this.fcmService.sendMulticast(
+      tokens,
+      title,
+      message,
+      { level: level ?? '', notificationId },
+      level,
+    );
 
     if (failedTokens?.length > 0) {
       await this.usersService.removeTokensByUser(failedTokens);
@@ -78,7 +126,7 @@ export class NotificationService {
     const notification = await this.notificationRepo.findById(id);
 
     if (!notification) {
-      throw new NotFoundException('Usuário já cadastrado');
+      throw new NotFoundException('Notificação não encontrada');
     }
 
     if (dto.title) notification.changeTitle(dto.title);
@@ -95,7 +143,7 @@ export class NotificationService {
     const user = await this.notificationRepo.findById(id);
 
     if (!user) {
-      throw new NotFoundException('Usuário já cadastrado');
+      throw new NotFoundException('Notificação não encontrada');
     }
 
     await this.notificationRepo.delete(id);

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show Color, IconData;
 import 'package:lucide_icons/lucide_icons.dart';
 
 enum AlertLevel {
@@ -52,39 +52,6 @@ enum AlertLevel {
       case 'HIGH':     return AlertLevel.high;
       case 'CRITICAL': return AlertLevel.critical;
       default:         return AlertLevel.low;
-    }
-  }
-}
-
-enum AlertStatus {
-  active,
-  resolved;
-
-  String get label {
-    switch (this) {
-      case AlertStatus.active:   return 'Ativo';
-      case AlertStatus.resolved: return 'Resolvido';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case AlertStatus.active:   return const Color(0xFFF59E0B);
-      case AlertStatus.resolved: return const Color(0xFF10B981);
-    }
-  }
-
-  Color get backgroundColor {
-    switch (this) {
-      case AlertStatus.active:   return const Color(0xFFFEF3C7);
-      case AlertStatus.resolved: return const Color(0xFFD1FAE5);
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case AlertStatus.active:   return Icons.radio_button_checked;
-      case AlertStatus.resolved: return Icons.check_circle_outline;
     }
   }
 }

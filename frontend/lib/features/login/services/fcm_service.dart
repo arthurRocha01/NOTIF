@@ -19,7 +19,11 @@ class FcmService {
 
   Future<String?> getToken() async {
     if (!_supported) return null;
-    return await FirebaseMessaging.instance.getToken();
+    return await FirebaseMessaging.instance.getToken(
+      vapidKey: kIsWeb
+          ? 'BOcDeGoSA4d2YcuUxy72y200lq3v_BBAGf_UKE0RsrqmZX2LgkdpSiDVll66XIieTAExd2FGAjBQjg1l81N-arI'
+          : null,
+    );
   }
 
   Stream<String> get onTokenRefresh =>

@@ -60,7 +60,7 @@ class AlertModel {
       level: AlertLevel.fromBackend(json['level']?.toString()),
       slaMinutes: json['slaMinutes'] as int? ?? 0,
       requiresAcknowledgment: json['requiresAcknowledgment'] as bool? ?? false,
-      targetSectorId: json['targetSectorId'] as String?,
+      targetSectorId: json['sectorId'] as String?,
       authorId: json['authorId'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
@@ -94,6 +94,8 @@ class AssignmentModel {
   final DateTime? viewedAt;
   final DateTime? acknowledgedAt;
   final bool? requiresAcknowledgment;
+  final String? notificationAuthorId;
+  final int? notificationSlaMinutes;
 
   AssignmentModel({
     required this.id,
@@ -109,14 +111,20 @@ class AssignmentModel {
     this.viewedAt,
     this.acknowledgedAt,
     this.requiresAcknowledgment,
+    this.notificationAuthorId,
+    this.notificationSlaMinutes,
   });
 
   bool get isCritical => notificationLevel == AlertLevel.critical;
 
-  bool get canAcknowledge => isCritical || (requiresAcknowledgment ?? false);
+  bool get canAcknowledge =>
+      status != AssignmentStatus.overdue &&
+      (isCritical || (requiresAcknowledgment ?? false));
 
   bool get isBlocking =>
-      isCritical && status != AssignmentStatus.acknowledged;
+      isCritical &&
+      status != AssignmentStatus.acknowledged &&
+      status != AssignmentStatus.overdue;
 
   bool get isOverdue => status == AssignmentStatus.overdue;
 
@@ -134,6 +142,8 @@ class AssignmentModel {
     DateTime? viewedAt,
     DateTime? acknowledgedAt,
     bool? requiresAcknowledgment,
+    String? notificationAuthorId,
+    int? notificationSlaMinutes,
   }) {
     return AssignmentModel(
       id: id ?? this.id,
@@ -149,6 +159,8 @@ class AssignmentModel {
       viewedAt: viewedAt ?? this.viewedAt,
       acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
       requiresAcknowledgment: requiresAcknowledgment ?? this.requiresAcknowledgment,
+      notificationAuthorId: notificationAuthorId ?? this.notificationAuthorId,
+      notificationSlaMinutes: notificationSlaMinutes ?? this.notificationSlaMinutes,
     );
   }
 
@@ -174,7 +186,9 @@ class AssignmentModel {
       acknowledgedAt: json['acknowledgedAt'] != null
           ? DateTime.parse(json['acknowledgedAt'])
           : null,
-      requiresAcknowledgment: json['requiresAcknowledgment'] as bool?,
+      requiresAcknowledgment: json['notificationRequiresAcknowledgment'] as bool?,
+      notificationAuthorId: json['notificationAuthorId'] as String?,
+      notificationSlaMinutes: json['notificationSlaMinutes'] as int?,
     );
   }
 }

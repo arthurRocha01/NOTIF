@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notif_app/core/api/api_client.dart' show ApiClient;
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_state.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
@@ -16,20 +16,16 @@ class AlertNotifier extends StateNotifier<AlertState> {
 
   AlertNotifier(this._service) : super(const AlertState());
 
-  String get _token => ApiClient.currentToken;
-
-  Future<void> loadNotifications({String? token}) async {
+  Future<void> loadNotifications() async {
     if (state.isLoadingNotifications) return;
     state = state.copyWith(isLoadingNotifications: true, clearError: true);
     try {
-      final notifications =
-          await _service.getNotifications(token: token ?? _token);
+      final notifications = await _service.getNotifications();
       state = state.copyWith(
         notifications: notifications,
         isLoadingNotifications: false,
       );
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(
         isLoadingNotifications: false,
         errorMessage: e.message,
@@ -42,18 +38,16 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<void> loadAssignments({String? token}) async {
+  Future<void> loadAssignments() async {
     if (state.isLoadingAssignments) return;
     state = state.copyWith(isLoadingAssignments: true, clearError: true);
     try {
-      final assignments =
-          await _service.getMyAssignments(token: token ?? _token);
+      final assignments = await _service.getMyAssignments();
       state = state.copyWith(
         assignments: assignments,
         isLoadingAssignments: false,
       );
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(
         isLoadingAssignments: false,
         errorMessage: e.message,
@@ -72,14 +66,10 @@ class AlertNotifier extends StateNotifier<AlertState> {
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
-    required String authorId,
     String? sectorId,
-    String? token,
   }) async {
     try {
       final created = await _service.createNotification(
-        token: token ?? _token,
-        authorId: authorId,
         title: title,
         message: message,
         level: level,
@@ -91,8 +81,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
         notifications: [created, ...state.notifications],
       );
       return true;
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
       return false;
     } catch (_) {
@@ -101,41 +90,27 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<bool> createNotificationForAllSectors({
+  Future<bool> createGlobalNotification({
     required String title,
     required String message,
     required AlertLevel level,
     required int slaMinutes,
     required bool requiresAcknowledgment,
-    required String authorId,
-    required List<String> sectorIds,
-    String? token,
   }) async {
-    if (sectorIds.isEmpty) {
-      state = state.copyWith(errorMessage: 'Nenhum setor disponível.');
-      return false;
-    }
     try {
-      final created = <AlertModel>[];
-      for (final sectorId in sectorIds) {
-        final notification = await _service.createNotification(
-          token: token ?? _token,
-          authorId: authorId,
-          title: title,
-          message: message,
-          level: level,
-          slaMinutes: slaMinutes,
-          requiresAcknowledgment: requiresAcknowledgment,
-          sectorId: sectorId,
-        );
-        created.add(notification);
-      }
+      final created = await _service.createNotification(
+        title: title,
+        message: message,
+        level: level,
+        slaMinutes: slaMinutes,
+        requiresAcknowledgment: requiresAcknowledgment,
+        sectorId: null,
+      );
       state = state.copyWith(
-        notifications: [...created, ...state.notifications],
+        notifications: [created, ...state.notifications],
       );
       return true;
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
       return false;
     } catch (_) {
@@ -144,13 +119,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<void> markAsViewed(
-      {required String assignmentId, String? token}) async {
+  Future<void> markAsViewed(String assignmentId) async {
     try {
-      await _service.markAsViewed(
-        assignmentId: assignmentId,
-        token: token ?? _token,
-      );
+      await _service.markAsViewed(assignmentId);
       final now = DateTime.now();
       state = state.copyWith(
         assignments: state.assignments
@@ -159,19 +130,14 @@ class AlertNotifier extends StateNotifier<AlertState> {
                 : a)
             .toList(),
       );
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
     } catch (_) {}
   }
 
-  Future<void> acknowledge(
-      {required String assignmentId, String? token}) async {
+  Future<void> acknowledge(String assignmentId) async {
     try {
-      await _service.acknowledge(
-        assignmentId: assignmentId,
-        token: token ?? _token,
-      );
+      await _service.acknowledge(assignmentId);
       final now = DateTime.now();
       state = state.copyWith(
         assignments: state.assignments
@@ -183,31 +149,42 @@ class AlertNotifier extends StateNotifier<AlertState> {
                 : a)
             .toList(),
       );
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
     } catch (_) {}
   }
 
-  Future<void> syncDeliveries(
-      {required String userId, String? token}) async {
+  Future<void> loadAllAssignments() async {
+    if (state.isLoadingAllAssignments) return;
+    state = state.copyWith(isLoadingAllAssignments: true, clearError: true);
     try {
-      await _service.syncDeliveries(
-        userId: userId,
-        token: token ?? _token,
+      final all = await _service.getAllAssignments();
+      state = state.copyWith(allAssignments: all, isLoadingAllAssignments: false);
+    } on ApiException catch (e) {
+      state = state.copyWith(
+        isLoadingAllAssignments: false,
+        errorMessage: e.message,
       );
-    } on AlertServiceException catch (e) {
-      if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingAllAssignments: false,
+        errorMessage: 'Erro inesperado. Tente novamente.',
+      );
+    }
+  }
+
+  Future<void> syncDeliveries() async {
+    try {
+      await _service.syncDeliveries();
     } catch (_) {}
   }
 
-  Future<void> markAllPendingAsViewed({String? token}) async {
+  Future<void> markAllPendingAsViewed() async {
     final pending = state.assignments
         .where((a) => a.status == AssignmentStatus.pending)
         .toList();
     for (final a in pending) {
-      await markAsViewed(assignmentId: a.id, token: token);
+      await markAsViewed(a.id);
     }
   }
-
 }

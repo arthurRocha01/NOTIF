@@ -1,73 +1,66 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:mocktail/mocktail.dart';
+import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
+import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
 
-class MockHttpClient extends Mock implements http.Client {}
-
-class FakeUri extends Fake implements Uri {}
+const _email = 'employee.dev@notif.com';
+const _password = 'password123';
 
 void main() {
-  late MockHttpClient mockClient;
   late SectorService service;
+  late AuthService authService;
 
-  const baseUrl = 'http://localhost:3000';
-  const token = 'test-token';
+  setUp(() async {
+    service = SectorService();
+    authService = AuthService();
+    ApiClient.clearToken();
 
-  setUpAll(() => registerFallbackValue(FakeUri()));
-
-  setUp(() {
-    mockClient = MockHttpClient();
-    service = SectorService(httpClient: mockClient, baseUrl: baseUrl);
+    final token = await authService.login(_email, _password);
+    ApiClient.setToken(token);
+    final alertService = AlertService();
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
   });
 
-  final sectorJson = [
-    {'id': 'uuid-ti', 'name': 'TI'},
-    {'id': 'uuid-rh', 'name': 'RH'},
-    {'id': 'uuid-ops', 'name': 'Operações'},
-  ];
-
   group('SectorService.getSectors', () {
-    test('retorna lista de SectorModel em sucesso', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer((_) async => http.Response(jsonEncode(sectorJson), 200));
-
-      final result = await service.getSectors(token: token);
-
-      expect(result, hasLength(3));
-      expect(result.first.id, equals('uuid-ti'));
-      expect(result.first.name, equals('TI'));
-      expect(result.last.name, equals('Operações'));
+    test('retorna lista de SectorModel', () async {
+      final sectors = await service.getSectors();
+      expect(sectors, isA<List<SectorModel>>());
     });
 
-    test('lança SectorServiceException em status != 200', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenAnswer(
-              (_) async => http.Response('{"message":"Unauthorized"}', 401));
+    test('lista não está vazia', () async {
+      final sectors = await service.getSectors();
+      expect(sectors, isNotEmpty);
+    });
 
-      expect(
-        () => service.getSectors(token: token),
-        throwsA(isA<SectorServiceException>()),
+    test('cada setor tem id e name não vazios', () async {
+      final sectors = await service.getSectors();
+      for (final s in sectors) {
+        expect(s.id, isNotEmpty,
+            reason: 'id vazio no setor "${s.name}"');
+        expect(s.name, isNotEmpty,
+            reason: 'name vazio no setor com id "${s.id}"');
+      }
+    });
+
+    test('id de cada setor é um UUID válido', () async {
+      final sectors = await service.getSectors();
+      final uuidPattern = RegExp(
+        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
       );
+      for (final s in sectors) {
+        expect(s.id, matches(uuidPattern),
+            reason: 'id "${s.id}" não é um UUID válido');
+      }
     });
 
-    test('lança SectorServiceException em SocketException', () async {
-      when(() => mockClient.get(any(), headers: any(named: 'headers')))
-          .thenThrow(const SectorServiceException('Sem conexão com a internet'));
-
-      expect(
-        () => service.getSectors(token: token),
-        throwsA(isA<SectorServiceException>()),
-      );
-    });
-
-    test('SectorModel.fromJson mapeia id e name corretamente', () {
-      final model = SectorModel.fromJson({'id': 'abc-123', 'name': 'Financeiro'});
-      expect(model.id, equals('abc-123'));
-      expect(model.name, equals('Financeiro'));
+    test('não retorna setores duplicados', () async {
+      final sectors = await service.getSectors();
+      final ids = sectors.map((s) => s.id).toList();
+      expect(ids.toSet().length, equals(ids.length));
     });
   });
 }

@@ -4,62 +4,43 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
-let app: any;
+let cachedApp: any;
 
-export default async function handler(req: any, res: any) {
-  if (!app) {
-    app = await NestFactory.create(AppModule);
+async function createApp() {
+  if (cachedApp) return cachedApp;
 
-    app.enableCors();
+  const app = await NestFactory.create(AppModule);
 
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+  app.setGlobalPrefix('api');
+  app.enableCors();
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-    const config = new DocumentBuilder()
-      .setTitle('Notif API')
-      .setDescription('Documentação do serviço de documentações')
-      .setVersion('1.0')
-      .build();
+  const config = new DocumentBuilder()
+    .setTitle('Notif API')
+    .setDescription('Documentação do serviço de documentações')
+    .setVersion('1.0')
+    .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('swagger', app, document);
 
-    await app.init();
-  }
-
-  const instance = app.getHttpAdapter().getInstance();
-  return instance(req, res);
+  await app.init();
+  cachedApp = app;
+  return app;
 }
 
-// Para rodar localmente
-// async function bootstrap() {
-//   const app = await NestFactory.create(AppModule);
+export default async function handler(req: any, res: any) {
+  const app = await createApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  expressInstance(req, res);
+}
 
-//   app.enableCors();
-
-//   app.useGlobalPipes(
-//     new ValidationPipe({
-//       whitelist: true,
-//       forbidNonWhitelisted: true,
-//       transform: true,
-//     }),
-//   );
-
-//   const config = new DocumentBuilder()
-//     .setTitle('Notif API')
-//     .setDescription('Documentação do serviço de documentações')
-//     .setVersion('1.0')
-//     .build();
-
-//   const document = SwaggerModule.createDocument(app, config);
-
-//   SwaggerModule.setup('api', app, document);
-
-//   await app.listen(process.env.PORT ?? 3000);
-// }
-// bootstrap();
+if (!process.env.VERCEL) {
+  createApp().then((app) => app.listen(5050));
+}

@@ -15,7 +15,7 @@ export class UserRepository implements IUserRepository {
 
   async findBySectorId(id: string): Promise<User[]> {
     const users = await this.prisma.user.findMany({
-      where: { sectorId: id, fcmToken: { not: null } },
+      where: { sectorId: id },
     });
     return users.map((user) => UserMapper.toDomain(user));
   }

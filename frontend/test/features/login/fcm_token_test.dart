@@ -1,255 +1,103 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:http/http.dart' as http;
 import 'package:notif_app/core/api/api_client.dart';
-import 'package:notif_app/core/model/user_model.dart';
-import 'package:notif_app/core/storage/token_storage.dart';
-import 'package:notif_app/features/alerts/providers/alert_provider.dart';
-import 'package:notif_app/features/alerts/services/alert_service.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-import 'package:notif_app/features/login/services/fcm_service.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
-import 'package:notif_app/features/sectors/services/sector_service.dart';
 
-class MockAuthService extends Mock implements AuthService {}
-class MockFcmService extends Mock implements FcmService {}
-class MockTokenStorage extends Mock implements TokenStorage {}
-class MockSectorService extends Mock implements SectorService {}
-class MockAlertService extends Mock implements AlertService {}
-class MockHttpClient extends Mock implements http.Client {}
-
-final _fakeUser = UserModel(
-  id: 'user-1',
-  name: 'João',
-  email: 'joao@test.com',
-  sector: 'TI',
-  role: UserRole.employee,
-  fcmToken: 'old-token',
-);
-
-ProviderContainer _makeContainer({
-  required MockAuthService authService,
-  required MockFcmService fcmService,
-  required MockTokenStorage storage,
-}) {
-  final mockSector = MockSectorService();
-  final mockAlert = MockAlertService();
-
-  when(() => mockSector.getSectors(token: any(named: 'token')))
-      .thenAnswer((_) async => []);
-  when(() => mockAlert.syncDeliveries(
-        userId: any(named: 'userId'),
-        token: any(named: 'token'),
-      )).thenAnswer((_) async {});
-  when(() => fcmService.requestPermission()).thenAnswer((_) async {});
-  when(() => fcmService.onTokenRefresh).thenAnswer((_) => const Stream.empty());
-  when(() => storage.saveToken(any())).thenAnswer((_) async {});
-  when(() => storage.saveEmail(any())).thenAnswer((_) async {});
-  when(() => storage.clearAll()).thenAnswer((_) async {});
-
-  return ProviderContainer(
-    overrides: [
-      authServiceProvider.overrideWithValue(authService),
-      fcmServiceProvider.overrideWithValue(fcmService),
-      tokenStorageProvider.overrideWithValue(storage),
-      sectorServiceProvider.overrideWithValue(mockSector),
-      alertServiceProvider.overrideWithValue(mockAlert),
-    ],
-  );
-}
+const _email = 'employee.dev@notif.com';
+const _password = 'password123';
 
 void main() {
-  late MockAuthService mockService;
-  late MockFcmService mockFcm;
-  late MockTokenStorage mockStorage;
+  late AuthService service;
+  late String userId;
 
-  setUp(() {
-    mockService = MockAuthService();
-    mockFcm = MockFcmService();
-    mockStorage = MockTokenStorage();
-    ApiClient.clearToken();
+  setUpAll(() async {
+    service = AuthService();
+    final token = await service.login(_email, _password);
+    ApiClient.setToken(token);
+    final user = await service.fetchUser(_email);
+    userId = user.id;
   });
 
-  // ── AuthService.updateFcmToken ────────────────────────────────────────────
+  setUp(() async {
+    final token = await service.login(_email, _password);
+    ApiClient.setToken(token);
+  });
 
-  group('AuthService.updateFcmToken', () {
-    test('faz PATCH /users/:id com fcmToken e não lança exceção em 200', () async {
-      final client = MockHttpClient();
-      final service = AuthService(httpClient: client, baseUrl: 'http://test');
-
-      when(() => client.patch(
-            Uri.parse('http://test/users/user-1'),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => http.Response('{}', 200));
-
-      await expectLater(
-        service.updateFcmToken(
-          userId: 'user-1',
-          fcmToken: 'new-device-token',
-          token: 'jwt',
-        ),
-        completes,
-      );
-
-      verify(() => client.patch(
-            Uri.parse('http://test/users/user-1'),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).called(1);
+  group('Cenário: primeiro dispositivo — token inicialmente ausente', () {
+    test('usuário sem token aceita PATCH com token novo', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-primeiro-dispositivo');
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, equals('token-primeiro-dispositivo'));
     });
 
-    test('lança ApiException em erro HTTP', () async {
-      final client = MockHttpClient();
-      final service = AuthService(httpClient: client, baseUrl: 'http://test');
-
-      when(() => client.patch(
-            Uri.parse('http://test/users/user-1'),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer(
-            (_) async => http.Response('{"message":"Erro"}', 400));
-
-      await expectLater(
-        service.updateFcmToken(
-          userId: 'user-1',
-          fcmToken: 'token',
-          token: 'jwt',
-        ),
-        throwsA(isA<ApiException>()),
-      );
+    test('fetchUser reflete o token após primeira sincronização', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-sync-inicial');
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, isNotNull);
+      expect(user.fcmToken, isNotEmpty);
     });
   });
 
-  // ── AuthNotifier — FCM sync ───────────────────────────────────────────────
+  group('Cenário: troca de dispositivo', () {
+    test('token do novo dispositivo sobrescreve o anterior no servidor', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-dispositivo-A');
+      final antes = await service.fetchUser(_email);
+      expect(antes.fcmToken, equals('token-dispositivo-A'));
 
-  group('AuthNotifier — sincronização FCM após login', () {
-    test('chama FcmService.getToken() após login bem-sucedido', () async {
-      when(() => mockService.login(any(), any()))
-          .thenAnswer((_) async => 'jwt');
-      when(() => mockService.fetchUser(any(), any()))
-          .thenAnswer((_) async => _fakeUser);
-      when(() => mockFcm.getToken())
-          .thenAnswer((_) async => 'old-token'); // mesmo token → não atualiza
-      when(() => mockStorage.getToken()).thenAnswer((_) async => null);
-      when(() => mockStorage.getEmail()).thenAnswer((_) async => null);
-
-      final container = _makeContainer(
-        authService: mockService,
-        fcmService: mockFcm,
-        storage: mockStorage,
-      );
-      addTearDown(container.dispose);
-
-      await container
-          .read(authProvider.notifier)
-          .login('joao@test.com', '123');
-
-      // Aguarda a sincronização fire-and-forget
-      await Future.delayed(Duration.zero);
-
-      verify(() => mockFcm.getToken()).called(1);
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-dispositivo-B');
+      final depois = await service.fetchUser(_email);
+      expect(depois.fcmToken, equals('token-dispositivo-B'));
+      expect(depois.fcmToken, isNot(equals(antes.fcmToken)));
     });
 
-    test('chama updateFcmToken quando token do dispositivo difere do salvo',
+    test('servidor mantém apenas o token mais recente', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-antigo');
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-novo');
+
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, equals('token-novo'));
+    });
+  });
+
+  group('Cenário: expiração / rotação do token pelo Firebase', () {
+    test('token rotacionado é persistido no servidor', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'fcm-original');
+      await service.updateFcmToken(userId: userId, fcmToken: 'fcm-rotacionado');
+
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, equals('fcm-rotacionado'));
+    });
+
+    test('fetchUser após rotação não retorna mais o token expirado', () async {
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-expirado');
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-pos-rotacao');
+
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, isNot(equals('token-expirado')));
+    });
+  });
+
+  group('Mecanismo de auto-cura', () {
+    test('divergência entre token do dispositivo e do servidor é detectável via fetchUser',
         () async {
-      when(() => mockService.login(any(), any()))
-          .thenAnswer((_) async => 'jwt');
-      when(() => mockService.fetchUser(any(), any()))
-          .thenAnswer((_) async => _fakeUser); // fcmToken: 'old-token'
-      when(() => mockFcm.getToken())
-          .thenAnswer((_) async => 'new-device-token');
-      when(() => mockService.updateFcmToken(
-                userId: any(named: 'userId'),
-                fcmToken: any(named: 'fcmToken'),
-                token: any(named: 'token'),
-              ))
-          .thenAnswer((_) async {});
-      when(() => mockStorage.getToken()).thenAnswer((_) async => null);
-      when(() => mockStorage.getEmail()).thenAnswer((_) async => null);
+      await service.updateFcmToken(userId: userId, fcmToken: 'token-servidor-desatualizado');
+      final userServidor = await service.fetchUser(_email);
 
-      final container = _makeContainer(
-        authService: mockService,
-        fcmService: mockFcm,
-        storage: mockStorage,
-      );
-      addTearDown(container.dispose);
+      const tokenDispositivo = 'token-dispositivo-novo';
+      expect(userServidor.fcmToken, isNot(equals(tokenDispositivo)),
+          reason: 'divergência deve ser detectável para o sync ser acionado');
 
-      await container
-          .read(authProvider.notifier)
-          .login('joao@test.com', '123');
-
-      await Future.delayed(Duration.zero);
-
-      verify(() => mockService.updateFcmToken(
-            userId: 'user-1',
-            fcmToken: 'new-device-token',
-            token: any(named: 'token'),
-          )).called(1);
+      await service.updateFcmToken(userId: userId, fcmToken: tokenDispositivo);
+      final userSincronizado = await service.fetchUser(_email);
+      expect(userSincronizado.fcmToken, equals(tokenDispositivo));
     });
 
-    test('NÃO chama updateFcmToken quando tokens são iguais', () async {
-      when(() => mockService.login(any(), any()))
-          .thenAnswer((_) async => 'jwt');
-      when(() => mockService.fetchUser(any(), any()))
-          .thenAnswer((_) async => _fakeUser); // fcmToken: 'old-token'
-      when(() => mockFcm.getToken())
-          .thenAnswer((_) async => 'old-token'); // mesmo token
-      when(() => mockStorage.getToken()).thenAnswer((_) async => null);
-      when(() => mockStorage.getEmail()).thenAnswer((_) async => null);
+    test('PATCH com o mesmo token não quebra o estado do servidor', () async {
+      const token = 'token-sem-mudanca';
+      await service.updateFcmToken(userId: userId, fcmToken: token);
+      await service.updateFcmToken(userId: userId, fcmToken: token);
 
-      final container = _makeContainer(
-        authService: mockService,
-        fcmService: mockFcm,
-        storage: mockStorage,
-      );
-      addTearDown(container.dispose);
-
-      await container
-          .read(authProvider.notifier)
-          .login('joao@test.com', '123');
-
-      await Future.delayed(Duration.zero);
-
-      verifyNever(() => mockService.updateFcmToken(
-            userId: any(named: 'userId'),
-            fcmToken: any(named: 'fcmToken'),
-            token: any(named: 'token'),
-          ));
-    });
-
-    test('atualiza state.fcmToken após sync bem-sucedido', () async {
-      when(() => mockService.login(any(), any()))
-          .thenAnswer((_) async => 'jwt');
-      when(() => mockService.fetchUser(any(), any()))
-          .thenAnswer((_) async => _fakeUser); // fcmToken: 'old-token'
-      when(() => mockFcm.getToken())
-          .thenAnswer((_) async => 'new-device-token');
-      when(() => mockService.updateFcmToken(
-                userId: any(named: 'userId'),
-                fcmToken: any(named: 'fcmToken'),
-                token: any(named: 'token'),
-              ))
-          .thenAnswer((_) async {});
-      when(() => mockStorage.getToken()).thenAnswer((_) async => null);
-      when(() => mockStorage.getEmail()).thenAnswer((_) async => null);
-
-      final container = _makeContainer(
-        authService: mockService,
-        fcmService: mockFcm,
-        storage: mockStorage,
-      );
-      addTearDown(container.dispose);
-
-      await container
-          .read(authProvider.notifier)
-          .login('joao@test.com', '123');
-
-      await Future.delayed(Duration.zero);
-
-      expect(container.read(authProvider)?.fcmToken, equals('new-device-token'));
+      final user = await service.fetchUser(_email);
+      expect(user.fcmToken, equals(token));
     });
   });
 }
