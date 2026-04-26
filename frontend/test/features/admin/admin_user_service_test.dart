@@ -3,6 +3,7 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
 const _adminEmail = 'admin.dev@notif.com';
@@ -22,6 +23,10 @@ void main() {
 
     final token = await authService.login(_adminEmail, _password);
     ApiClient.setToken(token);
+    final alertService = AlertService();
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
 
     final sectors = await sectorService.getSectors();
     testSectorId = sectors.first.id;

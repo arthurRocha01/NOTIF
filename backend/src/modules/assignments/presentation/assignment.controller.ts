@@ -1,6 +1,7 @@
 import { Controller, Delete, Get, Param, Req } from '@nestjs/common';
 import { AssignmentService } from '../application/assignment.service';
 import { AssignmentResponseDto } from '../dto/assignment-response.dto';
+import { BypassBlock } from '../infrastructure/decorators/bypass-block.decorator';
 
 @Controller('assignments')
 export class AssignmentController {
@@ -15,6 +16,7 @@ export class AssignmentController {
   }
 
   @Get('mine')
+  @BypassBlock()
   async findMine(@Req() req: any): Promise<AssignmentResponseDto[]> {
     const assignments = await this.assignmentService.listMyAssignments(req.user.userId);
     return assignments.map((a) => AssignmentResponseDto.fromDomain(a));

@@ -8,6 +8,7 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
 import 'package:notif_app/features/alerts/screen/alerts_user_screen.dart';
+import 'package:notif_app/features/alerts/screen/critical_block_screen.dart';
 import 'package:notif_app/features/alerts/widgets/critical_alert_overlay.dart';
 import 'package:notif_app/features/alerts/widgets/in_app_banner_overlay.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
@@ -48,7 +49,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (user?.isSupervisor == true) {
         alert.markAllPendingAsViewed();
       }
+      _checkAndShowBlockScreen();
     });
+  }
+
+  void _checkAndShowBlockScreen() {
+    if (!mounted) return;
+    if (ref.read(alertProvider).isBlocked) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const CriticalBlockScreen(),
+        ),
+      );
+    }
   }
 
   void _initNotificationHandlers() {
@@ -192,6 +206,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(authProvider);
     final feedController = ref.watch(feedProvider);
     final bool isSupervisor = user?.isSupervisor ?? false;
+
+    ref.listen<bool>(
+      alertProvider.select((s) => s.isBlocked),
+      (wasBlocked, isBlocked) {
+        if (isBlocked && !(wasBlocked ?? false)) {
+          _checkAndShowBlockScreen();
+        }
+      },
+    );
 
     // Contagem real de assignments não confirmados — alimenta o badge da navbar
     final pendingCount = ref

@@ -8,6 +8,8 @@ import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
 import 'package:notif_app/features/admin/screens/admin_dashboard_page.dart';
 import 'package:notif_app/features/admin/screens/sectors_management_screen.dart';
 import 'package:notif_app/features/admin/screens/users_management_screen.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
+import 'package:notif_app/features/alerts/screen/critical_block_screen.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 import 'package:notif_app/shared/widgets/home_app_bar.dart';
 
@@ -25,10 +27,24 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(adminUserProvider.notifier).loadUsers();
       ref.read(adminSectorProvider.notifier).loadSectors();
+      await ref.read(alertProvider.notifier).loadAssignments();
+      _checkAndShowBlockScreen();
     });
+  }
+
+  void _checkAndShowBlockScreen() {
+    if (!mounted) return;
+    if (ref.read(alertProvider).isBlocked) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const CriticalBlockScreen(),
+        ),
+      );
+    }
   }
 
   void _onNavTap(int index) => setState(() => _pageIndex = index);
@@ -63,6 +79,15 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(
+      alertProvider.select((s) => s.isBlocked),
+      (wasBlocked, isBlocked) {
+        if (isBlocked && !(wasBlocked ?? false)) {
+          _checkAndShowBlockScreen();
+        }
+      },
+    );
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF5F6FA),

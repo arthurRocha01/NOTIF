@@ -20,6 +20,9 @@ void main() {
 
     final token = await authService.login(_employeeEmail, _password);
     ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
   });
 
   group('AlertService.getMyAssignments — campos enriquecidos do DTO', () {
@@ -181,6 +184,9 @@ void main() {
     setUp(() async {
       final token = await authService.login(_supervisorEmail, _password);
       ApiClient.setToken(token);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
       final user = await authService.fetchUser(_supervisorEmail);
       supervisorId = user.id;
     });
@@ -229,6 +235,9 @@ void main() {
 
   group('AlertService.getMyAssignments — isolamento por usuário', () {
     test('todos os assignments pertencem ao usuário autenticado', () async {
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
       final user = await authService.fetchUser(_employeeEmail);
       final assignments = await alertService.getMyAssignments();
 
@@ -246,6 +255,9 @@ void main() {
         () async {
       final supervisorToken = await authService.login(_supervisorEmail, _password);
       ApiClient.setToken(supervisorToken);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
       final supervisor = await authService.fetchUser(_supervisorEmail);
 
       final assignments = await alertService.getMyAssignments();
@@ -265,6 +277,9 @@ void main() {
     setUp(() async {
       final token = await authService.login(_supervisorEmail, _password);
       ApiClient.setToken(token);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
     });
 
     test('retorna assignments com notificationTitle não nulo', () async {

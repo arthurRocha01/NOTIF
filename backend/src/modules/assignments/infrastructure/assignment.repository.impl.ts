@@ -3,6 +3,8 @@ import { INotificationAssignment } from '../domain/assigment.repository';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationAssignment } from '../domain/notification-assignment.entity';
 import { NotificationAssignmentMapper } from './assignment.mapper';
+import { AssignmentStatus } from '../domain/type';
+import { NotificationLevel } from '../../notifications/domain/type';
 
 @Injectable()
 export class NotificationAssignmentRepository implements INotificationAssignment {
@@ -64,6 +66,35 @@ export class NotificationAssignmentRepository implements INotificationAssignment
         assigment.notification,
       );
     });
+  }
+
+  async findBlockingByUserId(userId: string): Promise<NotificationAssignment[]> {
+    const assignments = await this.prisma.notificationAssignment.findMany({
+      where: {
+        userId,
+        status: { not: AssignmentStatus.ACKNOWLEDGED },
+        notification: { level: NotificationLevel.CRITICAL },
+      },
+      include: { notification: true },
+    });
+
+    return assignments.map((a) =>
+      NotificationAssignmentMapper.toDomain(a, a.notification),
+    );
+  }
+
+  async findPendingOverdue(now: Date): Promise<NotificationAssignment[]> {
+    const assignments = await this.prisma.notificationAssignment.findMany({
+      where: {
+        dueAt: { lt: now },
+        status: { notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE] },
+      },
+      include: { notification: true },
+    });
+
+    return assignments.map((a) =>
+      NotificationAssignmentMapper.toDomain(a, a.notification),
+    );
   }
 
   async save(notificationAssignment: NotificationAssignment): Promise<void> {

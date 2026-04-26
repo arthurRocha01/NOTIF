@@ -22,7 +22,17 @@ void main() {
 
     final adminToken = await authService.login(_adminEmail, _password);
     ApiClient.setToken(adminToken);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
 
+    final empTokenPre = await authService.login(_employeeEmail, _password);
+    ApiClient.setToken(empTokenPre);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+
+    ApiClient.setToken(adminToken);
     final admin = await authService.fetchUser(_adminEmail);
     final employee = await authService.fetchUser(_employeeEmail);
     employeeId = employee.id;

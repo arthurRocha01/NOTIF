@@ -19,6 +19,9 @@ void main() {
 
     final token = await authService.login(_supervisorEmail, _supervisorPassword);
     ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
   });
 
   group('AlertService.getAllAssignments', () {

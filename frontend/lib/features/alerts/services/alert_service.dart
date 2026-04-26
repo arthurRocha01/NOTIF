@@ -32,6 +32,13 @@ class AlertService {
     return AlertModel.fromJson(data as Map<String, dynamic>);
   }
 
+  Future<List<AssignmentModel>> getBlockingAssignments() async {
+    final data = await ApiClient.get('/assignments/blocking');
+    return (data as List<dynamic>)
+        .map((e) => AssignmentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<AssignmentModel>> getMyAssignments() async {
     final data = await ApiClient.get('/assignments/mine');
     return (data as List<dynamic>)

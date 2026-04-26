@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
 const _email = 'employee.dev@notif.com';
@@ -7,6 +8,17 @@ const _password = 'password123';
 
 void main() {
   late AuthService service;
+
+  setUpAll(() async {
+    final authService = AuthService();
+    final alertService = AlertService();
+    final token = await authService.login(_email, _password);
+    ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+    ApiClient.clearToken();
+  });
 
   setUp(() {
     service = AuthService();

@@ -9,6 +9,7 @@ import { SectorsModule } from './modules/sectors/sectors.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
+import { CriticalBlockGuard } from './modules/assignments/infrastructure/guards/critical-block.guard';
 
 @Module({
   imports: [
@@ -20,6 +21,10 @@ import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guar
     AssignmentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: CriticalBlockGuard },
+  ],
 })
 export class AppModule {}

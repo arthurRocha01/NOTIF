@@ -20,6 +20,9 @@ void main() {
 
     final token = await authService.login(_adminEmail, _password);
     ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
 
     final admin = await authService.fetchUser(_adminEmail);
     adminId = admin.id;
@@ -29,6 +32,9 @@ void main() {
   setUp(() async {
     final token = await authService.login(_adminEmail, _password);
     ApiClient.setToken(token);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
   });
 
   group('AlertService.createNotification — resposta da API', () {

@@ -21,6 +21,9 @@ class AlertState {
 
   bool get isBlocked => assignments.any((a) => a.isBlocking);
 
+  List<AssignmentModel> get blockingAssignments =>
+      assignments.where((a) => a.isBlocking).toList();
+
   AlertState copyWith({
     List<AlertModel>? notifications,
     List<AssignmentModel>? assignments,

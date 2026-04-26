@@ -21,6 +21,19 @@ void main() {
 
     final adminToken = await authService.login(_adminEmail, _password);
     ApiClient.setToken(adminToken);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+
+    for (final email in [_employeeTiEmail, _employeeOpsEmail]) {
+      final t = await authService.login(email, _password);
+      ApiClient.setToken(t);
+      for (final a in await alertService.getBlockingAssignments()) {
+        await alertService.acknowledge(a.id);
+      }
+    }
+
+    ApiClient.setToken(adminToken);
     final admin = await authService.fetchUser(_adminEmail);
 
     final notification = await alertService.createNotification(

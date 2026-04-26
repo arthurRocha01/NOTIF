@@ -15,6 +15,12 @@ export class AssignmentsInteractionService {
     private readonly notificationRepo: NotificationRepository,
   ) {}
 
+  async getBlockingAssignments(
+    userId: string,
+  ): Promise<import('../domain/notification-assignment.entity').NotificationAssignment[]> {
+    return this.assignmentRepo.findBlockingByUserId(userId);
+  }
+
   async syncDeliveries(userId: string): Promise<number> {
     const peddingAssigments = await this.assignmentRepo.findByUserId(userId);
     if (peddingAssigments.length === 0) {

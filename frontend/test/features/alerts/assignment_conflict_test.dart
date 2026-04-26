@@ -21,8 +21,19 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    // busca o setor do employee para criar notificação direcionada
     final adminToken = await authService.login(_adminEmail, _password);
+    ApiClient.setToken(adminToken);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+
+    final empTokenPre = await authService.login(_employeeEmail, _password);
+    ApiClient.setToken(empTokenPre);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+
+    // busca o setor do employee para criar notificação direcionada
     ApiClient.setToken(adminToken);
     final employee = await authService.fetchUser(_employeeEmail);
     employeeId = employee.id;
