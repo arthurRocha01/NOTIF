@@ -10,9 +10,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
+  private static readonly PUBLIC_PATHS = /\.(js|wasm|json|png|ico|wav|ttf|otf|frag|css|map|html)$/;
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    const request = context.switchToHttp().getRequest();
+    if (JwtAuthGuard.PUBLIC_PATHS.test(request.path)) {
+      return true;
+    }
+
     if (process.env.DISABLE_AUTH === 'true') {
       const request = context.switchToHttp().getRequest();
       request.user = {
