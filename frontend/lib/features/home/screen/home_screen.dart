@@ -86,7 +86,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _showCriticalOverlay(message);
     } else {
       ref.read(feedProvider).changePage(2);
-      ref.read(alertProvider.notifier).markAllPendingAsViewed();
     }
   }
 

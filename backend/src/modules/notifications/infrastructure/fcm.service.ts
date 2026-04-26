@@ -46,10 +46,10 @@ export class FcmService {
       const response = await getMessaging().sendEachForMulticast(message);
 
       console.log(
-        `Notificação - sucessos: ${response.successCount} falhas: ${response.failureCount} falhas`,
+        `Notificação - sucessos: ${response.successCount} | falhas: ${response.failureCount}`,
       );
 
-      return this.retriveFalideTokens(response, tokens);
+      return this.retrieveFailedTokens(response, tokens);
     } catch (error) {
       console.log('Erro de conexão ou falha crítica no Firebase', error);
       return [];
@@ -100,7 +100,7 @@ export class FcmService {
     }
   }
 
-  private retriveFalideTokens(
+  private retrieveFailedTokens(
     response: BatchResponse,
     tokenOrder: string[],
   ): string[] {
