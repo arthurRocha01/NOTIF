@@ -38,9 +38,11 @@ export class NotificationService {
 
     await this.notificationRepo.save(newNotification);
 
-    const targetUsers = dto.sectorId
+    const allUsers = dto.sectorId
       ? await this.usersService.listUsersBySectorId(dto.sectorId)
       : await this.usersService.listUsers();
+
+    const targetUsers = allUsers.filter((u) => u.getId() !== authorId);
 
     const assignments = await Promise.all(
       targetUsers.map((user) =>

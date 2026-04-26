@@ -45,7 +45,6 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
           level: AlertLevel.low,
           slaMinutes: 60,
           requiresAcknowledgment: false,
-          authorId: user.id,
         );
 
     if (!mounted) return;

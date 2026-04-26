@@ -144,7 +144,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   }
 
   void _syncDeliveriesSilently(String userId) {
-    _alertService.syncDeliveries(userId).catchError((_) {});
+    _alertService.syncDeliveries().catchError((_) {});
   }
 
   void _syncFcmTokenSilently(UserModel user) {

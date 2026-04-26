@@ -5,7 +5,7 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _adminEmail = 'admin.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
 const _employeeEmail = 'employee.dev@notif.com';
 const _password = 'password123';
 
@@ -21,8 +21,8 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    final adminToken = await authService.login(_adminEmail, _password);
-    ApiClient.setToken(adminToken);
+    final supervisorToken = await authService.login(_supervisorEmail, _password);
+    ApiClient.setToken(supervisorToken);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
     }
@@ -34,14 +34,13 @@ void main() {
     }
 
     // busca o setor do employee para criar notificação direcionada
-    ApiClient.setToken(adminToken);
+    ApiClient.setToken(supervisorToken);
     final employee = await authService.fetchUser(_employeeEmail);
     employeeId = employee.id;
     employeeSectorId = employee.sectorId;
 
     // cria notificação setorial → gera assignment para o employee
     await alertService.createNotification(
-      authorId: employeeId,
       title: 'Conflito Teste TDD',
       message: 'Notificação criada para testar erros de transição de estado.',
       level: AlertLevel.low,
@@ -53,7 +52,7 @@ void main() {
     // loga como employee e sincroniza entregas
     final employeeToken = await authService.login(_employeeEmail, _password);
     ApiClient.setToken(employeeToken);
-    await alertService.syncDeliveries(employeeId);
+    await alertService.syncDeliveries();
 
     // busca o assignment recém-criado
     final assignments = await alertService.getMyAssignments();

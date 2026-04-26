@@ -235,7 +235,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           index: feedController.pageIndex,
           children: [
             FeedContent(controller: feedController), // 0 = Feed
-            const DashboardScreen(), // 1 = Dashboard
+            isSupervisor || (user?.isAdmin ?? false)
+                ? const DashboardScreen()
+                : const SizedBox.shrink(), // 1 = Dashboard (somente supervisor/admin)
             isSupervisor
                 ? const AlertAdminScreen()
                 : const AlertUserScreen(), // 2 = Alertas

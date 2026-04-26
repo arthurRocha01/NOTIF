@@ -4,7 +4,7 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _adminEmail = 'admin.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
 const _employeeEmail = 'employee.dev@notif.com';
 const _password = 'password123';
 
@@ -20,8 +20,8 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    final adminToken = await authService.login(_adminEmail, _password);
-    ApiClient.setToken(adminToken);
+    final supervisorToken = await authService.login(_supervisorEmail, _password);
+    ApiClient.setToken(supervisorToken);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
     }
@@ -32,14 +32,12 @@ void main() {
       await alertService.acknowledge(a.id);
     }
 
-    ApiClient.setToken(adminToken);
-    final admin = await authService.fetchUser(_adminEmail);
+    ApiClient.setToken(supervisorToken);
     final employee = await authService.fetchUser(_employeeEmail);
     employeeId = employee.id;
     employeeSectorId = employee.sectorId;
 
     await alertService.createNotification(
-      authorId: admin.id,
       title: 'Ciclo de Vida TDD',
       message: 'Notificação criada para testar o ciclo PENDING → VIEWED → ACKNOWLEDGED.',
       level: AlertLevel.medium,
@@ -50,7 +48,7 @@ void main() {
 
     final employeeToken = await authService.login(_employeeEmail, _password);
     ApiClient.setToken(employeeToken);
-    await alertService.syncDeliveries(employeeId);
+    await alertService.syncDeliveries();
 
     final assignments = await alertService.getMyAssignments();
     final pending = assignments.where((a) => a.status == AssignmentStatus.pending).toList();

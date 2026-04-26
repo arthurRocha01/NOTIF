@@ -4,7 +4,7 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _adminEmail = 'admin.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
 const _employeeEmail = 'employee.dev@notif.com';
 const _password = 'password123';
 
@@ -19,9 +19,9 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    // Limpa bloqueios pré-existentes do admin (podem vir do seed ou de runs anteriores)
-    final adminToken = await authService.login(_adminEmail, _password);
-    ApiClient.setToken(adminToken);
+    // Limpa bloqueios pré-existentes do supervisor
+    final supervisorToken = await authService.login(_supervisorEmail, _password);
+    ApiClient.setToken(supervisorToken);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
     }
@@ -33,14 +33,12 @@ void main() {
       await alertService.acknowledge(a.id);
     }
 
-    // Setup: cria a notificação CRITICAL do teste
-    ApiClient.setToken(adminToken);
-    final admin = await authService.fetchUser(_adminEmail);
+    // Setup: cria a notificação CRITICAL do teste (supervisor não recebe assignment próprio)
+    ApiClient.setToken(supervisorToken);
     final employee = await authService.fetchUser(_employeeEmail);
     employeeId = employee.id;
 
     await alertService.createNotification(
-      authorId: admin.id,
       title: 'Bloqueio Crítico TDD',
       message: 'Notificação crítica para testar o bloqueio sistêmico do colaborador.',
       level: AlertLevel.critical,
@@ -48,11 +46,6 @@ void main() {
       requiresAcknowledgment: true,
       sectorId: employee.sectorId,
     );
-
-    // Se o admin estiver no mesmo setor, também recebeu um assignment — limpa
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
 
     // Captura o assignmentId do employee
     final employeeToken = await authService.login(_employeeEmail, _password);

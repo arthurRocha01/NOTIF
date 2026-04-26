@@ -5,32 +5,30 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _adminEmail = 'admin.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
 const _password = 'password123';
 
 void main() {
   late AlertService alertService;
   late AuthService authService;
-  late String adminId;
-  late String adminSectorId;
+  late String supervisorSectorId;
 
   setUpAll(() async {
     alertService = AlertService();
     authService = AuthService();
 
-    final token = await authService.login(_adminEmail, _password);
+    final token = await authService.login(_supervisorEmail, _password);
     ApiClient.setToken(token);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
     }
 
-    final admin = await authService.fetchUser(_adminEmail);
-    adminId = admin.id;
-    adminSectorId = admin.sectorId;
+    final supervisor = await authService.fetchUser(_supervisorEmail);
+    supervisorSectorId = supervisor.sectorId;
   });
 
   setUp(() async {
-    final token = await authService.login(_adminEmail, _password);
+    final token = await authService.login(_supervisorEmail, _password);
     ApiClient.setToken(token);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
@@ -45,7 +43,7 @@ void main() {
         level: AlertLevel.low,
         slaMinutes: 30,
         requiresAcknowledgment: true,
-        sectorId: adminSectorId,
+        sectorId: supervisorSectorId,
       );
 
       expect(notif, isA<AlertModel>());
@@ -59,7 +57,7 @@ void main() {
         level: AlertLevel.high,
         slaMinutes: 45,
         requiresAcknowledgment: false,
-        sectorId: adminSectorId,
+        sectorId: supervisorSectorId,
       );
 
       expect(notif.title, equals('Campos Retorno TDD'));
@@ -75,10 +73,10 @@ void main() {
         level: AlertLevel.medium,
         slaMinutes: 20,
         requiresAcknowledgment: true,
-        sectorId: adminSectorId,
+        sectorId: supervisorSectorId,
       );
 
-      expect(notif.targetSectorId, equals(adminSectorId));
+      expect(notif.targetSectorId, equals(supervisorSectorId));
       expect(notif.isGlobal, isFalse);
     });
 
@@ -105,7 +103,7 @@ void main() {
         level: AlertLevel.low,
         slaMinutes: 10,
         requiresAcknowledgment: true,
-        sectorId: adminSectorId,
+        sectorId: supervisorSectorId,
       );
 
       expect(notif.createdAt.isAfter(antes), isTrue);
@@ -118,7 +116,7 @@ void main() {
         level: AlertLevel.critical,
         slaMinutes: 5,
         requiresAcknowledgment: false,
-        sectorId: adminSectorId,
+        sectorId: supervisorSectorId,
       );
 
       expect(notif.level, equals(AlertLevel.critical));

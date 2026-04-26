@@ -117,10 +117,14 @@ class AssignmentModel {
 
   bool get isCritical => notificationLevel == AlertLevel.critical;
 
-  bool get canAcknowledge => isCritical || (requiresAcknowledgment ?? false);
+  bool get canAcknowledge =>
+      status != AssignmentStatus.overdue &&
+      (isCritical || (requiresAcknowledgment ?? false));
 
   bool get isBlocking =>
-      isCritical && status != AssignmentStatus.acknowledged;
+      isCritical &&
+      status != AssignmentStatus.acknowledged &&
+      status != AssignmentStatus.overdue;
 
   bool get isOverdue => status == AssignmentStatus.overdue;
 

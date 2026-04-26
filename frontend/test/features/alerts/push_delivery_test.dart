@@ -62,7 +62,6 @@ void main() {
       ApiClient.setToken(adminToken);
 
       await alertService.createNotification(
-        authorId: adminId,
         title: 'Teste de Push Real',
         message: 'Se você está vendo esta notificação no Chrome, o fluxo funciona.',
         level: AlertLevel.high,
@@ -109,7 +108,6 @@ void main() {
       ApiClient.setToken(adminToken);
 
       await alertService.createNotification(
-        authorId: adminId,
         title: 'Push Delivery Test',
         message: 'Notificação para validar o envio FCM de ponta a ponta.',
         level: AlertLevel.low,

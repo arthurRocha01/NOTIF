@@ -194,8 +194,9 @@ export class NotificationAssignment {
   public isBlocking(): boolean {
     const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
     const notAcknowledged = this.status !== AssignmentStatus.ACKNOWLEDGED;
+    const notOverdue = this.status !== AssignmentStatus.OVERDUE;
 
-    return isCritical && notAcknowledged;
+    return isCritical && notAcknowledged && notOverdue;
   }
 
   public getResponseTimeInMs(): number | null {

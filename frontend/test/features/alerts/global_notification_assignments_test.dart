@@ -4,7 +4,7 @@ import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _adminEmail = 'admin.dev@notif.com';
+const _supervisorEmail = 'supervisor.dev@notif.com';
 const _employeeTiEmail = 'employee.dev@notif.com';
 const _employeeOpsEmail = 'employee.ops@notif.com';
 const _password = 'password123';
@@ -19,8 +19,8 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    final adminToken = await authService.login(_adminEmail, _password);
-    ApiClient.setToken(adminToken);
+    final supervisorToken = await authService.login(_supervisorEmail, _password);
+    ApiClient.setToken(supervisorToken);
     for (final a in await alertService.getBlockingAssignments()) {
       await alertService.acknowledge(a.id);
     }
@@ -33,8 +33,7 @@ void main() {
       }
     }
 
-    ApiClient.setToken(adminToken);
-    final admin = await authService.fetchUser(_adminEmail);
+    ApiClient.setToken(supervisorToken);
 
     final notification = await alertService.createNotification(
       title: 'Aviso Global TDD',
@@ -99,8 +98,8 @@ void main() {
 
     test('getAllAssignments contém assignments dos dois setores para a notificação global',
         () async {
-      final adminToken = await authService.login(_adminEmail, _password);
-      ApiClient.setToken(adminToken);
+      final supervisorToken = await authService.login(_supervisorEmail, _password);
+      ApiClient.setToken(supervisorToken);
 
       final all = await alertService.getAllAssignments();
       final forNotification =
