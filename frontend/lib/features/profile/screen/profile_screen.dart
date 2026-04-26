@@ -125,10 +125,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _StatItem(value: myPosts.length, label: 'posts'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followersCount, label: 'seguidores'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followingCount, label: 'seguindo'),
                     ],
                   ),
                 ],
@@ -292,17 +288,6 @@ class _StatItem extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 28,
-      color: Colors.white24,
     );
   }
 }
