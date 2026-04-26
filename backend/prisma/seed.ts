@@ -134,16 +134,10 @@ async function main() {
   //   NÃO BLOQUEADO → admin, supervisor.dev, supervisor.ops (N1 ACKNOWLEDGED)
 
   // ── N1: Vazamento de Dados (CRITICAL global) ─────────────────────────────
+  // Admin não recebe assignments — regra de negócio
   const delivN1 = ago(45); // entregue há 45 min
   await prisma.notificationAssignment.createMany({
     data: [
-      // admin — ACKNOWLEDGED (não bloqueado)
-      {
-        userId: admin.id, notificationId: nVazamento.id,
-        status: AssignmentStatus.ACKNOWLEDGED,
-        deliveredAt: ago(50), dueAt: from(ago(50), 60),
-        viewedAt: ago(48), acknowledgedAt: ago(47),
-      },
       // supervisor.dev — ACKNOWLEDGED (não bloqueado)
       {
         userId: supervisorTI.id, notificationId: nVazamento.id,
@@ -187,13 +181,6 @@ async function main() {
   const delivN2 = ago(180); // entregue há 3 h
   await prisma.notificationAssignment.createMany({
     data: [
-      // admin — ACKNOWLEDGED
-      {
-        userId: admin.id, notificationId: nMigracao.id,
-        status: AssignmentStatus.ACKNOWLEDGED,
-        deliveredAt: delivN2, dueAt: from(delivN2, 120),
-        viewedAt: ago(175), acknowledgedAt: ago(170),
-      },
       // supervisor.dev — ACKNOWLEDGED
       {
         userId: supervisorTI.id, notificationId: nMigracao.id,
@@ -243,13 +230,6 @@ async function main() {
   const delivN4 = ago(300);
   await prisma.notificationAssignment.createMany({
     data: [
-      // admin — ACKNOWLEDGED
-      {
-        userId: admin.id, notificationId: nPolitica.id,
-        status: AssignmentStatus.ACKNOWLEDGED,
-        deliveredAt: delivN4, dueAt: from(delivN4, 1440),
-        viewedAt: ago(290), acknowledgedAt: ago(285),
-      },
       // supervisor.dev — ACKNOWLEDGED
       {
         userId: supervisorTI.id, notificationId: nPolitica.id,
@@ -295,12 +275,6 @@ async function main() {
   await prisma.notificationAssignment.createMany({
     data: [
       {
-        userId: admin.id, notificationId: nBackup.id,
-        status: AssignmentStatus.ACKNOWLEDGED,
-        deliveredAt: delivN5, dueAt: from(delivN5, 480),
-        viewedAt: ago(595), acknowledgedAt: ago(590),
-      },
-      {
         userId: supervisorTI.id, notificationId: nBackup.id,
         status: AssignmentStatus.ACKNOWLEDGED,
         deliveredAt: delivN5, dueAt: from(delivN5, 480),
@@ -319,13 +293,6 @@ async function main() {
   const delivN6 = ago(1440); // enviada ontem
   await prisma.notificationAssignment.createMany({
     data: [
-      // admin — ACKNOWLEDGED
-      {
-        userId: admin.id, notificationId: nRecesso.id,
-        status: AssignmentStatus.ACKNOWLEDGED,
-        deliveredAt: delivN6, dueAt: from(delivN6, 2880),
-        viewedAt: ago(1430), acknowledgedAt: ago(1425),
-      },
       // supervisor.dev — VIEWED
       {
         userId: supervisorTI.id, notificationId: nRecesso.id,
@@ -369,7 +336,7 @@ async function main() {
   console.log('Seed concluído.');
   console.log('');
   console.log('Usuários criados (senha: password123):');
-  console.log(`  ADMIN      → ${admin.email}          (TI)          — não bloqueado`);
+  console.log(`  ADMIN      → ${admin.email}          (TI)          — nunca bloqueado, sem assignments`);
   console.log(`  SUPERVISOR → ${supervisorTI.email}   (TI)          — não bloqueado`);
   console.log(`  EMPLOYEE   → ${employeeTI.email}     (TI)          — BLOQUEADO (CRITICAL pendente)`);
   console.log(`  SUPERVISOR → ${supervisorOps.email}  (Operações)   — não bloqueado`);

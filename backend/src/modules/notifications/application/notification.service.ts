@@ -7,6 +7,7 @@ import { FcmService } from '../infrastructure/fcm.service';
 import { UserService } from '../../users/application/user.service';
 import { AssignmentService } from '../../assignments/application/assignment.service';
 import { NotificationAssignment } from '../../assignments/domain/notification-assignment.entity';
+import { UserRole } from '../../users/domain/types';
 
 @Injectable()
 export class NotificationService {
@@ -42,7 +43,9 @@ export class NotificationService {
       ? await this.usersService.listUsersBySectorId(dto.sectorId)
       : await this.usersService.listUsers();
 
-    const targetUsers = allUsers.filter((u) => u.getId() !== authorId);
+    const targetUsers = allUsers.filter(
+      (u) => u.getId() !== authorId && u.getRole() !== UserRole.ADMIN,
+    );
 
     const assignments = await Promise.all(
       targetUsers.map((user) =>
