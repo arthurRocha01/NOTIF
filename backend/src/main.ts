@@ -4,11 +4,15 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
-async function bootstrap() {
+let cachedApp: any;
+
+async function createApp() {
+  if (cachedApp) return cachedApp;
+
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix('api');
   app.enableCors();
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -24,10 +28,19 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('swagger', app, document);
 
-  SwaggerModule.setup('api', app, document);
-
-  await app.listen(5050);
+  await app.init();
+  cachedApp = app;
+  return app;
 }
 
-bootstrap();
+export default async function handler(req: any, res: any) {
+  const app = await createApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  expressInstance(req, res);
+}
+
+if (!process.env.VERCEL) {
+  createApp().then((app) => app.listen(5050));
+}

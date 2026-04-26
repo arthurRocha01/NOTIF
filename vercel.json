@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/src/main.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["backend/notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json"]
+      }
+    },
+    {
+      "src": "frontend/build/web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/src/main.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/build/web/$1"
+    }
+  ]
+}
