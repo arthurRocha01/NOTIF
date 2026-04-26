@@ -4,10 +4,15 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
-    // CORREÇÃO: A v7 obriga passar um objeto de opções.
-    // Passamos os logs para satisfazer a exigência "non-empty".
+    const url = process.env.DATABASE_URL ?? '';
+    const serverlessUrl =
+      process.env.VERCEL && !url.includes('pgbouncer=true')
+        ? `${url}${url.includes('?') ? '&' : '?'}pgbouncer=true&connection_limit=1`
+        : url;
+
     super({
       log: ['warn', 'error'],
+      datasources: { db: { url: serverlessUrl } },
     });
   }
 
