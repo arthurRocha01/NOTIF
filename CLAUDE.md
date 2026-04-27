@@ -8,7 +8,7 @@ Todo desenvolvimento segue o ciclo Red → Green → Refactor:
 2. **Implemente o mínimo** para o teste passar
 3. **Refatore** sem quebrar os testes
 
-Testes ficam em `frontend/test/features/<feature>/`.  
+Testes ficam em `apps/web/test/features/<feature>/`.  
 Para rodar: `flutter test test/features/<feature>/`
 
 ---
