@@ -4,8 +4,8 @@ abstract class AppColors {
   // Brand
   static const Color primary = Color(0xFF1A2340);
   static const Color primaryLight = Color(0xFF2A3560);
-  static const Color accent = Color(0xFF4A6CF7);
-  static const Color accentLight = Color(0xFF6B8BFF);
+  static const Color accent = Color(0xFF1D4ED8);
+  static const Color accentLight = Color(0xFF3B63E8);
 
   // Alerts
   static const Color critical = Color(0xFFE53935);
@@ -16,14 +16,14 @@ abstract class AppColors {
   static const Color resolvedLight = Color(0xFFF0FDF4);
 
   // Neutral
-  static const Color background = Color(0xFFF5F6FA);
+  static const Color background = Color(0xFFF9FAFB);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF8F9FE);
-  static const Color border = Color(0xFFE8EAF0);
-  static const Color borderLight = Color(0xFFF0F2F8);
+  static const Color surfaceVariant = Color(0xFFF9FAFB);
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color borderLight = Color(0xFFF3F4F6);
 
   // Text
-  static const Color textPrimary = Color(0xFF1A2340);
+  static const Color textPrimary = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF6B7280);
   static const Color textTertiary = Color(0xFF9CA3AF);
   static const Color textOnDark = Color(0xFFFFFFFF);

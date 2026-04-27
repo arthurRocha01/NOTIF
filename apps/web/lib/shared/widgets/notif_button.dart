@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_radius.dart';
 
 /// Botão reutilizável do sistema NOTIF.
 /// Suporta estados: loading, outlined, danger e hover.
@@ -35,7 +37,7 @@ class _NotifButtonState extends State<NotifButton> {
   @override
   Widget build(BuildContext context) {
     final primaryColor =
-        widget.color ?? (widget.isDanger ? Colors.red : Colors.blue);
+        widget.color ?? (widget.isDanger ? AppColors.error : AppColors.primary);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -46,22 +48,16 @@ class _NotifButtonState extends State<NotifButton> {
         decoration: BoxDecoration(
           color: widget.isOutlined
               ? Colors.transparent
-              : primaryColor.withOpacity(_hover ? .9 : 1),
-          borderRadius: BorderRadius.circular(10),
-          border: widget.isOutlined ? Border.all(color: primaryColor) : null,
-          boxShadow: _hover
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(.1),
-                    blurRadius: 6,
-                  )
-                ]
-              : [],
+              : primaryColor.withValues(alpha: _hover ? .88 : 1),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: widget.isOutlined
+              ? Border.all(color: primaryColor, width: 0.5)
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             onTap: widget.isLoading ? null : widget.onPressed,
             child: Padding(
               padding: const EdgeInsets.symmetric(

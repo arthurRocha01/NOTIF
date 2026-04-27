@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/home/model/post_model.dart';
 
 class PostCard extends StatefulWidget {
@@ -39,26 +40,20 @@ class _PostCardState extends State<PostCard> {
     final post = widget.post;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border, width: 0.5),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildBody(post),
             if (_showComments) ...[
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              const Divider(height: 1, thickness: 0.5, color: AppColors.border),
               _buildCommentSection(post),
             ],
           ],
@@ -88,15 +83,15 @@ class _PostCardState extends State<PostCard> {
                         post.userName,
                         style: const TextStyle(
                           fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF334155),
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         '${post.userRole} · $_timeAgo',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xFF94A3B8),
+                          color: AppColors.textTertiary,
                         ),
                       ),
                     ],
@@ -123,24 +118,24 @@ class _PostCardState extends State<PostCard> {
             Text(
               post.title,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
                 height: 1.35,
-                letterSpacing: -0.2,
+                letterSpacing: -0.1,
               ),
             ),
 
             // Excerpt
             if (post.content.isNotEmpty) ...[
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
               Text(
                 post.content,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 13.5,
-                  color: Color(0xFF64748B),
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
                   height: 1.5,
                 ),
               ),
@@ -202,31 +197,31 @@ class _PostCardState extends State<PostCard> {
                 child: TextField(
                   controller: _commentController,
                   style: const TextStyle(
-                      fontSize: 13, color: Color(0xFF374151)),
+                      fontSize: 13, color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Escreva um comentário...',
                     hintStyle: const TextStyle(
-                        fontSize: 13, color: Color(0xFFCBD5E1)),
+                        fontSize: 13, color: AppColors.textTertiary),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 9),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                          color: AppColors.border, width: 0.5),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                          color: AppColors.border, width: 0.5),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF4A6CF7)),
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(
+                          color: AppColors.accent, width: 1),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
+                    fillColor: AppColors.surfaceVariant,
                   ),
                   onSubmitted: (_) => _commentController.clear(),
                 ),
@@ -249,12 +244,12 @@ class _MiniAvatar extends StatelessWidget {
 
   Color get _color {
     const colors = [
-      Color(0xFF4A6CF7),
-      Color(0xFF0EA5E9),
-      Color(0xFF10B981),
-      Color(0xFFF59E0B),
-      Color(0xFFE11D48),
-      Color(0xFF8B5CF6),
+      AppColors.accent,
+      Color(0xFF0369A1),
+      Color(0xFF047857),
+      Color(0xFFB45309),
+      AppColors.error,
+      Color(0xFF6D28D9),
     ];
     return colors[name.codeUnitAt(0) % colors.length];
   }
@@ -288,12 +283,12 @@ class _StatChip extends StatelessWidget {
     required this.value,
     required this.label,
     this.active = false,
-    this.activeColor = const Color(0xFF4A6CF7),
+    this.activeColor = AppColors.accent,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? activeColor : const Color(0xFFCBD5E1);
+    final color = active ? activeColor : AppColors.textTertiary;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -302,9 +297,9 @@ class _StatChip extends StatelessWidget {
         Text(
           '$value',
           style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w500,
-            color: active ? activeColor : const Color(0xFF94A3B8),
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: active ? activeColor : AppColors.textTertiary,
           ),
         ),
       ],
@@ -330,8 +325,9 @@ class _CommentItem extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.border, width: 0.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,8 +336,8 @@ class _CommentItem extends StatelessWidget {
                     comment.userName,
                     style: const TextStyle(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF374151),
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -349,7 +345,7 @@ class _CommentItem extends StatelessWidget {
                     comment.content,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF4B5563),
+                      color: AppColors.textSecondary,
                       height: 1.4,
                     ),
                   ),

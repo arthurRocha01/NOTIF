@@ -40,13 +40,9 @@ class CustomNavbar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF0D1B2A),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 16,
-            offset: Offset(0, -4),
-          ),
-        ],
+        border: Border(
+          top: BorderSide(color: Color(0x1AFFFFFF), width: 0.5),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -140,16 +136,7 @@ class NavItem extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isSelected ? _pill : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: isSelected
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x334A6CF7), // AppColors.accent 20%
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ]
-                    : const [],
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Stack(
                 clipBehavior: Clip.none,
