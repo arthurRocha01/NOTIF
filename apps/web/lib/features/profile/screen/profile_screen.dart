@@ -20,22 +20,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late TextEditingController _nameController;
-  bool _editing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final user = ref.read(authProvider);
-    _nameController = TextEditingController(text: user?.name ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
   Future<void> _pickAvatar() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -47,14 +31,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final bytes = result.files.first.bytes!;
       ref.read(profileProvider.notifier).setAvatar(bytes);
     }
-  }
-
-  void _saveDisplayName() {
-    final name = _nameController.text.trim();
-    if (name.isNotEmpty) {
-      ref.read(profileProvider.notifier).setDisplayName(name);
-    }
-    setState(() => _editing = false);
   }
 
   @override
@@ -147,48 +123,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       value: profile.displayName.isNotEmpty
                           ? profile.displayName
                           : (user?.name ?? '—'),
-                      trailing: IconButton(
-                        icon: Icon(
-                          _editing ? LucideIcons.x : LucideIcons.pencil,
-                          size: 18,
-                          color: AppColors.accent,
-                        ),
-                        onPressed: () => setState(() => _editing = !_editing),
-                      ),
                     ),
-                    if (_editing)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _nameController,
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                  hintText: 'Nome exibido no feed',
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed: _saveDisplayName,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
-                              ),
-                              child: const Text('Salvar'),
-                            ),
-                          ],
-                        ),
-                      ),
                     ProfileInfoRow(
                       icon: LucideIcons.mail,
                       label: 'Email',

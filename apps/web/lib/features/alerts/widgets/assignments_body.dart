@@ -37,7 +37,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -49,20 +49,21 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
   List<AssignmentModel> get _pending => widget.assignments
       .where((a) =>
           a.status == AssignmentStatus.pending ||
-          a.status == AssignmentStatus.viewed ||
-          a.status == AssignmentStatus.overdue)
+          a.status == AssignmentStatus.viewed)
       .toList()
     ..sort((a, b) {
-      final aPriority = a.status == AssignmentStatus.overdue
-          ? 0
-          : a.notificationLevel == AlertLevel.critical
-              ? 1
-              : 2;
-      final bPriority = b.status == AssignmentStatus.overdue
-          ? 0
-          : b.notificationLevel == AlertLevel.critical
-              ? 1
-              : 2;
+      final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
+      final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
+      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
+      return b.createdAt.compareTo(a.createdAt);
+    });
+
+  List<AssignmentModel> get _overdue => widget.assignments
+      .where((a) => a.status == AssignmentStatus.overdue)
+      .toList()
+    ..sort((a, b) {
+      final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
+      final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
       if (aPriority != bPriority) return aPriority.compareTo(bPriority);
       return b.createdAt.compareTo(a.createdAt);
     });
@@ -114,6 +115,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
             delegate: _TabBarDelegate(
               tabController: _tabController,
               pendingCount: _pending.length,
+              overdueCount: _overdue.length,
               doneCount: _done.length,
             ),
           ),
@@ -123,6 +125,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
           children: [
             _buildList(_all),
             _buildList(_pending, emptyLabel: 'Nenhuma notificação pendente'),
+            _buildList(_overdue, emptyLabel: 'Nenhuma notificação atrasada'),
             _buildList(_done, emptyLabel: 'Nenhuma notificação confirmada'),
           ],
         ),
@@ -133,6 +136,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
   Widget _buildHeader() {
     final total    = widget.assignments.length;
     final pending  = _pending.length;
+    final overdue  = _overdue.length;
     final critical = _criticalCount;
 
     return Container(
@@ -185,6 +189,23 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
                     style: TextStyle(color: AppColors.textTertiary),
                   ),
                 ],
+                if (overdue > 0) ...[
+                  const TextSpan(
+                    text: '  ·  ',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                  TextSpan(
+                    text: '$overdue',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.critical,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: ' atrasados',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                ],
                 if (critical > 0) ...[
                   const TextSpan(
                     text: '  ·  ',
@@ -218,20 +239,34 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
 
   Widget _buildList(List<AssignmentModel> items, {String? emptyLabel}) {
     if (widget.isLoading && widget.assignments.isEmpty) {
-      return const Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.primary,
-            strokeWidth: 1.5,
+      return CustomScrollView(
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 1.5,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       );
     }
 
     if (items.isEmpty) {
-      return _EmptyState(label: emptyLabel ?? 'Nenhuma notificação');
+      return CustomScrollView(
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: _EmptyState(label: emptyLabel ?? 'Nenhuma notificação'),
+          ),
+        ],
+      );
     }
 
     return ListView.builder(
@@ -256,11 +291,13 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabController tabController;
   final int pendingCount;
+  final int overdueCount;
   final int doneCount;
 
   const _TabBarDelegate({
     required this.tabController,
     required this.pendingCount,
+    required this.overdueCount,
     required this.doneCount,
   });
 
@@ -273,8 +310,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
       decoration: const BoxDecoration(
+        color: Colors.white,
         border: Border(
           bottom: BorderSide(color: AppColors.border, width: 0.5),
         ),
@@ -309,6 +346,18 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Text('Atrasados'),
+                if (overdueCount > 0) ...[
+                  const SizedBox(width: 5),
+                  _TabCount(count: overdueCount, color: AppColors.critical),
+                ],
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 const Text('Confirmados'),
                 if (doneCount > 0) ...[
                   const SizedBox(width: 5),
@@ -324,7 +373,9 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_TabBarDelegate old) =>
-      old.pendingCount != pendingCount || old.doneCount != doneCount;
+      old.pendingCount != pendingCount ||
+      old.overdueCount != overdueCount ||
+      old.doneCount != doneCount;
 }
 
 class _TabCount extends StatelessWidget {
@@ -442,10 +493,6 @@ class _AssignmentCard extends ConsumerWidget {
             top: const BorderSide(color: AppColors.border, width: 0.5),
             right: const BorderSide(color: AppColors.border, width: 0.5),
             bottom: const BorderSide(color: AppColors.border, width: 0.5),
-          ),
-          borderRadius: const BorderRadius.only(
-            topRight: Radius.circular(4),
-            bottomRight: Radius.circular(4),
           ),
         ),
         child: Padding(

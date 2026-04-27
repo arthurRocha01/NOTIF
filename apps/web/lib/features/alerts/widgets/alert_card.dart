@@ -46,10 +46,6 @@ class AlertCard extends StatelessWidget {
           right: const BorderSide(color: AppColors.border, width: 0.5),
           bottom: const BorderSide(color: AppColors.border, width: 0.5),
         ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(4),
-          bottomRight: Radius.circular(4),
-        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),

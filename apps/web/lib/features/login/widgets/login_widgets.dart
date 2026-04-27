@@ -3,52 +3,97 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 
-// ── Header editorial ──────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
 class AuthHeader extends StatelessWidget {
   const AuthHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 64, 32, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final double headerHeight = MediaQuery.of(context).size.height * 0.22;
+
+    return Container(
+      width: double.infinity,
+      height: headerHeight,
+      decoration: const BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              const Icon(LucideIcons.bellRing,
-                  size: 12, color: AppColors.textTertiary),
-              const SizedBox(width: 6),
-              Text(
-                'NOTIFTA',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textTertiary,
-                  letterSpacing: 3,
-                ),
+          // Círculo decorativo sutil
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withValues(alpha: 0.08),
               ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          Text(
-            'Portal de\nSegurança.',
-            style: GoogleFonts.inter(
-              fontSize: 34,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-              height: 1.1,
-              letterSpacing: -0.6,
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Acesso corporativo restrito.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textTertiary,
+          Positioned(
+            bottom: -20,
+            left: -20,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accent.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+          // Logo centralizado
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'N',
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontSize: 30,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        LucideIcons.bellRing,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    Text(
+                      'TIF',
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        fontSize: 30,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  width: 32,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -100,14 +145,29 @@ class _CustomInputFieldState extends State<CustomInputField> {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+      duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(6),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _isFocused ? AppColors.accent : AppColors.border,
-          width: _isFocused ? 1 : 0.5,
+          width: _isFocused ? 1.5 : 1,
         ),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.10),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
       ),
       child: TextField(
         controller: widget.controller,
@@ -115,9 +175,9 @@ class _CustomInputFieldState extends State<CustomInputField> {
         obscureText: widget.isPassword && _obscure,
         keyboardType: widget.keyboardType,
         style: GoogleFonts.inter(
-          fontSize: 14,
+          fontSize: 15,
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: widget.hint,
@@ -130,23 +190,23 @@ class _CustomInputFieldState extends State<CustomInputField> {
             child: Icon(
               widget.icon,
               color: _isFocused ? AppColors.accent : AppColors.textTertiary,
-              size: 17,
+              size: 19,
             ),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 46),
+          prefixIconConstraints: const BoxConstraints(minWidth: 48),
           suffixIcon: widget.isPassword
               ? IconButton(
                   icon: Icon(
                     _obscure ? LucideIcons.eyeOff : LucideIcons.eye,
                     color: AppColors.textTertiary,
-                    size: 17,
+                    size: 19,
                   ),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 )
               : null,
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 4),
+              const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
         ),
       ),
     );
@@ -169,7 +229,7 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 54,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -178,16 +238,16 @@ class PrimaryButton extends StatelessWidget {
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         child: Text(
           text,
           style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
             color: Colors.white,
-            letterSpacing: 0.5,
+            letterSpacing: 0.3,
           ),
         ),
       ),

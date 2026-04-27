@@ -87,10 +87,6 @@ class _KpiCard extends StatelessWidget {
           right: const BorderSide(color: AppColors.border, width: 0.5),
           bottom: const BorderSide(color: AppColors.border, width: 0.5),
         ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(4),
-          bottomRight: Radius.circular(4),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
