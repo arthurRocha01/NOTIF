@@ -20,15 +20,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
-    if (process.env.DISABLE_AUTH === 'true') {
-      const request = context.switchToHttp().getRequest();
-      request.user = {
-        userId: '17c9cd79-c31e-4296-be97-28bd2fed6acf',
-        email: 'desenvolvedor@gmail.com',
-      };
-      return true;
-    }
-
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),

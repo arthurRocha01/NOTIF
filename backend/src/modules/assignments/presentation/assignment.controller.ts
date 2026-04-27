@@ -20,9 +20,7 @@ export class AssignmentController {
   @Get('mine')
   @BypassBlock()
   async findMine(@Req() req: any): Promise<AssignmentResponseDto[]> {
-    console.log('[DEBUG mine] req.user:', JSON.stringify(req.user));
     const assignments = await this.assignmentService.listMyAssignments(req.user.userId);
-    console.log('[DEBUG mine] assignments count:', assignments.length);
     return assignments.map((a) => AssignmentResponseDto.fromDomain(a));
   }
 
