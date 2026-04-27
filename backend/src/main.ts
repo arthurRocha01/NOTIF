@@ -37,10 +37,5 @@ async function createApp() {
 
 export default async function handler(req: any, res: any) {
   const app = await createApp();
-  const expressInstance = app.getHttpAdapter().getInstance();
-  expressInstance(req, res);
-}
-
-if (!process.env.VERCEL) {
-  createApp().then((app) => app.listen(5050));
+  app.getHttpAdapter().getInstance()(req, res);
 }
