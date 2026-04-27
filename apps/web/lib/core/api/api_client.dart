@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiException implements Exception {
@@ -12,7 +13,8 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const baseUrl = 'http://localhost:5050/api';
+  static String get baseUrl =>
+      kIsWeb ? '${Uri.base.origin}/api' : 'http://localhost:5050/api';
   static String? _authToken;
   static void Function()? onUnauthorized;
 

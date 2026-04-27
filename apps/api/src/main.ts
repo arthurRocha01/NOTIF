@@ -39,5 +39,3 @@ export default async function handler(req: any, res: any) {
   const app = await createApp();
   app.getHttpAdapter().getInstance()(req, res);
 }
-
-createApp().then((app) => app.listen(5050));
