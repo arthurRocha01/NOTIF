@@ -1,0 +1,37 @@
+# ── Node / NestJS ─────────────────────────────────────────────────────────────
+apps/api/node_modules/
+apps/api/dist/
+apps/api/coverage/
+apps/api/.nyc_output/
+apps/api/generated/
+apps/api/.temp
+apps/api/.tmp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Flutter / Dart ────────────────────────────────────────────────────────────
+apps/web/.dart_tool/
+apps/web/.flutter-plugins-dependencies
+apps/web/.pub-cache/
+apps/web/.pub/
+apps/web/coverage/
+apps/web/build/android/
+apps/web/build/ios/
+apps/web/build/linux/
+apps/web/build/macos/
+apps/web/build/windows/
+apps/web/build/.last_build_id
+apps/web/build/test_cache/
+apps/web/build/unit_test_assets/
+apps/web/build/native_assets/
+apps/web/build/native_hooks/
+apps/web/build/flutter_assets/
+apps/web/build/f537d389bd7fe17e116f8b847863fcdd.cache.dill.track.dill
+apps/web/build/aae2a2943419aa538564fd59b2f19683/
+apps/web/pubspec.lock
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
