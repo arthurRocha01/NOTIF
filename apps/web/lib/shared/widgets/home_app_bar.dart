@@ -81,18 +81,22 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   Widget _buildLogo() {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Icon(LucideIcons.bellRing, color: Colors.white54, size: 14),
-        const SizedBox(width: 7),
-        Text(
-          'notifta',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w300,
-            color: Colors.white,
-            fontSize: 16,
-            letterSpacing: 0.5,
-          ),
+        Text('N',
+            style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                fontSize: 22)),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 3),
+          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 18),
         ),
+        Text('TIF',
+            style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                fontSize: 22)),
       ],
     );
   }

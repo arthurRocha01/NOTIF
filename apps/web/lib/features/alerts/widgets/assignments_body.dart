@@ -6,6 +6,7 @@ import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../screen/alert_details_screen.dart';
+import '../../../core/constants/app_colors.dart';
 
 class AssignmentsBody extends StatefulWidget {
   final List<AssignmentModel> assignments;
@@ -52,9 +53,16 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
           a.status == AssignmentStatus.overdue)
       .toList()
     ..sort((a, b) {
-      // Críticos e atrasados primeiro
-      final aPriority = a.status == AssignmentStatus.overdue ? 0 : a.notificationLevel == AlertLevel.critical ? 1 : 2;
-      final bPriority = b.status == AssignmentStatus.overdue ? 0 : b.notificationLevel == AlertLevel.critical ? 1 : 2;
+      final aPriority = a.status == AssignmentStatus.overdue
+          ? 0
+          : a.notificationLevel == AlertLevel.critical
+              ? 1
+              : 2;
+      final bPriority = b.status == AssignmentStatus.overdue
+          ? 0
+          : b.notificationLevel == AlertLevel.critical
+              ? 1
+              : 2;
       if (aPriority != bPriority) return aPriority.compareTo(bPriority);
       return b.createdAt.compareTo(a.createdAt);
     });
@@ -96,7 +104,8 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
-      color: const Color(0xFF4A6CF7),
+      color: AppColors.primary,
+      strokeWidth: 1.5,
       child: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverToBoxAdapter(child: _buildHeader()),
@@ -127,63 +136,81 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
     final critical = _criticalCount;
 
     return Container(
-      color: const Color(0xFFF1F5F9),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.isSupervisor ? 'Painel de Alertas' : 'Minhas Notificações',
+            widget.isSupervisor ? 'Painel de Alertas' : 'Notificações',
             style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.4,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            widget.isSupervisor
-                ? 'Visão geral de todos os setores'
-                : 'Acompanhe os avisos do seu setor',
-            style: GoogleFonts.inter(
-                fontSize: 13, color: const Color(0xFF94A3B8)),
-          ),
+          const SizedBox(height: 4),
 
-          // ── Banner de bloqueio ──────────────────────────────────────────
-          if (widget.isBlocked) ...[
-            const SizedBox(height: 12),
-            _BlockingBanner(),
-          ],
-
-          // ── Resumo rápido ───────────────────────────────────────────────
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _StatChip(
-                label: 'Total',
-                count: total,
-                color: const Color(0xFF4A6CF7),
-                bg: const Color(0xFFEEF2FF),
-              ),
-              const SizedBox(width: 8),
-              _StatChip(
-                label: 'Pendentes',
-                count: pending,
-                color: const Color(0xFFF59E0B),
-                bg: const Color(0xFFFEF3C7),
-              ),
-              if (critical > 0) ...[
-                const SizedBox(width: 8),
-                _StatChip(
-                  label: 'Críticos',
-                  count: critical,
-                  color: const Color(0xFFDC2626),
-                  bg: const Color(0xFFFEE2E2),
-                  icon: LucideIcons.alertOctagon,
+          // ── Stats inline ──────────────────────────────────────────────────
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.inter(fontSize: 13),
+              children: [
+                TextSpan(
+                  text: '$total',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
+                const TextSpan(
+                  text: ' total',
+                  style: TextStyle(color: AppColors.textTertiary),
+                ),
+                if (pending > 0) ...[
+                  const TextSpan(
+                    text: '  ·  ',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                  TextSpan(
+                    text: '$pending',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: ' pendentes',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                ],
+                if (critical > 0) ...[
+                  const TextSpan(
+                    text: '  ·  ',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                  TextSpan(
+                    text: '$critical',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.critical,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: ' críticos',
+                    style: TextStyle(color: AppColors.textTertiary),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
+
+          // ── Banner de bloqueio ────────────────────────────────────────────
+          if (widget.isBlocked) ...[
+            const SizedBox(height: 16),
+            const _BlockingBanner(),
+          ],
         ],
       ),
     );
@@ -192,7 +219,14 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
   Widget _buildList(List<AssignmentModel> items, {String? emptyLabel}) {
     if (widget.isLoading && widget.assignments.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4A6CF7)),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 1.5,
+          ),
+        ),
       );
     }
 
@@ -201,7 +235,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       itemCount: items.length,
       itemBuilder: (_, i) {
         final a = items[i];
@@ -209,9 +243,8 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
             a.status != AssignmentStatus.acknowledged && a.canAcknowledge;
         return _AssignmentCard(
           assignment: a,
-          onAcknowledge: canAcknowledge
-              ? () => widget.onAcknowledge?.call(a.id)
-              : null,
+          onAcknowledge:
+              canAcknowledge ? () => widget.onAcknowledge?.call(a.id) : null,
         );
       },
     );
@@ -232,25 +265,32 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  double get minExtent => 48;
+  double get minExtent => 44;
   @override
-  double get maxExtent => 48;
+  double get maxExtent => 44;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Colors.white,
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.border, width: 0.5),
+        ),
+      ),
       child: TabBar(
         controller: tabController,
-        indicatorColor: const Color(0xFF4A6CF7),
-        indicatorWeight: 2.5,
-        labelColor: const Color(0xFF4A6CF7),
-        unselectedLabelColor: const Color(0xFF94A3B8),
-        labelStyle:
-            GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle:
-            GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+        indicatorColor: AppColors.primary,
+        indicatorWeight: 1.5,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: AppColors.textPrimary,
+        unselectedLabelColor: AppColors.textTertiary,
+        labelStyle: GoogleFonts.inter(
+            fontSize: 13, fontWeight: FontWeight.w500),
+        unselectedLabelStyle: GoogleFonts.inter(
+            fontSize: 13, fontWeight: FontWeight.w400),
+        dividerColor: Colors.transparent,
         tabs: [
           const Tab(text: 'Todos'),
           Tab(
@@ -259,8 +299,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               children: [
                 const Text('Pendentes'),
                 if (pendingCount > 0) ...[
-                  const SizedBox(width: 6),
-                  _TabBadge(count: pendingCount),
+                  const SizedBox(width: 5),
+                  _TabCount(count: pendingCount, color: AppColors.warning),
                 ],
               ],
             ),
@@ -271,11 +311,8 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
               children: [
                 const Text('Confirmados'),
                 if (doneCount > 0) ...[
-                  const SizedBox(width: 6),
-                  _TabBadge(
-                      count: doneCount,
-                      color: const Color(0xFF10B981),
-                      bg: const Color(0xFFD1FAE5)),
+                  const SizedBox(width: 5),
+                  _TabCount(count: doneCount, color: AppColors.success),
                 ],
               ],
             ),
@@ -290,78 +327,20 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
       old.pendingCount != pendingCount || old.doneCount != doneCount;
 }
 
-class _TabBadge extends StatelessWidget {
+class _TabCount extends StatelessWidget {
   final int count;
   final Color color;
-  final Color bg;
 
-  const _TabBadge({
-    required this.count,
-    this.color = const Color(0xFFF59E0B),
-    this.bg = const Color(0xFFFEF3C7),
-  });
+  const _TabCount({required this.count, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        '$count',
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Stat chip ─────────────────────────────────────────────────────────────────
-
-class _StatChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-  final Color bg;
-  final IconData? icon;
-
-  const _StatChip({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.bg,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 12, color: color),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            '$count $label',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
+    return Text(
+      '$count',
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: color,
       ),
     );
   }
@@ -370,28 +349,30 @@ class _StatChip extends StatelessWidget {
 // ── Blocking banner ───────────────────────────────────────────────────────────
 
 class _BlockingBanner extends StatelessWidget {
+  const _BlockingBanner();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEE2E2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: const Color(0xFFDC2626).withValues(alpha: 0.35)),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          left: BorderSide(color: AppColors.critical, width: 3),
+          top: BorderSide(color: AppColors.border, width: 0.5),
+          right: BorderSide(color: AppColors.border, width: 0.5),
+          bottom: BorderSide(color: AppColors.border, width: 0.5),
+        ),
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(4),
+          bottomRight: Radius.circular(4),
+        ),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDC2626).withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(LucideIcons.shieldOff,
-                color: Color(0xFFDC2626), size: 16),
-          ),
-          const SizedBox(width: 12),
+          const Icon(LucideIcons.shieldOff,
+              color: AppColors.critical, size: 15),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,17 +380,17 @@ class _BlockingBanner extends StatelessWidget {
                 Text(
                   'Ação necessária',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFFDC2626),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.critical,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Você tem alertas críticos pendentes. Confirme a ciência para continuar.',
+                  'Confirme a ciência dos alertas críticos para continuar.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFFB91C1C),
+                    color: AppColors.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -438,14 +419,14 @@ class _AssignmentCard extends ConsumerWidget {
     final isOverdue = status == AssignmentStatus.overdue;
 
     final Color accentColor = isDone
-        ? const Color(0xFF10B981)
+        ? AppColors.success
         : isOverdue
-            ? const Color(0xFFDC2626)
+            ? AppColors.critical
             : level.color;
 
     return GestureDetector(
       onTap: () {
-        if (assignment.status == AssignmentStatus.pending) {
+        if (status == AssignmentStatus.pending) {
           ref.read(alertProvider.notifier).markAsViewed(assignment.id);
         }
         Navigator.of(context).push(MaterialPageRoute(
@@ -453,174 +434,141 @@ class _AssignmentCard extends ConsumerWidget {
         ));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: AppColors.surface,
+          border: Border(
+            left: BorderSide(color: accentColor, width: 3),
+            top: const BorderSide(color: AppColors.border, width: 0.5),
+            right: const BorderSide(color: AppColors.border, width: 0.5),
+            bottom: const BorderSide(color: AppColors.border, width: 0.5),
+          ),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(4),
+            bottomRight: Radius.circular(4),
+          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Barra lateral colorida por nível
-                Container(width: 4, color: accentColor),
-
-                // Conteúdo do card
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Linha superior: ícone + título + chip ───────────
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isDone
-                                    ? const Color(0xFFD1FAE5)
-                                    : level.backgroundColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                isDone ? LucideIcons.checkCircle2 : level.icon,
-                                color: isDone
-                                    ? const Color(0xFF10B981)
-                                    : level.color,
-                                size: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                assignment.notificationTitle ?? 'Notificação',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: isDone
-                                      ? const Color(0xFF94A3B8)
-                                      : const Color(0xFF0F172A),
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            _StatusChip(status: status),
-                          ],
-                        ),
-
-                        // ── Mensagem preview ────────────────────────────────
-                        if (assignment.notificationMessage != null &&
-                            assignment.notificationMessage!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            assignment.notificationMessage!,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: const Color(0xFF64748B),
-                              height: 1.4,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-
-                        // ── Linha inferior: nível + prazo ───────────────────
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: level.backgroundColor,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                level.label,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: level.color,
-                                ),
-                              ),
-                            ),
-                            if (assignment.dueAt != null && !isDone) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                LucideIcons.clock,
-                                size: 11,
-                                color: isOverdue
-                                    ? const Color(0xFFDC2626)
-                                    : const Color(0xFF94A3B8),
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                _formatDue(assignment.dueAt!),
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: isOverdue
-                                      ? FontWeight.w700
-                                      : FontWeight.w400,
-                                  color: isOverdue
-                                      ? const Color(0xFFDC2626)
-                                      : const Color(0xFF94A3B8),
-                                ),
-                              ),
-                            ],
-                            const Spacer(),
-                            Icon(LucideIcons.chevronRight,
-                                size: 14, color: const Color(0xFFCBD5E1)),
-                          ],
-                        ),
-
-                        // ── Botão confirmar ciência ─────────────────────────
-                        if (onAcknowledge != null) ...[
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: onAcknowledge,
-                              icon: const Icon(LucideIcons.checkCircle2,
-                                  size: 15),
-                              label: Text(
-                                'Confirmar ciência',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: accentColor,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Título + status ───────────────────────────────────────────
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      assignment.notificationTitle ?? 'Notificação',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: isDone
+                            ? AppColors.textTertiary
+                            : AppColors.textPrimary,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  _StatusDot(status: status),
+                ],
+              ),
+
+              // ── Mensagem preview ──────────────────────────────────────────
+              if (assignment.notificationMessage != null &&
+                  assignment.notificationMessage!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  assignment.notificationMessage!,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              // ── Footer: nível + prazo ─────────────────────────────────────
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: level.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    level.label,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textTertiary,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  if (assignment.dueAt != null && !isDone) ...[
+                    const SizedBox(width: 10),
+                    Icon(
+                      LucideIcons.clock,
+                      size: 11,
+                      color: isOverdue
+                          ? AppColors.critical
+                          : AppColors.textTertiary,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      _formatDue(assignment.dueAt!),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: isOverdue
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                        color: isOverdue
+                            ? AppColors.critical
+                            : AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  const Icon(LucideIcons.chevronRight,
+                      size: 13, color: AppColors.border),
+                ],
+              ),
+
+              // ── Botão confirmar ciência ───────────────────────────────────
+              if (onAcknowledge != null) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1, thickness: 0.5, color: AppColors.border),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: onAcknowledge,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(LucideIcons.checkCircle2,
+                          size: 13, color: accentColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Confirmar ciência',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: accentColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -636,28 +584,36 @@ class _AssignmentCard extends ConsumerWidget {
   }
 }
 
-// ── Status chip ───────────────────────────────────────────────────────────────
+// ── Status dot ────────────────────────────────────────────────────────────────
 
-class _StatusChip extends StatelessWidget {
+class _StatusDot extends StatelessWidget {
   final AssignmentStatus status;
-  const _StatusChip({required this.status});
+  const _StatusDot({required this.status});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: status.color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status.label,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: status.color,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: status.color,
+            shape: BoxShape.circle,
+          ),
         ),
-      ),
+        const SizedBox(width: 4),
+        Text(
+          status.label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: status.color,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -674,33 +630,23 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              LucideIcons.bellOff,
-              size: 32,
-              color: Color(0xFF4A6CF7),
-            ),
-          ),
+          const Icon(LucideIcons.bellOff,
+              size: 28, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF0F172A),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Puxe para baixo para atualizar',
             style: GoogleFonts.inter(
-              fontSize: 13,
-              color: const Color(0xFF94A3B8),
+              fontSize: 12,
+              color: AppColors.textTertiary,
             ),
           ),
         ],
