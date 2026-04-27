@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class AlertCard extends StatelessWidget {
   final AlertModel alert;
@@ -13,115 +16,155 @@ class AlertCard extends StatelessWidget {
     this.onResolve,
   });
 
+  Color get _accentColor {
+    return switch (alert.level) {
+      AlertLevel.critical => AppColors.critical,
+      AlertLevel.high     => AppColors.warning,
+      AlertLevel.medium   => AppColors.accent,
+      AlertLevel.low      => AppColors.textTertiary,
+    };
+  }
+
+  String get _levelLabel {
+    return switch (alert.level) {
+      AlertLevel.critical => 'CRÍTICO',
+      AlertLevel.high     => 'ALTO',
+      AlertLevel.medium   => 'MÉDIO',
+      AlertLevel.low      => 'BAIXO',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isCritical = alert.level == AlertLevel.critical;
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isCritical
-              ? AppColors.critical
-              : Colors.grey.shade300,
-          width: isCritical ? 2 : 1,
+        color: AppColors.surface,
+        border: Border(
+          left: BorderSide(color: _accentColor, width: 3),
+          top: const BorderSide(color: AppColors.border, width: 0.5),
+          right: const BorderSide(color: AppColors.border, width: 0.5),
+          bottom: const BorderSide(color: AppColors.border, width: 0.5),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(4),
+          bottomRight: Radius.circular(4),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// 🔥 HEADER
-          Row(
-            children: [
-              Icon(
-                isCritical
-                    ? Icons.priority_high
-                    : Icons.notifications,
-                color: isCritical
-                    ? AppColors.critical
-                    : AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text(
-                  alert.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ────────────────────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    alert.title,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                      height: 1.3,
+                    ),
                   ),
                 ),
-              ),
-
-              /// BADGE
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isCritical
-                      ? AppColors.critical.withValues(alpha: 0.1)
-                      : AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  isCritical ? "CRÍTICO" : "NORMAL",
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isCritical
-                        ? AppColors.critical
-                        : AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          /// DESCRIÇÃO
-          Text(
-            alert.message,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.black87,
+                const SizedBox(width: 12),
+                _LevelBadge(label: _levelLabel, color: _accentColor),
+              ],
             ),
-          ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-          /// FOOTER
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 14),
-              const SizedBox(width: 4),
-              Text(
-                "${alert.createdAt.hour}:${alert.createdAt.minute}",
-                style: const TextStyle(fontSize: 12),
+            // ── Mensagem ──────────────────────────────────────────────────
+            Text(
+              alert.message,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 1.5,
               ),
+            ),
 
-              const Spacer(),
+            const SizedBox(height: 12),
 
-              if (onResolve != null)
-                TextButton.icon(
-                  onPressed: onResolve,
-                  icon: const Icon(Icons.check),
-                  label: const Text("Resolver"),
+            // ── Footer ────────────────────────────────────────────────────
+            Row(
+              children: [
+                const Icon(LucideIcons.clock,
+                    size: 12, color: AppColors.textTertiary),
+                const SizedBox(width: 4),
+                Text(
+                  DateFormatter.timeOnly(alert.createdAt),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
-            ],
-          ),
-        ],
+                const Spacer(),
+                if (onResolve != null)
+                  GestureDetector(
+                    onTap: onResolve,
+                    child: Row(
+                      children: [
+                        const Icon(LucideIcons.check,
+                            size: 13, color: AppColors.accent),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Resolver',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+// ── Badge de nível ────────────────────────────────────────────────────────────
+
+class _LevelBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _LevelBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: color,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
     );
   }
 }

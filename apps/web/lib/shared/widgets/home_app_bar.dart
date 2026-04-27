@@ -25,7 +25,8 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(LucideIcons.menu, color: Colors.white),
+        icon: const Icon(LucideIcons.menu,
+            color: Colors.white54, size: 20),
         onPressed: onMenuPressed,
       ),
       title: _buildLogo(),
@@ -36,54 +37,39 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
             MaterialPageRoute(builder: (_) => const ProfileScreen()),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 16),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.white12,
-                  backgroundImage: profile.avatarBytes != null
-                      ? MemoryImage(profile.avatarBytes!)
-                      : null,
-                  child: profile.avatarBytes == null
-                      ? Text(
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : '?',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
-                ),
                 if (user != null) ...[
-                  const SizedBox(width: 8),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         displayName.split(' ').first,
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                       Text(
                         user.roleLabel,
                         style: GoogleFonts.inter(
-                          color: Colors.white54,
-                          fontSize: 11,
+                          color: Colors.white30,
+                          fontSize: 10,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 10),
                 ],
+                _Avatar(
+                  displayName: displayName,
+                  avatarBytes: profile.avatarBytes,
+                ),
               ],
             ),
           ),
@@ -96,20 +82,64 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('N',
-            style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w900, color: Colors.white, fontSize: 22)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 20),
+        const Icon(LucideIcons.bellRing, color: Colors.white54, size: 14),
+        const SizedBox(width: 7),
+        Text(
+          'notifta',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w300,
+            color: Colors.white,
+            fontSize: 16,
+            letterSpacing: 0.5,
+          ),
         ),
-        Text('TIF',
-            style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w900, color: Colors.white, fontSize: 22)),
       ],
     );
   }
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final String displayName;
+  final dynamic avatarBytes;
+
+  const _Avatar({required this.displayName, required this.avatarBytes});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 0.5,
+        ),
+        image: avatarBytes != null
+            ? DecorationImage(
+                image: MemoryImage(avatarBytes!),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: avatarBytes == null
+          ? Center(
+              child: Text(
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 
 class DashboardKpiRow extends StatelessWidget {
   final int totalAssignments;
@@ -26,43 +26,35 @@ class DashboardKpiRow extends StatelessWidget {
               child: _KpiCard(
                 label: 'Total',
                 value: '$totalAssignments',
-                icon: LucideIcons.bellRing,
-                color: const Color(0xFF4A6CF7),
-                bgColor: const Color(0xFFEEF2FF),
+                accentColor: AppColors.accent,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _KpiCard(
                 label: 'Confirmados',
                 value: '$totalAcknowledged',
-                icon: LucideIcons.checkCircle2,
-                color: const Color(0xFF16A34A),
-                bgColor: const Color(0xFFDCFCE7),
+                accentColor: AppColors.success,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
               child: _KpiCard(
                 label: 'Pendentes',
                 value: '$totalPending',
-                icon: LucideIcons.clock,
-                color: const Color(0xFFF59E0B),
-                bgColor: const Color(0xFFFEF3C7),
+                accentColor: AppColors.warning,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _KpiCard(
                 label: 'Críticos',
                 value: '$totalCritical',
-                icon: LucideIcons.alertTriangle,
-                color: const Color(0xFFE53935),
-                bgColor: const Color(0xFFFFEBEE),
+                accentColor: AppColors.critical,
               ),
             ),
           ],
@@ -75,66 +67,52 @@ class DashboardKpiRow extends StatelessWidget {
 class _KpiCard extends StatelessWidget {
   final String label;
   final String value;
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
+  final Color accentColor;
 
   const _KpiCard({
     required this.label,
     required this.value,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surface,
+        border: Border(
+          left: BorderSide(color: accentColor, width: 2),
+          top: const BorderSide(color: AppColors.border, width: 0.5),
+          right: const BorderSide(color: AppColors.border, width: 0.5),
+          bottom: const BorderSide(color: AppColors.border, width: 0.5),
+        ),
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(4),
+          bottomRight: Radius.circular(4),
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(10),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 30,
+              fontWeight: FontWeight.w300,
+              color: AppColors.textPrimary,
+              height: 1,
+              letterSpacing: -1,
             ),
-            child: Icon(icon, size: 18, color: color),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 6),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textTertiary,
+              letterSpacing: 1.2,
             ),
           ),
         ],
