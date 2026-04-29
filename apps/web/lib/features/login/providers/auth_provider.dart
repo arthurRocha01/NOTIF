@@ -73,8 +73,9 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       await _storage.saveEmail(email);
       state = await _resolveUser(raw);
       _syncDeliveriesSilently(state!.id);
-      _fcmService.requestPermission().catchError((_) {});
-      _syncFcmTokenSilently(state!);
+      _fcmService.requestPermission()
+          .then((_) => _syncFcmTokenSilently(state!))
+          .catchError((_) {});
       _startTokenRefreshListener();
       return true;
     } on ApiException catch (e) {
@@ -99,8 +100,9 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       final raw = await _service.fetchUser(email);
       state = await _resolveUser(raw);
       _syncDeliveriesSilently(state!.id);
-      _fcmService.requestPermission().catchError((_) {});
-      _syncFcmTokenSilently(state!);
+      _fcmService.requestPermission()
+          .then((_) => _syncFcmTokenSilently(state!))
+          .catchError((_) {});
       _startTokenRefreshListener();
     } on ApiException catch (e) {
       ApiClient.clearToken();
