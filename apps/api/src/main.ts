@@ -6,6 +6,7 @@ import { ValidationPipe } from '@nestjs/common';
 
 const PORT = 5050;
 let cachedApp: any;
+let initialized = false;
 
 async function createApp() {
   if (cachedApp) return cachedApp;
@@ -39,13 +40,17 @@ async function createApp() {
 // Vercel serverless handler
 export default async function handler(req: any, res: any) {
   const app = await createApp();
-  await app.init();
+  if (!initialized) {
+    await app.init();
+    initialized = true;
+  }
   app.getHttpAdapter().getInstance()(req, res);
 }
 
 // Local dev
 if (process.env.NODE_ENV !== 'production') {
   createApp().then(async (app) => {
+    await app.init();
     await app.listen(PORT);
     console.log(`API rodando em http://localhost:${PORT}/api`);
     console.log(`Swagger em http://localhost:${PORT}/swagger`);

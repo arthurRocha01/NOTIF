@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getMessaging, type BatchResponse } from 'firebase-admin/messaging';
+import * as path from 'path';
 
 @Injectable()
 export class FcmService {
   constructor() {
     if (getApps().length === 0) {
-      initializeApp({
-        credential: applicationDefault(),
-      });
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const serviceAccount = require(
+        path.resolve(__dirname, '../../../../notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json'),
+      );
+      initializeApp({ credential: cert(serviceAccount) });
     }
   }
 
