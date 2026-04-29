@@ -4,13 +4,9 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
-let cachedApp: any;
+const PORT = 5050;
 
-async function createApp() {
-  if (cachedApp) return cachedApp;
-
-  const app = await NestFactory.create(AppModule);
-
+function applyConfig(app: any) {
   app.setGlobalPrefix('api');
   app.enableCors();
   app.useGlobalPipes(
@@ -29,7 +25,23 @@ async function createApp() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
+}
 
+// Local dev
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  applyConfig(app);
+  await app.listen(PORT);
+  console.log(`API rodando em http://localhost:${PORT}/api`);
+}
+
+// Vercel serverless
+let cachedApp: any;
+
+async function createApp() {
+  if (cachedApp) return cachedApp;
+  const app = await NestFactory.create(AppModule);
+  applyConfig(app);
   await app.init();
   cachedApp = app;
   return app;
@@ -38,4 +50,8 @@ async function createApp() {
 export default async function handler(req: any, res: any) {
   const app = await createApp();
   app.getHttpAdapter().getInstance()(req, res);
+}
+
+if (require.main === module) {
+  bootstrap();
 }

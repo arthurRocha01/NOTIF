@@ -3,14 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 
 class DashboardKpiRow extends StatelessWidget {
-  final int totalAssignments;
+  final int totalNotifications;
   final int totalAcknowledged;
   final int totalPending;
   final int totalCritical;
 
   const DashboardKpiRow({
     super.key,
-    required this.totalAssignments,
+    required this.totalNotifications,
     required this.totalAcknowledged,
     required this.totalPending,
     required this.totalCritical,
@@ -25,7 +25,7 @@ class DashboardKpiRow extends StatelessWidget {
             Expanded(
               child: _KpiCard(
                 label: 'Total',
-                value: '$totalAssignments',
+                value: '$totalNotifications',
                 accentColor: AppColors.accent,
               ),
             ),
