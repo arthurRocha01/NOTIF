@@ -6,6 +6,7 @@ import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
 import 'package:notif_app/features/alerts/modals/create_message_modal.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
 import 'package:notif_app/features/alerts/widgets/assignments_body.dart';
+import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
@@ -65,6 +66,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
   Widget build(BuildContext context) {
     final state       = ref.watch(alertProvider);
     final sectorState = ref.watch(sectorProvider);
+    final user        = ref.watch(authProvider);
 
     ref.listen<String?>(
       alertProvider.select((s) => s.errorMessage),
@@ -86,7 +88,13 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
 
     final myAssignments = state.assignments;
 
-    final criticalCount = state.notifications
+    final myNotifications = user?.isSupervisor == true
+        ? state.notifications
+            .where((n) => n.targetSectorId == user!.sectorId)
+            .toList()
+        : state.notifications;
+
+    final criticalCount = myNotifications
         .where((n) => n.level == AlertLevel.critical)
         .length;
 
@@ -140,7 +148,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
               controller: _tabController,
               children: [
                 _buildListContent(
-                  state.notifications,
+                  myNotifications,
                   state.isLoadingNotifications,
                   sectorState,
                 ),

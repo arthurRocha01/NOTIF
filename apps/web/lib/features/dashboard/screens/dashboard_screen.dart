@@ -117,10 +117,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: DashboardKpiRow(
-                  totalAssignments:  stats.totalAssignments,
-                  totalAcknowledged: stats.totalAcknowledged,
-                  totalPending:      stats.totalPending,
-                  totalCritical:     stats.totalCritical,
+                  totalNotifications: stats.totalNotifications,
+                  totalAcknowledged:  stats.totalAcknowledged,
+                  totalPending:       stats.totalPending,
+                  totalCritical:      stats.totalCritical,
                 ),
               ),
             ),

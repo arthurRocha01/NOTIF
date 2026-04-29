@@ -13,8 +13,10 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static String get baseUrl =>
-      kIsWeb ? '${Uri.base.origin}/api' : 'http://localhost:5050/api';
+  static String get baseUrl {
+    if (kIsWeb && !kDebugMode) return '${Uri.base.origin}/api';
+    return 'http://localhost:5050/api';
+  }
   static String? _authToken;
   static void Function()? onUnauthorized;
 
