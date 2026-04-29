@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   OverlayEntry? _bannerEntry;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -50,7 +52,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         alert.markAllPendingAsViewed();
       }
       _checkAndShowBlockScreen();
+      _startPolling();
     });
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      final notifier = ref.read(alertProvider.notifier);
+      notifier.syncDeliveries();
+      notifier.loadAssignments();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   void _checkAndShowBlockScreen() {
