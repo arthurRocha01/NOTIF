@@ -39,8 +39,7 @@ export class FcmService {
 
     const message = {
       tokens,
-      notification: { title, body },
-      data,
+      data: { ...data, title, message: body },
       android: {
         priority: (isCritical ? 'high' : 'normal') as 'high' | 'normal',
         notification: {
@@ -89,8 +88,7 @@ export class FcmService {
 
     const message = {
       token,
-      notification: { title, body },
-      data,
+      data: { ...data, title, message: body },
       android: {
         priority: (isCritical ? 'high' : 'normal') as 'high' | 'normal',
         notification: {
