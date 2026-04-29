@@ -1,36 +1,36 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, applicationDefault } from 'firebase-admin/app';
 import { getMessaging, type BatchResponse } from 'firebase-admin/messaging';
-import * as fs from 'fs';
 
 @Injectable()
 export class FcmService {
   private readonly logger = new Logger(FcmService.name);
 
   constructor() {
-    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    this.logger.log(`[init] GOOGLE_APPLICATION_CREDENTIALS="${credPath ?? '(não definida)'}"`);
-
-    if (credPath) {
-      const exists = fs.existsSync(credPath);
-      this.logger.log(`[init] Arquivo de credencial existe no disco: ${exists}`);
-      if (!exists) {
-        this.logger.error(`[init] CRÍTICO: arquivo não encontrado em "${credPath}" — FCM vai falhar`);
-      }
-    } else {
-      this.logger.error('[init] CRÍTICO: GOOGLE_APPLICATION_CREDENTIALS não está definida — applicationDefault() vai falhar');
+    if (getApps().length > 0) {
+      this.logger.log('[init] Firebase Admin SDK já inicializado, reutilizando instância');
+      return;
     }
 
-    if (getApps().length === 0) {
-      this.logger.log('[init] Inicializando Firebase Admin SDK via applicationDefault()...');
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+    if (serviceAccountJson) {
+      this.logger.log('[init] Inicializando Firebase via FIREBASE_SERVICE_ACCOUNT (env var)...');
       try {
-        initializeApp({ credential: applicationDefault() });
-        this.logger.log('[init] Firebase Admin SDK inicializado com sucesso');
+        const serviceAccount = JSON.parse(serviceAccountJson);
+        initializeApp({ credential: cert(serviceAccount) });
+        this.logger.log('[init] Firebase Admin SDK inicializado com sucesso via cert()');
       } catch (error: any) {
-        this.logger.error(`[init] Falha ao inicializar Firebase Admin SDK | message: ${error?.message}`, error);
+        this.logger.error(`[init] Falha ao parsear FIREBASE_SERVICE_ACCOUNT | message: ${error?.message}`, error);
       }
     } else {
-      this.logger.log('[init] Firebase Admin SDK já inicializado, reutilizando instância');
+      this.logger.warn('[init] FIREBASE_SERVICE_ACCOUNT não definida, tentando applicationDefault()...');
+      try {
+        initializeApp({ credential: applicationDefault() });
+        this.logger.log('[init] Firebase Admin SDK inicializado via applicationDefault()');
+      } catch (error: any) {
+        this.logger.error(`[init] Falha no applicationDefault() | message: ${error?.message}`, error);
+      }
     }
   }
 
