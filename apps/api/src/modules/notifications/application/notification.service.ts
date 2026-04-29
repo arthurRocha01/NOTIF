@@ -79,6 +79,16 @@ export class NotificationService {
   ) {
     const isCritical = level === 'CRITICAL';
 
+    console.log(`[FCM] Enviando notificação | level=${level} | notificationId=${notificationId} | destinatários=${users.length}`);
+
+    const usersWithToken = users.filter((u) => Boolean(u.getFcmToken()));
+    const usersWithoutToken = users.filter((u) => !u.getFcmToken());
+
+    console.log(`[FCM] Tokens disponíveis: ${usersWithToken.length} | Sem token: ${usersWithoutToken.length}`);
+    if (usersWithoutToken.length > 0) {
+      console.log(`[FCM] Usuários sem token: ${usersWithoutToken.map((u) => u.getId()).join(', ')}`);
+    }
+
     if (isCritical) {
       const assignmentByUserId = new Map(assignments.map((a) => [a.getUserId(), a]));
 
@@ -86,18 +96,25 @@ export class NotificationService {
         await Promise.all(
           users.map(async (user) => {
             const token = user.getFcmToken();
-            if (!token) return null;
+            if (!token) {
+              console.log(`[FCM] Usuário ${user.getId()} sem token — pulando`);
+              return null;
+            }
             const assignment = assignmentByUserId.get(user.getId());
-            return this.fcmService.sendToToken(token, title, message, {
+            console.log(`[FCM] Enviando individual para userId=${user.getId()} assignmentId=${assignment?.getId()}`);
+            const failed = await this.fcmService.sendToToken(token, title, message, {
               level: level ?? '',
               notificationId,
               assignmentId: assignment?.getId() ?? '',
             }, level);
+            if (failed) console.log(`[FCM] Token inválido para userId=${user.getId()}`);
+            return failed;
           }),
         )
       ).filter((t): t is string => t !== null);
 
       if (failedTokens.length > 0) {
+        console.log(`[FCM] Removendo ${failedTokens.length} token(s) inválido(s)`);
         await this.usersService.removeTokensByUser(failedTokens);
       }
       return;
@@ -107,7 +124,10 @@ export class NotificationService {
       .map((user) => user.getFcmToken())
       .filter((token): token is string => Boolean(token));
 
-    if (tokens.length === 0) return;
+    if (tokens.length === 0) {
+      console.log('[FCM] Nenhum token disponível — envio cancelado');
+      return;
+    }
 
     const failedTokens = await this.fcmService.sendMulticast(
       tokens,
@@ -118,6 +138,7 @@ export class NotificationService {
     );
 
     if (failedTokens?.length > 0) {
+      console.log(`[FCM] Removendo ${failedTokens.length} token(s) inválido(s) após multicast`);
       await this.usersService.removeTokensByUser(failedTokens);
     }
   }

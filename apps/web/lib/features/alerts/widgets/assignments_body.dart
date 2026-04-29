@@ -477,7 +477,8 @@ class _AssignmentCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        if (status == AssignmentStatus.pending) {
+        if (status == AssignmentStatus.pending ||
+            status == AssignmentStatus.viewed) {
           ref.read(alertProvider.notifier).markAsViewed(assignment.id);
         }
         Navigator.of(context).push(MaterialPageRoute(
