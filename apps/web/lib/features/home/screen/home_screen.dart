@@ -33,12 +33,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   OverlayEntry? _bannerEntry;
   Timer? _pollingTimer;
+  final _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(feedProvider).loadPosts());
     _initNotificationHandlers();
+    _audioPlayer.setVolume(0).then((_) =>
+        _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
@@ -67,6 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -99,6 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);
     } else {
+      _playAlertSound();
       _showBanner(message);
       NotificationService().showLocalNotification(
         title: message.notification?.title ?? message.data['title'] ?? 'Nova notificação',
@@ -175,11 +180,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _playAlertSound() {
-    try {
-      AudioPlayer()
-          .play(AssetSource('sounds/notice.notif.wav'))
-          .catchError((_) {});
-    } catch (_) {}
+    _audioPlayer.setVolume(1).then((_) =>
+        _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
   }
 
   // Mapeia o tap na nav bar → pageIndex (0=Feed, 1=Dashboard, 2=Alerts)
