@@ -89,7 +89,9 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     final myAssignments = state.assignments;
 
     final myNotifications = user?.isSupervisor == true
-        ? state.notifications.where((n) => n.authorId == user!.id).toList()
+        ? state.notifications
+            .where((n) => n.targetSectorId == user!.sectorId)
+            .toList()
         : state.notifications;
 
     final criticalCount = myNotifications
