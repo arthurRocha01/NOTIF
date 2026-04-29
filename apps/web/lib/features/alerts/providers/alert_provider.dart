@@ -124,11 +124,17 @@ class AlertNotifier extends StateNotifier<AlertState> {
       await _service.markAsViewed(assignmentId);
       final now = DateTime.now();
       state = state.copyWith(
-        assignments: state.assignments
-            .map((a) => a.id == assignmentId
-                ? a.copyWith(status: AssignmentStatus.viewed, viewedAt: now)
-                : a)
-            .toList(),
+        assignments: state.assignments.map((a) {
+          if (a.id != assignmentId) return a;
+          final autoAck = !(a.requiresAcknowledgment ?? false) && !a.isCritical;
+          return autoAck
+              ? a.copyWith(
+                  status: AssignmentStatus.acknowledged,
+                  viewedAt: now,
+                  acknowledgedAt: now,
+                )
+              : a.copyWith(status: AssignmentStatus.viewed, viewedAt: now);
+        }).toList(),
       );
     } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
