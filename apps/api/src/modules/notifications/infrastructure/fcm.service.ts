@@ -7,29 +7,21 @@ export class FcmService {
   private readonly logger = new Logger(FcmService.name);
 
   constructor() {
-    if (getApps().length > 0) {
-      this.logger.log('[init] Firebase Admin SDK já inicializado, reutilizando instância');
-      return;
-    }
+    if (getApps().length > 0) return;
 
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
     if (serviceAccountJson) {
-      this.logger.log('[init] Inicializando Firebase via FIREBASE_SERVICE_ACCOUNT (env var)...');
       try {
-        const serviceAccount = JSON.parse(serviceAccountJson);
-        initializeApp({ credential: cert(serviceAccount) });
-        this.logger.log('[init] Firebase Admin SDK inicializado com sucesso via cert()');
+        initializeApp({ credential: cert(JSON.parse(serviceAccountJson)) });
       } catch (error: any) {
-        this.logger.error(`[init] Falha ao parsear FIREBASE_SERVICE_ACCOUNT | message: ${error?.message}`, error);
+        this.logger.error(`[init] Falha ao inicializar via FIREBASE_SERVICE_ACCOUNT | ${error?.message}`);
       }
     } else {
-      this.logger.warn('[init] FIREBASE_SERVICE_ACCOUNT não definida, tentando applicationDefault()...');
       try {
         initializeApp({ credential: applicationDefault() });
-        this.logger.log('[init] Firebase Admin SDK inicializado via applicationDefault()');
       } catch (error: any) {
-        this.logger.error(`[init] Falha no applicationDefault() | message: ${error?.message}`, error);
+        this.logger.error(`[init] Falha no applicationDefault() | ${error?.message}`);
       }
     }
   }
@@ -43,14 +35,7 @@ export class FcmService {
   ): Promise<string[]> {
     const isCritical = level === 'CRITICAL';
 
-    this.logger.log(
-      `[sendMulticast] Iniciando | tokens: ${tokens.length} | level: ${level ?? 'N/A'} | title: "${title}"`,
-    );
-
-    if (tokens.length === 0) {
-      this.logger.warn('[sendMulticast] Nenhum token fornecido, envio abortado');
-      return [];
-    }
+    if (tokens.length === 0) return [];
 
     const message = {
       tokens,
@@ -74,18 +59,13 @@ export class FcmService {
     };
 
     try {
-      this.logger.log('[sendMulticast] Chamando sendEachForMulticast...');
       const response = await getMessaging().sendEachForMulticast(message);
-
-      this.logger.log(
-        `[sendMulticast] Concluído | sucessos: ${response.successCount} | falhas: ${response.failureCount} | total: ${tokens.length}`,
-      );
 
       if (response.failureCount > 0) {
         response.responses.forEach((res, idx) => {
           if (!res.success) {
             this.logger.warn(
-              `[sendMulticast] Falha token[${idx}] | code: ${res.error?.code} | message: ${res.error?.message} | token: ...${tokens[idx].slice(-8)}`,
+              `[sendMulticast] Falha token[${idx}] | code: ${res.error?.code} | message: ${res.error?.message}`,
             );
           }
         });
@@ -93,10 +73,7 @@ export class FcmService {
 
       return this.retrieveFailedTokens(response, tokens);
     } catch (error: any) {
-      this.logger.error(
-        `[sendMulticast] Erro crítico | code: ${error?.code} | message: ${error?.message}`,
-        error,
-      );
+      this.logger.error(`[sendMulticast] Erro crítico | code: ${error?.code} | message: ${error?.message}`);
       return [];
     }
   }
@@ -109,11 +86,6 @@ export class FcmService {
     level?: string,
   ): Promise<string | null> {
     const isCritical = level === 'CRITICAL';
-    const shortToken = `...${token.slice(-8)}`;
-
-    this.logger.log(
-      `[sendToToken] Iniciando | level: ${level ?? 'N/A'} | title: "${title}" | token: ${shortToken}`,
-    );
 
     const message = {
       token,
@@ -137,24 +109,16 @@ export class FcmService {
     };
 
     try {
-      this.logger.log(`[sendToToken] Chamando Firebase send | token: ${shortToken}`);
       await getMessaging().send(message);
-      this.logger.log(`[sendToToken] Entregue com sucesso | token: ${shortToken}`);
       return null;
     } catch (error: any) {
       const invalidCodes = [
         'messaging/invalid-registration-token',
         'messaging/registration-token-not-registered',
       ];
-      if (invalidCodes.includes(error?.code)) {
-        this.logger.warn(
-          `[sendToToken] Token inválido/não registrado | code: ${error.code} | token: ${shortToken}`,
-        );
-        return token;
-      }
+      if (invalidCodes.includes(error?.code)) return token;
       this.logger.error(
-        `[sendToToken] Erro inesperado | code: ${error?.code} | message: ${error?.message} | token: ${shortToken}`,
-        error,
+        `[sendToToken] Erro inesperado | code: ${error?.code} | message: ${error?.message} | token: ...${token.slice(-8)}`,
       );
       return null;
     }
