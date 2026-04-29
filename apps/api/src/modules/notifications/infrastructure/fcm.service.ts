@@ -2,15 +2,26 @@ import { Injectable } from '@nestjs/common';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getMessaging, type BatchResponse } from 'firebase-admin/messaging';
 import * as path from 'path';
+import * as fs from 'fs';
+
+const SA_FILENAME = 'notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json';
+
+function resolveServiceAccountPath(): string {
+  const candidates = [
+    path.resolve(__dirname, SA_FILENAME),                        // Vercel bundle
+    path.resolve(__dirname, '../../../../../', SA_FILENAME),     // local dist/
+  ];
+  const found = candidates.find((p) => fs.existsSync(p));
+  if (!found) throw new Error(`Firebase service account não encontrado. Tentativas: ${candidates.join(', ')}`);
+  return found;
+}
 
 @Injectable()
 export class FcmService {
   constructor() {
     if (getApps().length === 0) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const serviceAccount = require(
-        path.resolve(__dirname, '../../../../notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json'),
-      );
+      const serviceAccount = require(resolveServiceAccountPath());
       initializeApp({ credential: cert(serviceAccount) });
     }
   }
