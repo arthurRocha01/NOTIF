@@ -50,10 +50,6 @@ export class AssignmentsInteractionService {
       throw new ConflictException('Notificação já foi confirmada');
     }
 
-    if (assignment.getStatus() === AssignmentStatus.VIEWED) {
-      throw new ConflictException('Notificação já foi visualizada');
-    }
-
     assignment.markAsViewed();
 
     await this.assignmentRepo.update(assignment);

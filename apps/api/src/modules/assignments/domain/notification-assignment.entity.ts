@@ -160,8 +160,15 @@ export class NotificationAssignment {
 
     this.viewedAt = new Date();
 
-    if (this.status !== AssignmentStatus.OVERDUE) {
+    const isOverdue = this.status === AssignmentStatus.OVERDUE;
+    if (!isOverdue) {
       this.status = AssignmentStatus.VIEWED;
+    }
+
+    // Notificações sem exigência de confirmação são auto-confirmadas ao serem vistas
+    const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
+    if (!isOverdue && !this.notificationRequiresAcknowledgment && !isCritical) {
+      this.markAsRecognized();
     }
   }
 
