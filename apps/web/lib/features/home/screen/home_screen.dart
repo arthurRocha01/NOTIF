@@ -98,12 +98,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _checkAndShowBlockScreen() {
     if (!mounted) return;
     if (ref.read(alertProvider).isBlocked) {
+      _startCriticalLoop();
       Navigator.of(context).push(
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (_) => const CriticalBlockScreen(),
         ),
       );
+    }
+  }
+
+  void _startCriticalLoop() {
+    if (kIsWeb) {
+      final audio = _webAudio;
+      if (audio == null) return;
+      audio.loop = true;
+      audio.currentTime = 0;
+      audio.volume = 1;
+      audio.play().catchError((_) {});
+    } else {
+      _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      _audioPlayer.setVolume(1).then((_) =>
+          _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
+    }
+  }
+
+  void _stopCriticalLoop() {
+    if (kIsWeb) {
+      final audio = _webAudio;
+      if (audio == null) return;
+      audio.loop = false;
+      audio.pause();
+      audio.currentTime = 0;
+    } else {
+      _audioPlayer.stop();
+      _audioPlayer.setReleaseMode(ReleaseMode.release);
     }
   }
 
@@ -122,8 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
-      _playAlertSound();
-      // CriticalBlockScreen é acionado pelo listener isBlocked após loadAssignments()
+      // Loop iniciado pelo listener isBlocked após loadAssignments() completar.
     } else {
       _playAlertSound();
       _showBanner(message);
@@ -203,12 +231,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (kIsWeb) {
       final audio = _webAudio;
       if (audio != null) {
+        audio.loop = false;
         audio.currentTime = 0;
         audio.volume = 1;
         audio.play().catchError((_) {});
       }
       return;
     }
+    _audioPlayer.setReleaseMode(ReleaseMode.release);
     _audioPlayer.setVolume(1).then((_) =>
         _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
   }
@@ -260,6 +290,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (wasBlocked, isBlocked) {
         if (isBlocked && !(wasBlocked ?? false)) {
           _checkAndShowBlockScreen();
+        } else if (!isBlocked && (wasBlocked ?? false)) {
+          _stopCriticalLoop();
         }
       },
     );
