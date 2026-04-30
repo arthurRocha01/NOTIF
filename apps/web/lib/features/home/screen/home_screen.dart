@@ -122,7 +122,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level == AlertLevel.critical) {
-      _showCriticalOverlay(message);
+      _playAlertSound();
+      // CriticalBlockScreen é acionado pelo listener isBlocked após loadAssignments()
     } else {
       _playAlertSound();
       _showBanner(message);
@@ -139,9 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!mounted) return;
     ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
-    if (level == AlertLevel.critical) {
-      _showCriticalOverlay(message);
-    } else {
+    if (level != AlertLevel.critical) {
       ref.read(feedProvider).changePage(2);
     }
   }

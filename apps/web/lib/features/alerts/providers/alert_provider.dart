@@ -144,20 +144,25 @@ class AlertNotifier extends StateNotifier<AlertState> {
   Future<void> acknowledge(String assignmentId) async {
     try {
       await _service.acknowledge(assignmentId);
-      final now = DateTime.now();
-      state = state.copyWith(
-        assignments: state.assignments
-            .map((a) => a.id == assignmentId
-                ? a.copyWith(
-                    status: AssignmentStatus.acknowledged,
-                    acknowledgedAt: now,
-                  )
-                : a)
-            .toList(),
-      );
     } on ApiException catch (e) {
+      // 409 = já confirmado — estado local já é o correto, ignora
+      if (e.statusCode == 409) return;
       state = state.copyWith(errorMessage: e.message);
-    } catch (_) {}
+      return;
+    } catch (_) {
+      return;
+    }
+    final now = DateTime.now();
+    state = state.copyWith(
+      assignments: state.assignments
+          .map((a) => a.id == assignmentId
+              ? a.copyWith(
+                  status: AssignmentStatus.acknowledged,
+                  acknowledgedAt: now,
+                )
+              : a)
+          .toList(),
+    );
   }
 
   Future<void> loadAllAssignments() async {
