@@ -36,12 +36,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   OverlayEntry? _bannerEntry;
   Timer? _pollingTimer;
   final _audioPlayer = AudioPlayer();
+  // Elemento criado uma vez e desbloqueado no primeiro gesto — Chrome HTTPS
+  // bloqueia play() em elementos novos sem histórico de interação.
+  final html.AudioElement? _webAudio = kIsWeb
+      ? (html.AudioElement('assets/assets/sounds/notice.notif.wav')..load())
+      : null;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(feedProvider).loadPosts());
     _initNotificationHandlers();
+    if (kIsWeb) {
+      html.window.addEventListener('pointerdown', _unlockWebAudio);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
@@ -67,9 +75,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _unlockWebAudio(_) {
+    html.window.removeEventListener('pointerdown', _unlockWebAudio);
+    final audio = _webAudio;
+    if (audio == null) return;
+    audio.volume = 0;
+    audio.play().catchError((_) {});
+    audio.onEnded.first.then((_) {
+      audio.volume = 1;
+      audio.currentTime = 0;
+    });
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    if (kIsWeb) html.window.removeEventListener('pointerdown', _unlockWebAudio);
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -181,8 +202,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _playAlertSound() {
     if (kIsWeb) {
-      // HTML5 Audio é mais confiável no web — não depende de AudioContext.
-      html.AudioElement('assets/assets/sounds/notice.notif.wav').play();
+      final audio = _webAudio;
+      if (audio != null) {
+        audio.currentTime = 0;
+        audio.volume = 1;
+        audio.play().catchError((_) {});
+      }
       return;
     }
     _audioPlayer.setVolume(1).then((_) =>
