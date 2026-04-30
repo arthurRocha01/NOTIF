@@ -61,9 +61,9 @@ class NotificationService {
     if (kIsWeb) {
       FirebaseMessaging.onMessage.listen((message) {
         final n = message.notification;
-        if (n != null) {
-          showBrowserNotification(n.title ?? 'Nova notificação', n.body);
-        }
+        final title = n?.title ?? message.data['title'] as String? ?? 'Nova notificação';
+        final body = n?.body ?? message.data['message'] as String?;
+        showBrowserNotification(title, body);
         onForegroundMessage?.call(message);
       });
       return;
