@@ -127,7 +127,9 @@ final dashboardProvider = Provider<DashboardData>((ref) {
   final sectorNotifications = applyPeriod(
     supervisorSectorId != null
         ? allNotifications
-            .where((n) => n.targetSectorId == supervisorSectorId)
+            .where((n) =>
+                n.targetSectorId == supervisorSectorId ||
+                n.targetSectorId == null)
             .toList()
         : allNotifications,
   );
