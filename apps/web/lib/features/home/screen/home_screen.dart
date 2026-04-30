@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:html' as html show window;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,8 +42,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     Future.microtask(() => ref.read(feedProvider).loadPosts());
     _initNotificationHandlers();
-    _audioPlayer.setVolume(0).then((_) =>
-        _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
+    // Chrome HTTPS suspende o AudioContext até o primeiro gesto do usuário.
+    // O unlock precisa acontecer dentro de um event handler, não no initState.
+    if (kIsWeb) {
+      html.window.addEventListener('pointerdown', _unlockAudio);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
       final sector = ref.read(sectorProvider.notifier);
@@ -67,9 +72,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _unlockAudio(_) {
+    html.window.removeEventListener('pointerdown', _unlockAudio);
+    _audioPlayer
+        .setVolume(0)
+        .then((_) => _audioPlayer.play(AssetSource('sounds/notice.notif.wav')))
+        .catchError((_) {});
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    if (kIsWeb) html.window.removeEventListener('pointerdown', _unlockAudio);
     _audioPlayer.dispose();
     super.dispose();
   }
