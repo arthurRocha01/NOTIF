@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
-
-// ── Header ────────────────────────────────────────────────────────────────────
+import 'package:notif_app/shared/widgets/notif_logo.dart';
 
 class AuthHeader extends StatelessWidget {
   const AuthHeader({super.key});
@@ -24,7 +23,6 @@ class AuthHeader extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Círculo decorativo sutil
           Positioned(
             top: -30,
             right: -30,
@@ -49,41 +47,11 @@ class AuthHeader extends StatelessWidget {
               ),
             ),
           ),
-          // Logo centralizado
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'N',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        fontSize: 30,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
-                        LucideIcons.bellRing,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    Text(
-                      'TIF',
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        fontSize: 30,
-                      ),
-                    ),
-                  ],
-                ),
+                const NotifLogo(size: 30),
                 const SizedBox(height: 6),
                 Container(
                   width: 32,
@@ -101,8 +69,6 @@ class AuthHeader extends StatelessWidget {
     );
   }
 }
-
-// ── Input field ───────────────────────────────────────────────────────────────
 
 class CustomInputField extends StatefulWidget {
   final IconData icon;
@@ -212,8 +178,6 @@ class _CustomInputFieldState extends State<CustomInputField> {
     );
   }
 }
-
-// ── Botão principal ───────────────────────────────────────────────────────────
 
 class PrimaryButton extends StatelessWidget {
   final String text;
