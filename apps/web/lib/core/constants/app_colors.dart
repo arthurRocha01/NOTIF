@@ -38,4 +38,9 @@ abstract class AppColors {
   static const Color shadowLight = Color(0x0A000000);
   static const Color shadowMedium = Color(0x14000000);
   static const Color shadowDark = Color(0x1F000000);
+
+  // Dark surfaces
+  static const Color darkNavy = Color(0xFF0F172A);
+  static const Color navSurface = Color(0xFF0D1B2A);
+  static const Color backgroundAlt = Color(0xFFF1F5F9);
 }

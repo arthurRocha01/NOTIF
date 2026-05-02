@@ -14,8 +14,6 @@ class AlertLevelChip extends StatelessWidget {
   Widget build(BuildContext context) => StatusBadge(
         label: level.label,
         color: level.color,
-        backgroundColor: level.backgroundColor,
-        icon: level.icon,
       );
 }
 

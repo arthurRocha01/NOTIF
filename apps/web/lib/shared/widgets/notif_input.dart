@@ -72,7 +72,7 @@ class NotifInput extends StatelessWidget {
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
               borderSide: const BorderSide(
-                color: Colors.red,
+                color: AppColors.error,
                 width: 1.2,
               ),
             ),

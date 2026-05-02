@@ -9,7 +9,7 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge({
     super.key,
     required this.label,
-    required this.color, required Color backgroundColor, required IconData icon,
+    required this.color,
   });
 
   @override

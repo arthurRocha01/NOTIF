@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 class EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
   final String message;
-  final String? subtitle;
 
   const EmptyState({
     super.key,
+    required this.icon,
+    required this.title,
     required this.message,
-    this.subtitle, required IconData icon, required String title,
   });
 
   @override
@@ -16,10 +18,10 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.inbox_outlined, size: 40),
+          Icon(icon, size: 40),
           const SizedBox(height: 10),
+          Text(title),
           Text(message),
-          if (subtitle != null) Text(subtitle!),
         ],
       ),
     );

@@ -1,5 +1,3 @@
-import 'package:file_picker/file_picker.dart';
-
 enum UserRole { supervisor, employee, admin }
 
 class UserModel {
@@ -9,7 +7,6 @@ class UserModel {
   final String sectorId;
   final String sectorName;
   final UserRole role;
-  final PlatformFile? avatar;
   final String? fcmToken;
 
   const UserModel({
@@ -19,7 +16,6 @@ class UserModel {
     required this.sectorId,
     this.sectorName = '',
     required this.role,
-    this.avatar,
     this.fcmToken,
   });
 
@@ -43,7 +39,6 @@ class UserModel {
     String? sectorId,
     String? sectorName,
     UserRole? role,
-    PlatformFile? avatar,
     String? fcmToken,
   }) {
     return UserModel(
@@ -53,7 +48,6 @@ class UserModel {
       sectorId: sectorId ?? this.sectorId,
       sectorName: sectorName ?? this.sectorName,
       role: role ?? this.role,
-      avatar: avatar ?? this.avatar,
       fcmToken: fcmToken ?? this.fcmToken,
     );
   }

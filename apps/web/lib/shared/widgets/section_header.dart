@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 /// Cabeçalho reutilizável para seções da UI.
 /// Exemplo: "Alertas ativos"
@@ -32,7 +33,7 @@ class SectionHeader extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: const TextStyle(color: Colors.grey),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 )
             ],
           ),

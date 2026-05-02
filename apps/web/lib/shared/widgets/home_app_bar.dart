@@ -1,10 +1,13 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/screen/profile_screen.dart';
+import 'package:notif_app/shared/widgets/notif_logo.dart';
 
 class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback onMenuPressed;
@@ -21,15 +24,14 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
         : (user?.name ?? '');
 
     return AppBar(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: AppColors.darkNavy,
       elevation: 0,
       centerTitle: true,
       leading: IconButton(
-        icon: const Icon(LucideIcons.menu,
-            color: Colors.white54, size: 20),
+        icon: const Icon(LucideIcons.menu, color: Colors.white54, size: 20),
         onPressed: onMenuPressed,
       ),
-      title: _buildLogo(),
+      title: const NotifLogo(),
       actions: [
         GestureDetector(
           onTap: () => Navigator.push(
@@ -78,29 +80,6 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildLogo() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text('N',
-            style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                fontSize: 22)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 3),
-          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 18),
-        ),
-        Text('TIF',
-            style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                fontSize: 22)),
-      ],
-    );
-  }
-
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
@@ -109,7 +88,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
 class _Avatar extends StatelessWidget {
   final String displayName;
-  final dynamic avatarBytes;
+  final Uint8List? avatarBytes;
 
   const _Avatar({required this.displayName, required this.avatarBytes});
 
