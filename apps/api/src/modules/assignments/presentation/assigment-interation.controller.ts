@@ -17,6 +17,7 @@ export class AssigmentInterationController {
   }
 
   @Post('sync')
+  @BypassBlock()
   async sync(@Req() req: any) {
     const syncedCount = await this.service.syncDeliveries(req.user.userId);
 

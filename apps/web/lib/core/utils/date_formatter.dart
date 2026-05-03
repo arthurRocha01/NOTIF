@@ -25,4 +25,12 @@ abstract class DateFormatter {
 
   static String monthYear(DateTime date) =>
       DateFormat('MMMM yyyy', 'pt_BR').format(date);
+
+  static String remaining(DateTime due) {
+    final diff = due.difference(DateTime.now());
+    if (diff.isNegative) return 'Vencido';
+    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
+    if (diff.inHours < 24) return 'em ${diff.inHours}h';
+    return 'em ${diff.inDays}d';
+  }
 }

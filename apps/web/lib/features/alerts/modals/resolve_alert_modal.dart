@@ -36,7 +36,6 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
     super.dispose();
   }
 
-  // --- MÉTODO LIMPO E SEM ERROS ---
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 

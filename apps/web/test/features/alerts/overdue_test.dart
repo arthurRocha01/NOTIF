@@ -3,10 +3,7 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _employeeEmail = 'employee.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
@@ -19,21 +16,13 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    // Limpa bloqueios pré-existentes
-    final supervisorToken = await authService.login(_supervisorEmail, _password);
-    ApiClient.setToken(supervisorToken);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
-    final empToken = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(empToken);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    final supervisorToken = await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
+    await loginAsEmployee(authService);
+    await clearBlocking(alertService);
 
-    // Supervisor cria notificação setorial com SLA de 1 minuto
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(_employeeEmail);
+    final employee = await authService.fetchUser(kEmployeeEmail);
 
     final notif = await alertService.createNotification(
       title: 'Notificação SLA Overdue TDD',
@@ -44,8 +33,7 @@ void main() {
       sectorId: employee.sectorId,
     );
 
-    // Employee sincroniza — seta deliveredAt e dueAt = deliveredAt + 1 min
-    ApiClient.setToken(empToken);
+    await loginAsEmployee(authService);
     await alertService.syncDeliveries();
 
     final empAssignments = await alertService.getMyAssignments();
@@ -53,19 +41,18 @@ void main() {
         .firstWhere((a) => a.notificationId == notif.id)
         .id;
 
-    // Cria segunda notificação para testar assignment sem sync (sem dueAt)
     ApiClient.setToken(supervisorToken);
+    final opsEmployee = await authService.fetchUser(kEmployeeOpsEmail);
     final notif2 = await alertService.createNotification(
       title: 'Notificação Sem Sync TDD',
       message: 'Criada para validar que assignment sem deliveredAt não vira OVERDUE.',
       level: AlertLevel.medium,
       slaMinutes: 1,
       requiresAcknowledgment: true,
-      sectorId: employee.sectorId,
+      sectorId: opsEmployee.sectorId,
     );
 
-    // Busca o assignment sem sincronizar — dueAt permanece null
-    ApiClient.setToken(empToken);
+    await loginAs(authService, kEmployeeOpsEmail);
     final empAssignments2 = await alertService.getMyAssignments();
     undeliveredAssignmentId = empAssignments2
         .firstWhere((a) => a.notificationId == notif2.id)
@@ -76,8 +63,7 @@ void main() {
   });
 
   setUp(() async {
-    final token = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(token);
+    await loginAsEmployee(authService);
   });
 
   group('Transição automática para OVERDUE', () {
@@ -89,6 +75,7 @@ void main() {
     });
 
     test('assignment sem deliveredAt permanece PENDING', () async {
+      await loginAs(authService, kEmployeeOpsEmail);
       final assignments = await alertService.getMyAssignments();
       final a = assignments.firstWhere((a) => a.id == undeliveredAssignmentId);
       expect(a.status, equals(AssignmentStatus.pending),

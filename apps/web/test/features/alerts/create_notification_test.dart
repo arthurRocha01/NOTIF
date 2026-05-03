@@ -1,12 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
@@ -17,22 +14,16 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    final token = await authService.login(_supervisorEmail, _password);
-    ApiClient.setToken(token);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
 
-    final supervisor = await authService.fetchUser(_supervisorEmail);
+    final supervisor = await authService.fetchUser(kSupervisorEmail);
     supervisorSectorId = supervisor.sectorId;
   });
 
   setUp(() async {
-    final token = await authService.login(_supervisorEmail, _password);
-    ApiClient.setToken(token);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
   });
 
   group('AlertService.createNotification — resposta da API', () {

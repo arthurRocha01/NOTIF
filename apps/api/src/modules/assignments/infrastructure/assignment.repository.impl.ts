@@ -72,7 +72,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
     const assignments = await this.prisma.notificationAssignment.findMany({
       where: {
         userId,
-        status: { not: AssignmentStatus.ACKNOWLEDGED },
+        status: { notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE] },
         notification: { level: NotificationLevel.CRITICAL },
       },
       include: { notification: true },

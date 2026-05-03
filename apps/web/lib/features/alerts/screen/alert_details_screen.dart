@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class AlertDetailsScreen extends ConsumerWidget {
   final AssignmentModel assignment;
@@ -136,15 +137,14 @@ class AlertDetailsScreen extends ConsumerWidget {
                         _InfoRow(
                           icon: LucideIcons.calendar,
                           label: 'Recebido',
-                          value: _formatDate(assignment.createdAt),
+                          value: DateFormatter.relative(assignment.createdAt),
                         ),
                         if (assignment.dueAt != null) ...[
                           const Divider(height: 20, color: Color(0xFFF1F5F9)),
                           _InfoRow(
                             icon: LucideIcons.clock,
                             label: 'Prazo',
-                            value: _formatDueVerbose(
-                                assignment.dueAt!, isOverdue),
+                            value: DateFormatter.remaining(assignment.dueAt!),
                             valueColor: isOverdue
                                 ? const Color(0xFFDC2626)
                                 : null,
@@ -155,7 +155,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                           _InfoRow(
                             icon: LucideIcons.checkCircle2,
                             label: 'Confirmado em',
-                            value: _formatDate(assignment.acknowledgedAt!),
+                            value: DateFormatter.relative(assignment.acknowledgedAt!),
                             valueColor: const Color(0xFF10B981),
                           ),
                         ],
@@ -174,7 +174,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         _TimelineStep(
                           icon: LucideIcons.bell,
                           label: 'Notificação recebida',
-                          time: _formatDate(assignment.createdAt),
+                          time: DateFormatter.relative(assignment.createdAt),
                           done: true,
                           isFirst: true,
                         ),
@@ -182,7 +182,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                           icon: LucideIcons.eye,
                           label: 'Visualizado',
                           time: assignment.viewedAt != null
-                              ? _formatDate(assignment.viewedAt!)
+                              ? DateFormatter.relative(assignment.viewedAt!)
                               : null,
                           done: assignment.viewedAt != null,
                         ),
@@ -190,7 +190,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                           icon: LucideIcons.checkCircle2,
                           label: 'Ciência confirmada',
                           time: assignment.acknowledgedAt != null
-                              ? _formatDate(assignment.acknowledgedAt!)
+                              ? DateFormatter.relative(assignment.acknowledgedAt!)
                               : null,
                           done: assignment.acknowledgedAt != null,
                           isLast: true,
@@ -242,26 +242,6 @@ class AlertDetailsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'agora';
-    if (diff.inMinutes < 60) return 'há ${diff.inMinutes}min';
-    if (diff.inHours < 24) return 'há ${diff.inHours}h';
-    if (diff.inDays < 7) return 'há ${diff.inDays}d';
-    return '${dt.day.toString().padLeft(2, '0')}/'
-        '${dt.month.toString().padLeft(2, '0')}/'
-        '${dt.year}';
-  }
-
-  String _formatDueVerbose(DateTime due, bool isOverdue) {
-    if (isOverdue) return 'Vencido';
-    final diff = due.difference(DateTime.now());
-    if (diff.isNegative) return 'Vencido';
-    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
-    if (diff.inHours < 24) return 'em ${diff.inHours}h';
-    return 'em ${diff.inDays}d';
-  }
 }
 
 // ── Widgets auxiliares ────────────────────────────────────────────────────────

@@ -138,7 +138,9 @@ class AlertNotifier extends StateNotifier<AlertState> {
       );
     } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
-    } catch (_) {}
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro inesperado. Tente novamente.');
+    }
   }
 
   Future<void> acknowledge(String assignmentId) async {

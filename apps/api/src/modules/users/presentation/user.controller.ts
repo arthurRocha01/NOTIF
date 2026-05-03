@@ -47,6 +47,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @BypassBlock()
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

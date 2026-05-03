@@ -3,40 +3,26 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _employeeEmail = 'employee.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
   late AuthService authService;
 
-  late String employeeId;
   late String assignmentId;
+  late String pendingAssignmentId;
 
   setUpAll(() async {
     alertService = AlertService();
     authService = AuthService();
 
-    // Limpa bloqueios pré-existentes do supervisor
-    final supervisorToken = await authService.login(_supervisorEmail, _password);
-    ApiClient.setToken(supervisorToken);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    final supervisorToken = await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
+    await loginAsEmployee(authService);
+    await clearBlocking(alertService);
 
-    // Limpa bloqueios pré-existentes do employee
-    final empTokenPre = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(empTokenPre);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
-
-    // Setup: cria a notificação CRITICAL do teste (supervisor não recebe assignment próprio)
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(_employeeEmail);
-    employeeId = employee.id;
+    final employee = await authService.fetchUser(kEmployeeEmail);
 
     await alertService.createNotification(
       title: 'Bloqueio Crítico TDD',
@@ -47,17 +33,29 @@ void main() {
       sectorId: employee.sectorId,
     );
 
-    // Captura o assignmentId do employee
-    final employeeToken = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(employeeToken);
+    final pendingNotif = await alertService.createNotification(
+      title: 'Pendente Sem Bloqueio TDD',
+      message: 'Notificação não crítica com ciência exigida — não deve bloquear.',
+      level: AlertLevel.medium,
+      slaMinutes: 60,
+      requiresAcknowledgment: true,
+      sectorId: employee.sectorId,
+    );
+
+    await loginAsEmployee(authService);
+    await alertService.syncDeliveries();
 
     final blocking = await alertService.getBlockingAssignments();
     assignmentId = blocking.first.id;
+
+    final all = await alertService.getMyAssignments();
+    pendingAssignmentId = all
+        .firstWhere((a) => a.notificationId == pendingNotif.id)
+        .id;
   });
 
   setUp(() async {
-    final token = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(token);
+    await loginAsEmployee(authService);
   });
 
   group('Bloqueio sistêmico — CRITICAL não confirmado', () {
@@ -110,6 +108,22 @@ void main() {
     test('GET /notifications volta a funcionar após desbloqueio', () async {
       final notifications = await alertService.getNotifications();
       expect(notifications, isA<List>());
+    });
+  });
+
+  group('Sem bloqueio — PENDING com ciência exigida mas não crítico', () {
+    test('assignment não crítico com requiresAcknowledgment não aparece em getBlockingAssignments',
+        () async {
+      final blocking = await alertService.getBlockingAssignments();
+      expect(blocking.any((a) => a.id == pendingAssignmentId), isFalse,
+          reason: 'apenas CRITICAL deve bloquear — MEDIUM com requiresAcknowledgment não bloqueia');
+    });
+
+    test('assignment não crítico com requiresAcknowledgment fica como PENDING',
+        () async {
+      final assignments = await alertService.getMyAssignments();
+      final a = assignments.firstWhere((a) => a.id == pendingAssignmentId);
+      expect(a.status, equals(AssignmentStatus.pending));
     });
   });
 }

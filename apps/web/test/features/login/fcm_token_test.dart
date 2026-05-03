@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
@@ -56,6 +57,39 @@ void main() {
       await service.updateFcmToken(userId: userAId, fcmToken: 'token-fixo');
       final user = await service.fetchUser(_emailA);
       expect(user.fcmToken, equals('token-fixo'));
+    });
+  });
+
+  group('updateFcmToken — employee bloqueado por CRITICAL', () {
+    test('registra token FCM mesmo com CRITICAL não confirmado', () async {
+      final supervisorToken = await service.login('supervisor.dev@notif.com', _password);
+      ApiClient.setToken(supervisorToken);
+      final employee = await service.fetchUser(_emailA);
+
+      await alertService.createNotification(
+        title: 'CRITICAL para teste de FCM bloqueado',
+        message: 'Valida que updateFcmToken funciona mesmo durante bloqueio.',
+        level: AlertLevel.critical,
+        slaMinutes: 60,
+        requiresAcknowledgment: true,
+        sectorId: employee.sectorId,
+      );
+
+      final tokenA = await service.login(_emailA, _password);
+      ApiClient.setToken(tokenA);
+      await alertService.syncDeliveries();
+
+      final blocking = await alertService.getBlockingAssignments();
+      expect(blocking, isNotEmpty, reason: 'employee deve estar bloqueado neste ponto');
+
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-enquanto-bloqueado');
+
+      final user = await service.fetchUser(_emailA);
+      expect(user.fcmToken, equals('token-enquanto-bloqueado'));
+
+      for (final a in blocking) {
+        await alertService.acknowledge(a.id);
+      }
     });
   });
 
