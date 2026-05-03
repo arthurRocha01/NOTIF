@@ -4,25 +4,20 @@ import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/services/sector_service.dart';
-
-const _email = 'employee.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late SectorService service;
   late AuthService authService;
+  late AlertService alertService;
 
   setUp(() async {
     service = SectorService();
     authService = AuthService();
-    ApiClient.clearToken();
+    alertService = AlertService();
 
-    final token = await authService.login(_email, _password);
-    ApiClient.setToken(token);
-    final alertService = AlertService();
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    await loginAs(authService, kEmployeeEmail);
+    await clearBlocking(alertService);
   });
 
   group('SectorService.getSectors', () {
@@ -61,6 +56,14 @@ void main() {
       final sectors = await service.getSectors();
       final ids = sectors.map((s) => s.id).toList();
       expect(ids.toSet().length, equals(ids.length));
+    });
+
+    test('retorna 401 sem token', () async {
+      ApiClient.clearToken();
+      await expectLater(
+        service.getSectors(),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
+      );
     });
   });
 }
