@@ -10,12 +10,12 @@ import 'dashboard_filter_provider.dart';
 // ── Modelos auxiliares ────────────────────────────────────────────────────────
 
 class AttentionSector {
-  final String id;       // nome resolvido ou UUID como fallback
+  final String name;
   final double rate;
   final int pendingCount;
 
   const AttentionSector({
-    required this.id,
+    required this.name,
     required this.rate,
     required this.pendingCount,
   });
@@ -221,7 +221,7 @@ final dashboardProvider = Provider<DashboardData>((ref) {
         final rate       = total == 0 ? 0.0 : (acknowledgedBySector[sid] ?? 0) / total;
         final pendingCount = pendingBySector[sid] ?? 0;
         return AttentionSector(
-          id:           resolveName(sid),
+          name:         resolveName(sid),
           rate:         rate,
           pendingCount: pendingCount,
         );

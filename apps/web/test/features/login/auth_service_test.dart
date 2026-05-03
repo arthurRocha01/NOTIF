@@ -40,42 +40,18 @@ void main() {
   });
 
   group('AuthService.fetchUser', () {
-    late String token;
-
     setUp(() async {
-      token = await service.login(_email, _password);
+      final token = await service.login(_email, _password);
       ApiClient.setToken(token);
     });
 
-    test('retorna UserModel com sectorId preenchido', () async {
-      final user = await service.fetchUser(_email);
-      expect(user.sectorId, isNotEmpty);
-      expect(user.sectorId, matches(
-        RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'),
-      ));
-    });
-
-    test('sectorName começa vazio antes de resolver', () async {
-      final user = await service.fetchUser(_email);
-      expect(user.sectorName, isEmpty);
-    });
-
-    test('retorna email e role corretos', () async {
+    test('retorna contrato completo do usuário', () async {
       final user = await service.fetchUser(_email);
       expect(user.email, _email);
       expect(user.role.name, isNotEmpty);
-    });
-  });
-
-  group('AuthService.updateFcmToken', () {
-    test('atualiza token FCM sem erro', () async {
-      final token = await service.login(_email, _password);
-      ApiClient.setToken(token);
-      final user = await service.fetchUser(_email);
-      await expectLater(
-        service.updateFcmToken(userId: user.id, fcmToken: 'test-device-token'),
-        completes,
-      );
+      expect(user.sectorId, matches(
+        RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'),
+      ));
     });
   });
 

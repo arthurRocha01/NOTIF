@@ -3,11 +3,7 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _employeeTiEmail = 'employee.dev@notif.com';
-const _employeeOpsEmail = 'employee.ops@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
@@ -19,18 +15,12 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    final supervisorToken = await authService.login(_supervisorEmail, _password);
-    ApiClient.setToken(supervisorToken);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    final supervisorToken = await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
 
-    for (final email in [_employeeTiEmail, _employeeOpsEmail]) {
-      final t = await authService.login(email, _password);
-      ApiClient.setToken(t);
-      for (final a in await alertService.getBlockingAssignments()) {
-        await alertService.acknowledge(a.id);
-      }
+    for (final email in [kEmployeeEmail, kEmployeeOpsEmail]) {
+      await loginAs(authService, email);
+      await clearBlocking(alertService);
     }
 
     ApiClient.setToken(supervisorToken);
@@ -49,8 +39,7 @@ void main() {
 
   group('Notificação global — assignments criados para todos os setores', () {
     test('employee do setor TI recebe assignment', () async {
-      final token = await authService.login(_employeeTiEmail, _password);
-      ApiClient.setToken(token);
+      await loginAs(authService, kEmployeeEmail);
 
       final assignments = await alertService.getMyAssignments();
       final match = assignments.where((a) => a.notificationId == notificationId);
@@ -60,8 +49,7 @@ void main() {
     });
 
     test('employee do setor Operações recebe assignment', () async {
-      final token = await authService.login(_employeeOpsEmail, _password);
-      ApiClient.setToken(token);
+      await loginAs(authService, kEmployeeOpsEmail);
 
       final assignments = await alertService.getMyAssignments();
       final match = assignments.where((a) => a.notificationId == notificationId);
@@ -71,11 +59,8 @@ void main() {
     });
 
     test('assignments gerados têm status PENDING', () async {
-      final users = [_employeeTiEmail, _employeeOpsEmail];
-
-      for (final email in users) {
-        final token = await authService.login(email, _password);
-        ApiClient.setToken(token);
+      for (final email in [kEmployeeEmail, kEmployeeOpsEmail]) {
+        await loginAs(authService, email);
 
         final assignments = await alertService.getMyAssignments();
         final match = assignments.firstWhere((a) => a.notificationId == notificationId);
@@ -86,8 +71,7 @@ void main() {
     });
 
     test('assignment da notificação global tem notificationTitle preenchido', () async {
-      final token = await authService.login(_employeeTiEmail, _password);
-      ApiClient.setToken(token);
+      await loginAs(authService, kEmployeeEmail);
 
       final assignments = await alertService.getMyAssignments();
       final match = assignments.firstWhere((a) => a.notificationId == notificationId);
@@ -98,8 +82,7 @@ void main() {
 
     test('getAllAssignments contém assignments dos dois setores para a notificação global',
         () async {
-      final supervisorToken = await authService.login(_supervisorEmail, _password);
-      ApiClient.setToken(supervisorToken);
+      await loginAsSupervisor(authService);
 
       final all = await alertService.getAllAssignments();
       final forNotification =
@@ -107,8 +90,8 @@ void main() {
 
       final userIds = forNotification.map((a) => a.userId).toSet();
 
-      final tiUser = await authService.fetchUser(_employeeTiEmail);
-      final opsUser = await authService.fetchUser(_employeeOpsEmail);
+      final tiUser = await authService.fetchUser(kEmployeeEmail);
+      final opsUser = await authService.fetchUser(kEmployeeOpsEmail);
 
       expect(userIds, contains(tiUser.id),
           reason: 'userId do employee TI não está entre os assignments globais');

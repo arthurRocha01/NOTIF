@@ -67,10 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // ── Header azul com logo ────────────────────────────────────────
           const AuthHeader(),
-
-          // ── Conteúdo rolável ────────────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -78,8 +75,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 36),
-
-                  // Título principal
                   Text(
                     'Portal de Segurança\ne Compliance.',
                     textAlign: TextAlign.center,
@@ -91,8 +86,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Tagline com separadores
                   Row(
                     children: [
                       const Expanded(
@@ -122,8 +115,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // Subtítulo de acesso
                   Text(
                     'Acesso restrito',
                     textAlign: TextAlign.center,
@@ -144,8 +135,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: 20),
-
-                  // Campo e-mail
                   CustomInputField(
                     controller: _emailController,
                     icon: LucideIcons.user,
@@ -154,8 +143,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: 12),
-
-                  // Campo senha
                   CustomInputField(
                     controller: _passwordController,
                     icon: LucideIcons.lock,
@@ -164,8 +151,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: 28),
-
-                  // Botão / loading
                   if (_isLoading)
                     const Center(
                       child: CircularProgressIndicator(
@@ -176,52 +161,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   else
                     PrimaryButton(text: 'Entrar', onPressed: _handleLogin),
 
-                  const SizedBox(height: 24),
-
-                  // Link de suporte
-                  Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Precisa de Ajuda? ',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {},
-                          child: Text(
-                            'Contate o Suporte',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(height: 48),
                 ],
               ),
             ),
           ),
 
-          // ── Rodapé fixo ─────────────────────────────────────────────────
           const _Footer(),
         ],
       ),
     );
   }
 }
-
-// ── Rodapé ────────────────────────────────────────────────────────────────────
 
 class _Footer extends StatelessWidget {
   const _Footer();

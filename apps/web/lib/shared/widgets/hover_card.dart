@@ -5,10 +5,7 @@ class HoverCard extends StatefulWidget {
   final VoidCallback? onTap;
   final EdgeInsets? padding;
 
-  /// NOVO
   final BoxDecoration? decoration;
-
-  /// NOVO
   final BorderRadius? borderRadius;
 
   const HoverCard({

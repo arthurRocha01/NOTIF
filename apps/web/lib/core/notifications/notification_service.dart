@@ -29,7 +29,7 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
     NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
-        isCritical ? 'Alertas Críticos NOTIF' : 'Alertas NOTIF',
+        channelNameForLevel(level),
         importance: Importance.max,
         priority: Priority.high,
         sound: const RawResourceAndroidNotificationSound('notice_notif'),
@@ -138,7 +138,7 @@ class NotificationService {
       NotificationDetails(
         android: AndroidNotificationDetails(
           channelId,
-          isCritical ? 'Alertas Críticos NOTIF' : 'Alertas NOTIF',
+          channelNameForLevel(level),
           importance: Importance.max,
           priority: Priority.high,
           sound: const RawResourceAndroidNotificationSound('notice_notif'),

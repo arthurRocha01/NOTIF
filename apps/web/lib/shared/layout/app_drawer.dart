@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/screen/account_screen.dart';
+import 'package:notif_app/shared/widgets/notif_logo.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -13,11 +15,9 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider);
     final profile = ref.watch(profileProvider);
-    const Color darkNavy = Color(0xFF0F172A);
-    const Color lightGray = Color(0xFFF1F5F9);
 
     return Drawer(
-      backgroundColor: lightGray,
+      backgroundColor: AppColors.backgroundAlt,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,11 +31,11 @@ class AppDrawer extends ConsumerWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
-                    color: darkNavy,
+                    color: AppColors.darkNavy,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLogo(),
+                        const NotifLogo(size: 24),
                         const SizedBox(height: 32),
                         if (user == null)
                           const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
@@ -145,20 +145,6 @@ class AppDrawer extends ConsumerWidget {
 
   // ── Widgets auxiliares ─────────────────────────────────────────────────
 
-  Widget _buildLogo() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('N', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 24)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 2),
-          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 22),
-        ),
-        Text('TIF', style: GoogleFonts.montserrat(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 24)),
-      ],
-    );
-  }
-
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
@@ -250,7 +236,7 @@ class AppDrawer extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: const Color(0xFF0F172A)),
+            Icon(icon, size: 48, color: AppColors.darkNavy),
             const SizedBox(height: 16),
             Text(title, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold)),
             const Divider(height: 32),

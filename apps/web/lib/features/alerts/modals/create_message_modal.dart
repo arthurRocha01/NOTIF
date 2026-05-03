@@ -6,7 +6,7 @@ import '../models/alert_status.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../login/providers/auth_provider.dart';
 
-class CreateMessageModal extends ConsumerStatefulWidget { // Alterado para Consumer
+class CreateMessageModal extends ConsumerStatefulWidget {
   const CreateMessageModal({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -25,7 +25,7 @@ class CreateMessageModal extends ConsumerStatefulWidget { // Alterado para Consu
 class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
   final TextEditingController _titleCtrl = TextEditingController();
   final TextEditingController _contentCtrl = TextEditingController();
-  bool _isLoading = false; // Adicionado controle de loading
+  bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty || _contentCtrl.text.trim().isEmpty) {
@@ -125,7 +125,7 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _submit, // Desabilita se estiver carregando
+                onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1E3A8A),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

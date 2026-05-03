@@ -45,7 +45,8 @@ class AlertModel {
       message: message ?? this.message,
       level: level ?? this.level,
       slaMinutes: slaMinutes ?? this.slaMinutes,
-      requiresAcknowledgment: requiresAcknowledgment ?? this.requiresAcknowledgment,
+      requiresAcknowledgment:
+          requiresAcknowledgment ?? this.requiresAcknowledgment,
       targetSectorId: targetSectorId ?? this.targetSectorId,
       authorId: authorId ?? this.authorId,
       createdAt: createdAt ?? this.createdAt,
@@ -158,9 +159,11 @@ class AssignmentModel {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       viewedAt: viewedAt ?? this.viewedAt,
       acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
-      requiresAcknowledgment: requiresAcknowledgment ?? this.requiresAcknowledgment,
+      requiresAcknowledgment:
+          requiresAcknowledgment ?? this.requiresAcknowledgment,
       notificationAuthorId: notificationAuthorId ?? this.notificationAuthorId,
-      notificationSlaMinutes: notificationSlaMinutes ?? this.notificationSlaMinutes,
+      notificationSlaMinutes:
+          notificationSlaMinutes ?? this.notificationSlaMinutes,
     );
   }
 
@@ -186,7 +189,8 @@ class AssignmentModel {
       acknowledgedAt: json['acknowledgedAt'] != null
           ? DateTime.parse(json['acknowledgedAt'])
           : null,
-      requiresAcknowledgment: json['notificationRequiresAcknowledgment'] as bool?,
+      requiresAcknowledgment:
+          json['notificationRequiresAcknowledgment'] as bool?,
       notificationAuthorId: json['notificationAuthorId'] as String?,
       notificationSlaMinutes: json['notificationSlaMinutes'] as int?,
     );

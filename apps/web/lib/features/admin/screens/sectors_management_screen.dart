@@ -48,7 +48,7 @@ class _SectorsManagementScreenState
           ],
         ),
         content: Text(
-            'Deseja excluir "$name"?\nEsta ação não pode ser desfeita.'),
+            'Deseja excluir "$name"?\n\nTodos os usuários e notificações vinculados a este setor também serão removidos. Esta ação não pode ser desfeita.'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
+import 'package:notif_app/core/constants/app_radius.dart';
 
 // ---------------------------------------------------------------------------
 // NavItemData — dados de configuração de cada item da navbar
@@ -39,7 +40,7 @@ class CustomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1B2A),
+        color: AppColors.navSurface,
         border: Border(
           top: BorderSide(color: Color(0x1AFFFFFF), width: 0.5),
         ),
@@ -122,7 +123,7 @@ class NavItem extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 5),
               decoration: BoxDecoration(
                 color: _indicator,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
             ),
 
@@ -136,7 +137,7 @@ class NavItem extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isSelected ? _pill : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Stack(
                 clipBehavior: Clip.none,

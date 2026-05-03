@@ -4,66 +4,59 @@ import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _employeeEmail = 'employee.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
   late AuthService authService;
 
-  late String employeeId;
-  late String employeeSectorId;
   late AssignmentModel assignment;
+  late AssignmentModel pendingAssignment;
 
   setUpAll(() async {
     alertService = AlertService();
     authService = AuthService();
 
-    final supervisorToken = await authService.login(_supervisorEmail, _password);
+    final supervisorToken = await loginAsSupervisor(authService);
+    await clearBlocking(alertService);
+    await loginAsEmployee(authService);
+    await clearBlocking(alertService);
+
     ApiClient.setToken(supervisorToken);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    final employee = await authService.fetchUser(kEmployeeEmail);
 
-    final empTokenPre = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(empTokenPre);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
-
-    // busca o setor do employee para criar notificação direcionada
-    ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(_employeeEmail);
-    employeeId = employee.id;
-    employeeSectorId = employee.sectorId;
-
-    // cria notificação setorial → gera assignment para o employee
-    await alertService.createNotification(
+    final conflictNotif = await alertService.createNotification(
       title: 'Conflito Teste TDD',
       message: 'Notificação criada para testar erros de transição de estado.',
       level: AlertLevel.low,
       slaMinutes: 60,
       requiresAcknowledgment: true,
-      sectorId: employeeSectorId,
+      sectorId: employee.sectorId,
     );
 
-    // loga como employee e sincroniza entregas
-    final employeeToken = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(employeeToken);
+    final pendingNotif = await alertService.createNotification(
+      title: 'Acknowledge sem View TDD',
+      message: 'Notificação para testar que acknowledge exige markAsViewed primeiro.',
+      level: AlertLevel.low,
+      slaMinutes: 60,
+      requiresAcknowledgment: true,
+      sectorId: employee.sectorId,
+    );
+
+    await loginAsEmployee(authService);
     await alertService.syncDeliveries();
 
-    // busca o assignment recém-criado
     final assignments = await alertService.getMyAssignments();
     assignment = assignments.firstWhere(
-      (a) => a.status == AssignmentStatus.pending,
+      (a) => a.notificationId == conflictNotif.id,
+    );
+    pendingAssignment = assignments.firstWhere(
+      (a) => a.notificationId == pendingNotif.id,
     );
   });
 
   setUp(() async {
-    final token = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(token);
+    await loginAsEmployee(authService);
   });
 
   group('markAsViewed — conflitos de estado', () {
@@ -112,6 +105,14 @@ void main() {
             contains('confirmada'),
           ),
         ),
+      );
+    });
+
+    test('lança ApiException ao tentar confirmar assignment PENDING sem ter visualizado',
+        () async {
+      await expectLater(
+        alertService.acknowledge(pendingAssignment.id),
+        throwsA(isA<ApiException>()),
       );
     });
   });

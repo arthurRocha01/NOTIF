@@ -7,6 +7,7 @@ import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../screen/alert_details_screen.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class AssignmentsBody extends StatefulWidget {
   final List<AssignmentModel> assignments;
@@ -573,7 +574,7 @@ class _AssignmentCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: 3),
                     Text(
-                      _formatDue(assignment.dueAt!),
+                      DateFormatter.remaining(assignment.dueAt!),
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: isOverdue
@@ -623,13 +624,6 @@ class _AssignmentCard extends ConsumerWidget {
     );
   }
 
-  String _formatDue(DateTime due) {
-    final diff = due.difference(DateTime.now());
-    if (diff.isNegative) return 'Vencido';
-    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
-    if (diff.inHours < 24) return 'em ${diff.inHours}h';
-    return 'em ${diff.inDays}d';
-  }
 }
 
 // ── Status dot ────────────────────────────────────────────────────────────────

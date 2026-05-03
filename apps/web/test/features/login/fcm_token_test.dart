@@ -1,103 +1,126 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/alerts/models/alert_status.dart';
+import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 
-const _email = 'employee.dev@notif.com';
+const _emailA = 'employee.dev@notif.com';
+const _emailB = 'employee.ops@notif.com';
 const _password = 'password123';
 
 void main() {
   late AuthService service;
-  late String userId;
+  late AlertService alertService;
+  late String userAId;
+  late String userBId;
 
   setUpAll(() async {
     service = AuthService();
-    final token = await service.login(_email, _password);
-    ApiClient.setToken(token);
-    final user = await service.fetchUser(_email);
-    userId = user.id;
+    alertService = AlertService();
+
+    final tokenA = await service.login(_emailA, _password);
+    ApiClient.setToken(tokenA);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+    userAId = (await service.fetchUser(_emailA)).id;
+
+    final tokenB = await service.login(_emailB, _password);
+    ApiClient.setToken(tokenB);
+    for (final a in await alertService.getBlockingAssignments()) {
+      await alertService.acknowledge(a.id);
+    }
+    userBId = (await service.fetchUser(_emailB)).id;
   });
 
   setUp(() async {
-    final token = await service.login(_email, _password);
+    final token = await service.login(_emailA, _password);
     ApiClient.setToken(token);
   });
 
-  group('Cenário: primeiro dispositivo — token inicialmente ausente', () {
-    test('usuário sem token aceita PATCH com token novo', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-primeiro-dispositivo');
-      final user = await service.fetchUser(_email);
-      expect(user.fcmToken, equals('token-primeiro-dispositivo'));
+  group('updateFcmToken — comportamento básico', () {
+    test('token é persistido no servidor após PATCH', () async {
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-basico');
+      final user = await service.fetchUser(_emailA);
+      expect(user.fcmToken, equals('token-basico'));
     });
 
-    test('fetchUser reflete o token após primeira sincronização', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-sync-inicial');
-      final user = await service.fetchUser(_email);
-      expect(user.fcmToken, isNotNull);
-      expect(user.fcmToken, isNotEmpty);
-    });
-  });
-
-  group('Cenário: troca de dispositivo', () {
-    test('token do novo dispositivo sobrescreve o anterior no servidor', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-dispositivo-A');
-      final antes = await service.fetchUser(_email);
-      expect(antes.fcmToken, equals('token-dispositivo-A'));
-
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-dispositivo-B');
-      final depois = await service.fetchUser(_email);
-      expect(depois.fcmToken, equals('token-dispositivo-B'));
-      expect(depois.fcmToken, isNot(equals(antes.fcmToken)));
-    });
-
-    test('servidor mantém apenas o token mais recente', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-antigo');
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-novo');
-
-      final user = await service.fetchUser(_email);
+    test('token novo sobrescreve o anterior', () async {
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-antigo');
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-novo');
+      final user = await service.fetchUser(_emailA);
       expect(user.fcmToken, equals('token-novo'));
     });
-  });
 
-  group('Cenário: expiração / rotação do token pelo Firebase', () {
-    test('token rotacionado é persistido no servidor', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'fcm-original');
-      await service.updateFcmToken(userId: userId, fcmToken: 'fcm-rotacionado');
-
-      final user = await service.fetchUser(_email);
-      expect(user.fcmToken, equals('fcm-rotacionado'));
-    });
-
-    test('fetchUser após rotação não retorna mais o token expirado', () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-expirado');
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-pos-rotacao');
-
-      final user = await service.fetchUser(_email);
-      expect(user.fcmToken, isNot(equals('token-expirado')));
+    test('PATCH com mesmo token é idempotente', () async {
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-fixo');
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-fixo');
+      final user = await service.fetchUser(_emailA);
+      expect(user.fcmToken, equals('token-fixo'));
     });
   });
 
-  group('Mecanismo de auto-cura', () {
-    test('divergência entre token do dispositivo e do servidor é detectável via fetchUser',
-        () async {
-      await service.updateFcmToken(userId: userId, fcmToken: 'token-servidor-desatualizado');
-      final userServidor = await service.fetchUser(_email);
+  group('updateFcmToken — employee bloqueado por CRITICAL', () {
+    test('registra token FCM mesmo com CRITICAL não confirmado', () async {
+      final supervisorToken = await service.login('supervisor.dev@notif.com', _password);
+      ApiClient.setToken(supervisorToken);
+      final employee = await service.fetchUser(_emailA);
 
-      const tokenDispositivo = 'token-dispositivo-novo';
-      expect(userServidor.fcmToken, isNot(equals(tokenDispositivo)),
-          reason: 'divergência deve ser detectável para o sync ser acionado');
+      await alertService.createNotification(
+        title: 'CRITICAL para teste de FCM bloqueado',
+        message: 'Valida que updateFcmToken funciona mesmo durante bloqueio.',
+        level: AlertLevel.critical,
+        slaMinutes: 60,
+        requiresAcknowledgment: true,
+        sectorId: employee.sectorId,
+      );
 
-      await service.updateFcmToken(userId: userId, fcmToken: tokenDispositivo);
-      final userSincronizado = await service.fetchUser(_email);
-      expect(userSincronizado.fcmToken, equals(tokenDispositivo));
+      final tokenA = await service.login(_emailA, _password);
+      ApiClient.setToken(tokenA);
+      await alertService.syncDeliveries();
+
+      final blocking = await alertService.getBlockingAssignments();
+      expect(blocking, isNotEmpty, reason: 'employee deve estar bloqueado neste ponto');
+
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-enquanto-bloqueado');
+
+      final user = await service.fetchUser(_emailA);
+      expect(user.fcmToken, equals('token-enquanto-bloqueado'));
+
+      for (final a in blocking) {
+        await alertService.acknowledge(a.id);
+      }
+    });
+  });
+
+  group('updateFcmToken — isolamento entre usuários', () {
+    test('token de A não afeta token de B', () async {
+      final tokenB = await service.login(_emailB, _password);
+      ApiClient.setToken(tokenB);
+      await service.updateFcmToken(userId: userBId, fcmToken: 'token-b-inicial');
+
+      final tokenA = await service.login(_emailA, _password);
+      ApiClient.setToken(tokenA);
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a');
+
+      ApiClient.setToken(tokenB);
+      final userB = await service.fetchUser(_emailB);
+      expect(userB.fcmToken, equals('token-b-inicial'));
     });
 
-    test('PATCH com o mesmo token não quebra o estado do servidor', () async {
-      const token = 'token-sem-mudanca';
-      await service.updateFcmToken(userId: userId, fcmToken: token);
-      await service.updateFcmToken(userId: userId, fcmToken: token);
+    test('atualização de A não altera token de B', () async {
+      final tokenB = await service.login(_emailB, _password);
+      ApiClient.setToken(tokenB);
+      await service.updateFcmToken(userId: userBId, fcmToken: 'token-b-estavel');
 
-      final user = await service.fetchUser(_email);
-      expect(user.fcmToken, equals(token));
+      final tokenA = await service.login(_emailA, _password);
+      ApiClient.setToken(tokenA);
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a-novo');
+      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a-atualizado');
+
+      ApiClient.setToken(tokenB);
+      final userB = await service.fetchUser(_emailB);
+      expect(userB.fcmToken, equals('token-b-estavel'));
     });
   });
 }

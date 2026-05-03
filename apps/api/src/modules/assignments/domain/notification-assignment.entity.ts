@@ -155,19 +155,21 @@ export class NotificationAssignment {
   // Visualização
   public markAsViewed(): void {
     if (this.status === AssignmentStatus.ACKNOWLEDGED) {
-      return;
+      throw new Error('Notificação já foi confirmada');
+    }
+    if (this.status === AssignmentStatus.VIEWED) {
+      throw new Error('Notificação já foi visualizada');
+    }
+    if (this.status === AssignmentStatus.OVERDUE) {
+      throw new Error('Notificação vencida não pode ser alterada');
     }
 
     this.viewedAt = new Date();
-
-    const isOverdue = this.status === AssignmentStatus.OVERDUE;
-    if (!isOverdue) {
-      this.status = AssignmentStatus.VIEWED;
-    }
+    this.status = AssignmentStatus.VIEWED;
 
     // Notificações sem exigência de confirmação são auto-confirmadas ao serem vistas
     const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
-    if (!isOverdue && !this.notificationRequiresAcknowledgment && !isCritical) {
+    if (!this.notificationRequiresAcknowledgment && !isCritical) {
       this.markAsRecognized();
     }
   }
@@ -175,7 +177,15 @@ export class NotificationAssignment {
   // Confirmação
   public markAsRecognized(): void {
     if (this.status === AssignmentStatus.ACKNOWLEDGED) {
-      return;
+      throw new Error('Notificação já foi confirmada');
+    }
+    if (this.status === AssignmentStatus.OVERDUE) {
+      throw new Error('Notificação vencida não pode ser alterada');
+    }
+
+    const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
+    if (this.status === AssignmentStatus.PENDING && !isCritical) {
+      throw new Error('Notificação precisa ser visualizada antes de confirmar ciência');
     }
 
     this.acknowledgedAt = new Date();

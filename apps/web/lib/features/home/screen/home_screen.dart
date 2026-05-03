@@ -6,13 +6,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/notifications/notification_service.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
 import 'package:notif_app/features/alerts/screen/alerts_user_screen.dart';
 import 'package:notif_app/features/alerts/screen/critical_block_screen.dart';
-import 'package:notif_app/features/alerts/widgets/critical_alert_overlay.dart';
 import 'package:notif_app/features/alerts/widgets/in_app_banner_overlay.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
@@ -171,29 +169,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (level != AlertLevel.critical) {
       ref.read(feedProvider).changePage(2);
     }
-  }
-
-  void _showCriticalOverlay(RemoteMessage message) {
-    _playAlertSound();
-
-    final assignment = AssignmentModel(
-      id: message.data['assignmentId'] ?? '',
-      userId: '',
-      notificationId: message.data['notificationId'] ?? '',
-      notificationTitle: message.notification?.title ?? message.data['title'],
-      notificationMessage:
-          message.notification?.body ?? message.data['message'],
-      notificationLevel: AlertLevel.fromBackend(message.data['level']),
-      status: AssignmentStatus.pending,
-      createdAt: DateTime.now(),
-    );
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => CriticalAlertOverlay(assignment: assignment),
-      ),
-    );
   }
 
   void _showBanner(RemoteMessage message) {

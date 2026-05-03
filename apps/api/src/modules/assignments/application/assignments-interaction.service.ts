@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { NotificationAssignmentRepository } from '../infrastructure/assignment.repository.impl';
 import { NotificationRepository } from '../../../modules/notifications/infrastructure/notification.repository.impl';
-import { AssignmentStatus } from '../domain/type';
 
 @Injectable()
 export class AssignmentsInteractionService {
@@ -45,25 +44,21 @@ export class AssignmentsInteractionService {
 
   async markAsViewed(userId: string, assigmentId: string): Promise<void> {
     const assignment = await this.getLinkedAssignment(userId, assigmentId);
-
-    if (assignment.getStatus() === AssignmentStatus.ACKNOWLEDGED) {
-      throw new ConflictException('Notificação já foi confirmada');
+    try {
+      assignment.markAsViewed();
+    } catch (e: unknown) {
+      throw new ConflictException((e as Error).message);
     }
-
-    assignment.markAsViewed();
-
     await this.assignmentRepo.update(assignment);
   }
 
   async acknowledge(userId: string, assigmentId: string): Promise<void> {
     const assignment = await this.getLinkedAssignment(userId, assigmentId);
-
-    if (assignment.getStatus() === AssignmentStatus.ACKNOWLEDGED) {
-      throw new ConflictException('Notificação já foi confirmada');
+    try {
+      assignment.markAsRecognized();
+    } catch (e: unknown) {
+      throw new ConflictException((e as Error).message);
     }
-
-    assignment.markAsRecognized();
-
     await this.assignmentRepo.update(assignment);
   }
 

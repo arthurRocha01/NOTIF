@@ -4,10 +4,7 @@ import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _employeeEmail = 'employee.dev@notif.com';
-const _supervisorEmail = 'supervisor.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AlertService alertService;
@@ -18,11 +15,8 @@ void main() {
     authService = AuthService();
     ApiClient.clearToken();
 
-    final token = await authService.login(_employeeEmail, _password);
-    ApiClient.setToken(token);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    await loginAsEmployee(authService);
+    await clearBlocking(alertService);
   });
 
   group('AlertService.getMyAssignments — campos enriquecidos do DTO', () {
@@ -97,7 +91,6 @@ void main() {
 
   group('AlertService.syncDeliveries', () {
     test('completa sem erro para o employee logado', () async {
-      final user = await authService.fetchUser(_employeeEmail);
       await expectLater(
         alertService.syncDeliveries(),
         completes,
@@ -105,7 +98,6 @@ void main() {
     });
 
     test('assignments têm deliveredAt preenchido após sync', () async {
-      final user = await authService.fetchUser(_employeeEmail);
       await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
@@ -117,11 +109,43 @@ void main() {
                 'deliveredAt ainda null após sync para assignment ${a.id}');
       }
     });
+
+    test('segunda chamada a syncDeliveries completa sem erro', () async {
+      await alertService.syncDeliveries();
+      await expectLater(alertService.syncDeliveries(), completes);
+    });
+
+    test('deliveredAt não é alterado pela segunda chamada a syncDeliveries', () async {
+      await alertService.syncDeliveries();
+      final before = await alertService.getMyAssignments();
+      if (before.isEmpty) return;
+
+      await alertService.syncDeliveries();
+      final after = await alertService.getMyAssignments();
+
+      for (final a in before) {
+        if (a.deliveredAt == null) continue;
+        final updated = after.firstWhere((b) => b.id == a.id);
+        expect(updated.deliveredAt, equals(a.deliveredAt),
+            reason: 'deliveredAt foi sobrescrito na segunda chamada para assignment ${a.id}');
+      }
+    });
+
+    test('número de assignments não aumenta após segunda chamada a syncDeliveries',
+        () async {
+      await alertService.syncDeliveries();
+      final before = await alertService.getMyAssignments();
+
+      await alertService.syncDeliveries();
+      final after = await alertService.getMyAssignments();
+
+      expect(after.length, equals(before.length),
+          reason: 'syncDeliveries duplicou assignments na segunda chamada');
+    });
   });
 
   group('AlertService.markAsViewed', () {
     test('transiciona assignment PENDING para VIEWED', () async {
-      final user = await authService.fetchUser(_employeeEmail);
       await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
@@ -161,7 +185,6 @@ void main() {
 
   group('AlertService.acknowledge', () {
     test('transiciona assignment para ACKNOWLEDGED', () async {
-      final user = await authService.fetchUser(_employeeEmail);
       await alertService.syncDeliveries();
 
       final assignments = await alertService.getMyAssignments();
@@ -186,13 +209,10 @@ void main() {
     late String supervisorId;
 
     setUp(() async {
-      final token = await authService.login(_supervisorEmail, _password);
-      ApiClient.setToken(token);
-      for (final a in await alertService.getBlockingAssignments()) {
-        await alertService.acknowledge(a.id);
-      }
-      final user = await authService.fetchUser(_supervisorEmail);
-      supervisorId = user.id;
+      await loginAsSupervisor(authService);
+      await clearBlocking(alertService);
+      final supervisor = await authService.fetchUser(kSupervisorEmail);
+      supervisorId = supervisor.id;
     });
 
     test('cria notificação global sem erro', () async {
@@ -224,8 +244,7 @@ void main() {
 
     test('notificação setorial tem sectorId preenchido na resposta', () async {
       final notifications = await alertService.getNotifications();
-      final setorial =
-          notifications.where((n) => !n.isGlobal).toList();
+      final setorial = notifications.where((n) => !n.isGlobal).toList();
       if (setorial.isEmpty) return;
 
       for (final n in setorial) {
@@ -237,10 +256,8 @@ void main() {
 
   group('AlertService.getMyAssignments — isolamento por usuário', () {
     test('todos os assignments pertencem ao usuário autenticado', () async {
-      for (final a in await alertService.getBlockingAssignments()) {
-        await alertService.acknowledge(a.id);
-      }
-      final user = await authService.fetchUser(_employeeEmail);
+      await clearBlocking(alertService);
+      final user = await authService.fetchUser(kEmployeeEmail);
       final assignments = await alertService.getMyAssignments();
 
       for (final a in assignments) {
@@ -255,12 +272,9 @@ void main() {
 
     test('supervisor não recebe assignments de outros usuários em getMyAssignments',
         () async {
-      final supervisorToken = await authService.login(_supervisorEmail, _password);
-      ApiClient.setToken(supervisorToken);
-      for (final a in await alertService.getBlockingAssignments()) {
-        await alertService.acknowledge(a.id);
-      }
-      final supervisor = await authService.fetchUser(_supervisorEmail);
+      await loginAsSupervisor(authService);
+      await clearBlocking(alertService);
+      final supervisor = await authService.fetchUser(kSupervisorEmail);
 
       final assignments = await alertService.getMyAssignments();
 
@@ -277,11 +291,8 @@ void main() {
 
   group('AlertService.getAllAssignments — campos enriquecidos (supervisor)', () {
     setUp(() async {
-      final token = await authService.login(_supervisorEmail, _password);
-      ApiClient.setToken(token);
-      for (final a in await alertService.getBlockingAssignments()) {
-        await alertService.acknowledge(a.id);
-      }
+      await loginAsSupervisor(authService);
+      await clearBlocking(alertService);
     });
 
     test('retorna assignments com notificationTitle não nulo', () async {

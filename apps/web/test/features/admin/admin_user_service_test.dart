@@ -5,28 +5,23 @@ import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _adminEmail = 'admin.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AdminUserService service;
   late AdminSectorService sectorService;
   late AuthService authService;
+  late AlertService alertService;
   late String testSectorId;
 
   setUp(() async {
     service = AdminUserService();
     sectorService = AdminSectorService();
     authService = AuthService();
-    ApiClient.clearToken();
+    alertService = AlertService();
 
-    final token = await authService.login(_adminEmail, _password);
-    ApiClient.setToken(token);
-    final alertService = AlertService();
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    await loginAs(authService, kAdminEmail);
+    await clearBlocking(alertService);
 
     final sectors = await sectorService.getSectors();
     testSectorId = sectors.first.id;
@@ -55,7 +50,7 @@ void main() {
       final user = await service.createUser(
         name: 'Teste TDD',
         email: 'tdd.user.${DateTime.now().millisecondsSinceEpoch}@notif.com',
-        password: 'password123',
+        password: kPassword,
         role: 'EMPLOYEE',
         sectorId: testSectorId,
       );
@@ -69,13 +64,43 @@ void main() {
       final user = await service.createUser(
         name: 'Supervisor TDD',
         email: 'tdd.sup.${DateTime.now().millisecondsSinceEpoch}@notif.com',
-        password: 'password123',
+        password: kPassword,
         role: 'SUPERVISOR',
         sectorId: testSectorId,
       );
       expect(user.role, equals(UserRole.supervisor));
 
       await service.deleteUser(user.id);
+    });
+
+    test('rejeita email duplicado com ApiException', () async {
+      const duplicateEmail = 'tdd.dup@notif.com';
+      final user = await service.createUser(
+        name: 'Duplicado',
+        email: duplicateEmail,
+        password: kPassword,
+        role: 'EMPLOYEE',
+        sectorId: testSectorId,
+      );
+
+      try {
+        expect(
+          () => service.createUser(
+            name: 'Duplicado 2',
+            email: duplicateEmail,
+            password: kPassword,
+            role: 'EMPLOYEE',
+            sectorId: testSectorId,
+          ),
+          throwsA(isA<ApiException>().having(
+            (e) => e.statusCode,
+            'statusCode',
+            409,
+          )),
+        );
+      } finally {
+        await service.deleteUser(user.id);
+      }
     });
   });
 
@@ -86,7 +111,7 @@ void main() {
       createdUser = await service.createUser(
         name: 'Usuario Para Editar',
         email: 'tdd.edit.${DateTime.now().millisecondsSinceEpoch}@notif.com',
-        password: 'password123',
+        password: kPassword,
         role: 'EMPLOYEE',
         sectorId: testSectorId,
       );
@@ -130,7 +155,7 @@ void main() {
       final user = await service.createUser(
         name: 'Para Deletar',
         email: 'tdd.del.${DateTime.now().millisecondsSinceEpoch}@notif.com',
-        password: 'password123',
+        password: kPassword,
         role: 'EMPLOYEE',
         sectorId: testSectorId,
       );

@@ -13,7 +13,6 @@ class FeedController extends ChangeNotifier {
   bool loading = false;
 
   int pageIndex = 0;
-  int notifications = 3;
 
   Future<void> loadPosts() async {
     loading = true;
@@ -30,7 +29,6 @@ class FeedController extends ChangeNotifier {
 
   void changePage(int page) {
     pageIndex = page;
-    if (page == 2) notifications = 0;
     notifyListeners();
   }
 
