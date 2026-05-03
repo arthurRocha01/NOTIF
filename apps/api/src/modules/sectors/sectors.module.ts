@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { SectorService } from './application/sector.service';
 import { SectorController } from './presentation/sector.controller';
 import { SectorRepository } from './infrastructure/sector.repository.impl';
+import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],
   providers: [SectorService, SectorRepository],
   controllers: [SectorController],
 })

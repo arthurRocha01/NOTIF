@@ -23,6 +23,11 @@ export class SectorRepository implements ISectorRepository {
     return SectorMapper.toDomain(sector);
   }
 
+  async findByName(name: string): Promise<Sector | null> {
+    const sector = await this.prisma.sector.findUnique({ where: { name } });
+    return sector ? SectorMapper.toDomain(sector) : null;
+  }
+
   async save(sector: Sector): Promise<void> {
     const data = SectorMapper.toPersistence(sector);
     await this.prisma.sector.create({ data });
