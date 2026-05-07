@@ -40,7 +40,10 @@ export class NotificationController {
     @Body() dto: CreateNotificationDto,
     @Req() req: any,
   ): Promise<NotificationResponseDto> {
-    const notification = await this.serviceNotification.createNotification(dto, req.user.userId);
+    const notification = await this.serviceNotification.createNotification(
+      dto,
+      req.user.userId,
+    );
 
     return NotificationResponseDto.fromDomain(notification);
   }

@@ -36,9 +36,6 @@ export class AssignmentController {
     return AssignmentResponseDto.fromDomain(assignment);
   }
 
-  // @Post() — criação interna: assignments são gerados automaticamente pelo NotificationService
-  // @Delete — mantido para administração
-
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
     await this.assignmentService.deleteAssignment(id);
