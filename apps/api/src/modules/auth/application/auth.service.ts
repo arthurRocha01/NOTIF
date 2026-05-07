@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from '../../users/application/user.service';
 import { LoginDto } from '../dto/login.dto';
 import { JwtPayload } from '../domain/jwt-payload.interface';
+import { AuthResponseDto } from '../dto/auth-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -28,17 +29,19 @@ export class AuthService {
     return null;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
     if (!user) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const payload: JwtPayload = { email: user.email, sub: user.id, role: user.role };
-
-    return {
-      access_token: this.jwtService.sign(payload),
+    const payload: JwtPayload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
     };
+
+    return new AuthResponseDto(this.jwtService.sign(payload));
   }
 }

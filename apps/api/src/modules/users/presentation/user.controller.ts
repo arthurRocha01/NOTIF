@@ -1,11 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  Delete,
 } from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { UserResponseDto } from '../dto/user-response.dto';
@@ -58,7 +59,7 @@ export class UserController {
 
   @Delete(':id')
   @Roles('ADMIN')
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.userService.deleteUser(id);
   }
 }

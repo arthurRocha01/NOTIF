@@ -6,7 +6,6 @@ import { UpdateNotificationDto } from '../dto/update-notification.dto';
 import { FcmService } from '../infrastructure/fcm.service';
 import { UserService } from '../../users/application/user.service';
 import { AssignmentService } from '../../assignments/application/assignment.service';
-import { NotificationAssignment } from '../../assignments/domain/notification-assignment.entity';
 import { UserRole } from '../../users/domain/types';
 
 @Injectable()
@@ -58,7 +57,7 @@ export class NotificationService {
       ),
     );
 
-    await this.sendFcmToSector(
+    await this.fcmService.sendToSector(
       targetUsers,
       assignments,
       newNotification.getTitle(),
@@ -68,101 +67,6 @@ export class NotificationService {
     );
 
     return newNotification;
-  }
-
-  private async sendFcmToSector(
-    users: Awaited<ReturnType<UserService['listUsersBySectorId']>>,
-    assignments: NotificationAssignment[],
-    title: string,
-    message: string,
-    notificationId: string,
-    level?: string,
-  ) {
-    const isCritical = level === 'CRITICAL';
-
-    console.log(
-      `[FCM] Enviando notificação | level=${level} | notificationId=${notificationId} | destinatários=${users.length}`,
-    );
-
-    const usersWithToken = users.filter((u) => Boolean(u.getFcmToken()));
-    const usersWithoutToken = users.filter((u) => !u.getFcmToken());
-
-    console.log(
-      `[FCM] Tokens disponíveis: ${usersWithToken.length} | Sem token: ${usersWithoutToken.length}`,
-    );
-    if (usersWithoutToken.length > 0) {
-      console.log(
-        `[FCM] Usuários sem token: ${usersWithoutToken.map((u) => u.getId()).join(', ')}`,
-      );
-    }
-
-    if (isCritical) {
-      const assignmentByUserId = new Map(
-        assignments.map((a) => [a.getUserId(), a]),
-      );
-
-      const failedTokens = (
-        await Promise.all(
-          users.map(async (user) => {
-            const token = user.getFcmToken();
-            if (!token) {
-              console.log(`[FCM] Usuário ${user.getId()} sem token — pulando`);
-              return null;
-            }
-            const assignment = assignmentByUserId.get(user.getId());
-            console.log(
-              `[FCM] Enviando individual para userId=${user.getId()} assignmentId=${assignment?.getId()}`,
-            );
-            const failed = await this.fcmService.sendToToken(
-              token,
-              title,
-              message,
-              {
-                level: level ?? '',
-                notificationId,
-                assignmentId: assignment?.getId() ?? '',
-              },
-              level,
-            );
-            if (failed)
-              console.log(`[FCM] Token inválido para userId=${user.getId()}`);
-            return failed;
-          }),
-        )
-      ).filter((t): t is string => t !== null);
-
-      if (failedTokens.length > 0) {
-        console.log(
-          `[FCM] Removendo ${failedTokens.length} token(s) inválido(s)`,
-        );
-        await this.usersService.removeTokensByUser(failedTokens);
-      }
-      return;
-    }
-
-    const tokens = users
-      .map((user) => user.getFcmToken())
-      .filter((token): token is string => Boolean(token));
-
-    if (tokens.length === 0) {
-      console.log('[FCM] Nenhum token disponível — envio cancelado');
-      return;
-    }
-
-    const failedTokens = await this.fcmService.sendMulticast(
-      tokens,
-      title,
-      message,
-      { level: level ?? '', notificationId },
-      level,
-    );
-
-    if (failedTokens?.length > 0) {
-      console.log(
-        `[FCM] Removendo ${failedTokens.length} token(s) inválido(s) após multicast`,
-      );
-      await this.usersService.removeTokensByUser(failedTokens);
-    }
   }
 
   async updateNotification(id: string, dto: UpdateNotificationDto) {

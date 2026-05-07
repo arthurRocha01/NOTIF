@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { DashboardService } from '../application/dashboard.service';
 import { DashboardSummaryDto } from '../dto/dashboard-summary.dto';
+import type { AuthenticatedRequest } from '../../../modules/auth/domain/authenticated-request.interface';
 
 @Controller('dashboard')
 export class DashboardController {
@@ -8,7 +9,7 @@ export class DashboardController {
 
   @Get('summary')
   async getSummary(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Query('period') period?: string,
     @Query('sectorId') sectorId?: string,
   ): Promise<DashboardSummaryDto> {

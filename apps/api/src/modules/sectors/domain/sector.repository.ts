@@ -7,4 +7,5 @@ export interface ISectorRepository {
   save(sector: Sector): Promise<void>;
   update(idsector: Sector): Promise<void>;
   delete(id: string): Promise<void>;
+  deleteWithDependencies(id: string): Promise<void>;
 }

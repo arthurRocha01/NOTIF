@@ -1,9 +1,11 @@
+import type { AuthenticatedRequest } from '../../../modules/auth/domain/authenticated-request.interface';
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -38,7 +40,7 @@ export class NotificationController {
   @Roles('SUPERVISOR')
   async create(
     @Body() dto: CreateNotificationDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<NotificationResponseDto> {
     const notification = await this.serviceNotification.createNotification(
       dto,
@@ -62,7 +64,7 @@ export class NotificationController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.serviceNotification.deleteNotification(id);
   }
 }

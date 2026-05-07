@@ -1,13 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SectorService } from './sector.service';
 import { SectorRepository } from '../infrastructure/sector.repository.impl';
-import { PrismaService } from '../../../prisma/prisma.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('SectorService', () => {
   let service: SectorService;
   let repo: jest.Mocked<SectorRepository>;
-  let prisma: jest.Mocked<PrismaService>;
 
   const mockSector = {
     getId: () => 'sector-1',
@@ -30,13 +28,7 @@ describe('SectorService', () => {
             save: jest.fn().mockResolvedValue(undefined),
             update: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn().mockResolvedValue(undefined),
-          },
-        },
-        {
-          provide: PrismaService,
-          useValue: {
-            notification: { deleteMany: jest.fn().mockResolvedValue(undefined) },
-            user: { deleteMany: jest.fn().mockResolvedValue(undefined) },
+            deleteWithDependencies: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -44,7 +36,6 @@ describe('SectorService', () => {
 
     service = module.get<SectorService>(SectorService);
     repo = module.get(SectorRepository);
-    prisma = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -111,14 +102,7 @@ describe('SectorService', () => {
     it('should delete sector and related data', async () => {
       await service.deleteSector('sector-1');
 
-      expect(repo.findById).toHaveBeenCalledWith('sector-1');
-      expect(prisma.notification.deleteMany).toHaveBeenCalledWith({
-        where: { sectorId: 'sector-1' },
-      });
-      expect(prisma.user.deleteMany).toHaveBeenCalledWith({
-        where: { sectorId: 'sector-1' },
-      });
-      expect(repo.delete).toHaveBeenCalledWith('sector-1');
+      expect(repo.deleteWithDependencies).toHaveBeenCalledWith('sector-1');
     });
 
     it('should throw NotFoundException when sector not found', async () => {

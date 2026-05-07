@@ -41,4 +41,10 @@ export class SectorRepository implements ISectorRepository {
   async delete(id: string): Promise<void> {
     await this.prisma.sector.delete({ where: { id } });
   }
+
+  async deleteWithDependencies(id: string): Promise<void> {
+    await this.prisma.notification.deleteMany({ where: { sectorId: id } });
+    await this.prisma.user.deleteMany({ where: { sectorId: id } });
+    await this.prisma.sector.delete({ where: { id } });
+  }
 }

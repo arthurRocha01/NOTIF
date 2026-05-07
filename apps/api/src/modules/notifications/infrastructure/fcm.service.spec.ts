@@ -16,6 +16,7 @@ jest.mock('firebase-admin/messaging', () => ({
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { FcmService } from './fcm.service';
+import { UserService } from '../../users/application/user.service';
 
 describe('FcmService', () => {
   let service: FcmService;
@@ -25,7 +26,15 @@ describe('FcmService', () => {
     mockSend.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FcmService],
+      providers: [
+        FcmService,
+        {
+          provide: UserService,
+          useValue: {
+            removeTokensByUser: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<FcmService>(FcmService);

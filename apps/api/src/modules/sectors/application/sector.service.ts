@@ -1,16 +1,16 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { SectorRepository } from '../infrastructure/sector.repository.impl';
 import type { CreateSectorDto } from '../dto/create-sector.dto';
 import { Sector } from '../domain/sector.entity';
 import type { UpdateSectorDto } from '../dto/update-sector';
-import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class SectorService {
-  constructor(
-    private readonly sectorRepo: SectorRepository,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly sectorRepo: SectorRepository) {}
 
   async listSectors() {
     return await this.sectorRepo.findAll();
@@ -48,12 +48,8 @@ export class SectorService {
   async deleteSector(id: string) {
     const sector = await this.sectorRepo.findById(id);
 
-    if (!sector) {
-      throw new NotFoundException('Setor não encontrado');
-    }
+    if (!sector) throw new NotFoundException('Setor não encontrado');
 
-    await this.prisma.notification.deleteMany({ where: { sectorId: id } });
-    await this.prisma.user.deleteMany({ where: { sectorId: id } });
-    await this.sectorRepo.delete(id);
+    await this.sectorRepo.deleteWithDependencies(id);
   }
 }

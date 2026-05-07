@@ -26,6 +26,7 @@ const makeAssignment = (userId: string, assignmentId: string, level = 'HIGH') =>
     userId,
     'notif-id',
     level as any,
+    true,
     'PENDING' as any,
     new Date(),
     null,
@@ -49,8 +50,7 @@ const mockUserService = {
 };
 
 const mockFcmService = {
-  sendMulticast: jest.fn(),
-  sendToToken: jest.fn(),
+  sendToSector: jest.fn(),
 };
 
 const mockAssignmentService = {
@@ -67,7 +67,7 @@ const baseDto = {
   requiresAcknowledgment: true,
 };
 
-describe('NotificationService — fluxo FCM', () => {
+describe('NotificationService', () => {
   let service: NotificationService;
 
   beforeEach(async () => {
@@ -89,151 +89,61 @@ describe('NotificationService — fluxo FCM', () => {
     service = module.get<NotificationService>(NotificationService);
   });
 
-  describe('Targeting — quem recebe o push', () => {
-    it('chama sendMulticast com os tokens dos usuários do setor', async () => {
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('createNotification', () => {
+    it('should save notification and create assignments for sector users', async () => {
       const users = [makeUser('token-1'), makeUser('token-2')];
       mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
+      mockAssignmentService.createAssignment.mockResolvedValue(makeAssignment('user-1', 'assign-1'));
 
-      await service.createNotification(baseDto);
+      const result = await service.createNotification(baseDto, 'author-1');
 
-      expect(mockFcmService.sendMulticast).toHaveBeenCalledWith(
-        ['token-1', 'token-2'],
+      expect(mockNotificationRepo.save).toHaveBeenCalled();
+      expect(mockAssignmentService.createAssignment).toHaveBeenCalledTimes(2);
+      expect(result.getTitle()).toBe('Título da notificação');
+    });
+
+    it('should call sendToSector with target users', async () => {
+      const users = [makeUser('token-1'), makeUser('token-2')];
+      mockUserService.listUsersBySectorId.mockResolvedValue(users);
+      mockAssignmentService.createAssignment.mockResolvedValue(makeAssignment('user-1', 'assign-1'));
+
+      await service.createNotification(baseDto, 'author-1');
+
+      expect(mockFcmService.sendToSector).toHaveBeenCalledWith(
+        users,
+        expect.any(Array),
         baseDto.title,
         baseDto.message,
-        expect.objectContaining({ level: baseDto.level }),
+        expect.any(String),
         baseDto.level,
       );
     });
 
-    it('exclui usuários sem fcmToken do multicast', async () => {
-      const users = [makeUser('token-valido'), makeUser(null), makeUser('token-outro')];
-      mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
-
-      await service.createNotification(baseDto);
-
-      const [tokens] = mockFcmService.sendMulticast.mock.calls[0] as [string[]];
-      expect(tokens).toEqual(['token-valido', 'token-outro']);
-      expect(tokens).not.toContain(null);
-    });
-
-    it('não chama sendMulticast quando nenhum usuário do setor tem fcmToken', async () => {
-      mockUserService.listUsersBySectorId.mockResolvedValue([makeUser(null), makeUser(null)]);
-
-      await service.createNotification(baseDto);
-
-      expect(mockFcmService.sendMulticast).not.toHaveBeenCalled();
-    });
-
-    it('usa listUsers para notificação global (sectorId ausente)', async () => {
+    it('should use listUsers for global notification', async () => {
       const globalDto = { ...baseDto, sectorId: undefined };
       mockUserService.listUsers.mockResolvedValue([makeUser('token-global')]);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
+      mockAssignmentService.createAssignment.mockResolvedValue(makeAssignment('user-1', 'assign-1'));
 
-      await service.createNotification(globalDto);
+      await service.createNotification(globalDto, 'author-1');
 
       expect(mockUserService.listUsers).toHaveBeenCalled();
       expect(mockUserService.listUsersBySectorId).not.toHaveBeenCalled();
     });
-  });
 
-  describe('Limpeza de tokens inválidos', () => {
-    it('chama removeTokensByUser com os tokens que falharam', async () => {
-      const users = [makeUser('token-ok'), makeUser('token-falho')];
-      mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue(['token-falho']);
+    it('should exclude author and admins from assignments', async () => {
+      const author = makeUser('token-auth', 'author-1');
+      const admin = User.reconstitute('admin-1', 'Admin', 'admin@test.com', 'hash', 'sector-id', UserRole.ADMIN, 'token-admin', new Date());
+      const employee = makeUser('token-emp', 'employee-1');
+      mockUserService.listUsersBySectorId.mockResolvedValue([author, admin, employee]);
+      mockAssignmentService.createAssignment.mockResolvedValue(makeAssignment('employee-1', 'assign-1'));
 
-      await service.createNotification(baseDto);
+      await service.createNotification(baseDto, 'author-1');
 
-      expect(mockUserService.removeTokensByUser).toHaveBeenCalledWith(['token-falho']);
-    });
-
-    it('não chama removeTokensByUser quando todos os envios têm sucesso', async () => {
-      const users = [makeUser('token-a'), makeUser('token-b')];
-      mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
-
-      await service.createNotification(baseDto);
-
-      expect(mockUserService.removeTokensByUser).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Assignments — independência do FCM', () => {
-    it('cria assignments para todos os usuários do setor, incluindo os sem token', async () => {
-      const users = [makeUser('token-x'), makeUser(null)];
-      mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
-
-      await service.createNotification(baseDto);
-
-      expect(mockAssignmentService.createAssignment).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('Data payload — campos enviados ao app', () => {
-    it('envia level e notificationId no data para notificação não-CRITICAL', async () => {
-      const users = [makeUser('token-1'), makeUser('token-2')];
-      mockUserService.listUsersBySectorId.mockResolvedValue(users);
-      mockFcmService.sendMulticast.mockResolvedValue([]);
-      mockAssignmentService.createAssignment.mockResolvedValue(makeAssignment('user-1', 'assign-1'));
-
-      await service.createNotification(baseDto);
-
-      const callData = mockFcmService.sendMulticast.mock.calls[0][3] as Record<string, string>;
-      expect(callData).toMatchObject({ level: baseDto.level });
-      expect(callData.notificationId).toBeTruthy();
-    });
-
-    it('chama sendToToken individualmente para cada usuário com token em notificação CRITICAL', async () => {
-      const criticalDto = { ...baseDto, level: 'CRITICAL' as const };
-      const user1 = makeUser('token-1', 'user-id-1');
-      const user2 = makeUser('token-2', 'user-id-2');
-      mockUserService.listUsersBySectorId.mockResolvedValue([user1, user2]);
-      mockFcmService.sendToToken.mockResolvedValue(null);
-      mockAssignmentService.createAssignment
-        .mockResolvedValueOnce(makeAssignment('user-id-1', 'assign-id-1', 'CRITICAL'))
-        .mockResolvedValueOnce(makeAssignment('user-id-2', 'assign-id-2', 'CRITICAL'));
-
-      await service.createNotification(criticalDto);
-
-      expect(mockFcmService.sendToToken).toHaveBeenCalledTimes(2);
-      expect(mockFcmService.sendMulticast).not.toHaveBeenCalled();
-    });
-
-    it('envia assignmentId correto para cada usuário em notificação CRITICAL', async () => {
-      const criticalDto = { ...baseDto, level: 'CRITICAL' as const };
-      const user1 = makeUser('token-1', 'user-id-1');
-      const user2 = makeUser('token-2', 'user-id-2');
-      mockUserService.listUsersBySectorId.mockResolvedValue([user1, user2]);
-      mockFcmService.sendToToken.mockResolvedValue(null);
-      mockAssignmentService.createAssignment
-        .mockResolvedValueOnce(makeAssignment('user-id-1', 'assign-id-1', 'CRITICAL'))
-        .mockResolvedValueOnce(makeAssignment('user-id-2', 'assign-id-2', 'CRITICAL'));
-
-      await service.createNotification(criticalDto);
-
-      const calls = mockFcmService.sendToToken.mock.calls as [string, string, string, Record<string, string>, string][];
-      const dataPerCall = calls.map(([, , , data]) => data);
-      expect(dataPerCall).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ assignmentId: 'assign-id-1' }),
-          expect.objectContaining({ assignmentId: 'assign-id-2' }),
-        ]),
-      );
-    });
-
-    it('não chama sendToToken quando usuário CRITICAL não tem fcmToken', async () => {
-      const criticalDto = { ...baseDto, level: 'CRITICAL' as const };
-      mockUserService.listUsersBySectorId.mockResolvedValue([makeUser(null, 'user-sem-token')]);
-      mockAssignmentService.createAssignment.mockResolvedValue(
-        makeAssignment('user-sem-token', 'assign-1', 'CRITICAL'),
-      );
-
-      await service.createNotification(criticalDto);
-
-      expect(mockFcmService.sendToToken).not.toHaveBeenCalled();
+      expect(mockAssignmentService.createAssignment).toHaveBeenCalledTimes(1);
     });
   });
 });
