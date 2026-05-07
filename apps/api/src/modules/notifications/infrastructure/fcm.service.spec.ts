@@ -111,7 +111,10 @@ describe('FcmService', () => {
       expect(mockSendEachForMulticast).toHaveBeenCalledWith(
         expect.objectContaining({
           tokens: ['token-x'],
-          notification: { title: 'Alerta Crítico', body: 'Leia com atenção' },
+          data: expect.objectContaining({
+            title: 'Alerta Crítico',
+            message: 'Leia com atenção',
+          }),
         }),
       );
     });
