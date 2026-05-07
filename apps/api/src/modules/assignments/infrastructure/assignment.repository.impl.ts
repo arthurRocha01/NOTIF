@@ -39,10 +39,20 @@ export class NotificationAssignmentRepository implements INotificationAssignment
     );
   }
 
-  async findAllByUserId(userId: string): Promise<NotificationAssignment[]> {
+  async findAllByUserId(
+    userId: string,
+    status?: string,
+  ): Promise<NotificationAssignment[]> {
+    const where: any = { userId };
+
+    if (status) {
+      where.status = { in: status.split(',').map((s) => s.toUpperCase()) };
+    }
+
     const assignments = await this.prisma.notificationAssignment.findMany({
-      where: { userId },
+      where,
       include: { notification: true },
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     });
 
     return assignments.map((a) =>
@@ -68,11 +78,15 @@ export class NotificationAssignmentRepository implements INotificationAssignment
     });
   }
 
-  async findBlockingByUserId(userId: string): Promise<NotificationAssignment[]> {
+  async findBlockingByUserId(
+    userId: string,
+  ): Promise<NotificationAssignment[]> {
     const assignments = await this.prisma.notificationAssignment.findMany({
       where: {
         userId,
-        status: { notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE] },
+        status: {
+          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE],
+        },
         notification: { level: NotificationLevel.CRITICAL },
       },
       include: { notification: true },
@@ -87,7 +101,9 @@ export class NotificationAssignmentRepository implements INotificationAssignment
     const assignments = await this.prisma.notificationAssignment.findMany({
       where: {
         dueAt: { lt: now },
-        status: { notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE] },
+        status: {
+          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE],
+        },
       },
       include: { notification: true },
     });

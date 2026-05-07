@@ -8,23 +8,20 @@ export class NotificationAssignment {
     private readonly userId: string,
     private readonly notificationId: string,
     private notificationLevel: NotificationLevel,
+    private readonly notificationRequiresAcknowledgment: boolean,
     private status: AssignmentStatus,
     private readonly createdAt: Date,
     private dueAt: Date | null,
     private deliveredAt: Date | null,
     private viewedAt: Date | null,
     private acknowledgedAt: Date | null,
-    private readonly notificationTitle: string = '',
-    private readonly notificationMessage: string = '',
-    private readonly notificationSlaMinutes: number = 0,
-    private readonly notificationRequiresAcknowledgment: boolean = false,
-    private readonly notificationAuthorId: string = '',
   ) {}
 
   public static create(
     userId: string,
     notificationId: string,
     notificationLevel: NotificationLevel,
+    requiresAcknowledge: boolean,
   ) {
     const id = randomUUID();
     const createdat = new Date();
@@ -35,6 +32,7 @@ export class NotificationAssignment {
       userId,
       notificationId,
       notificationLevel,
+      requiresAcknowledge,
       status,
       createdat,
       null,
@@ -49,95 +47,27 @@ export class NotificationAssignment {
     userId: string,
     notificationId: string,
     notificationLevel: NotificationLevel,
+    notificationRequiresAcknowledgment: boolean,
     status: AssignmentStatus,
     createdAt: Date,
     dueAt: Date | null,
     deliveredAt: Date | null,
     viewedAt: Date | null,
     acknowledgedAt: Date | null,
-    notificationTitle: string = '',
-    notificationMessage: string = '',
-    notificationSlaMinutes: number = 0,
-    notificationRequiresAcknowledgment: boolean = false,
-    notificationAuthorId: string = '',
   ) {
     return new NotificationAssignment(
       id,
       userId,
       notificationId,
       notificationLevel,
+      notificationRequiresAcknowledgment,
       status,
       createdAt,
       dueAt,
       deliveredAt,
       viewedAt,
       acknowledgedAt,
-      notificationTitle,
-      notificationMessage,
-      notificationSlaMinutes,
-      notificationRequiresAcknowledgment,
-      notificationAuthorId,
     );
-  }
-
-  public getId() {
-    return this.id;
-  }
-
-  public getUserId() {
-    return this.userId;
-  }
-
-  public getNotificationId() {
-    return this.notificationId;
-  }
-
-  public getNotificationLevel() {
-    return this.notificationLevel;
-  }
-
-  public getStatus() {
-    return this.status;
-  }
-
-  public getCreatedAt() {
-    return this.createdAt;
-  }
-
-  public getDueAt() {
-    return this.dueAt;
-  }
-
-  public getDeliveredAt() {
-    return this.deliveredAt;
-  }
-
-  public getViewedAt() {
-    return this.viewedAt;
-  }
-
-  public getAcknowledgedAt() {
-    return this.acknowledgedAt;
-  }
-
-  public getNotificationTitle() {
-    return this.notificationTitle;
-  }
-
-  public getNotificationMessage() {
-    return this.notificationMessage;
-  }
-
-  public getNotificationSlaMinutes() {
-    return this.notificationSlaMinutes;
-  }
-
-  public getNotificationRequiresAcknowledgment() {
-    return this.notificationRequiresAcknowledgment;
-  }
-
-  public getNotificationAuthorId() {
-    return this.notificationAuthorId;
   }
 
   // Entrega
@@ -185,7 +115,9 @@ export class NotificationAssignment {
 
     const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
     if (this.status === AssignmentStatus.PENDING && !isCritical) {
-      throw new Error('Notificação precisa ser visualizada antes de confirmar ciência');
+      throw new Error(
+        'Notificação precisa ser visualizada antes de confirmar ciência',
+      );
     }
 
     this.acknowledgedAt = new Date();
@@ -216,8 +148,65 @@ export class NotificationAssignment {
     return isCritical && notAcknowledged && notOverdue;
   }
 
+  public isOverdue(): boolean {
+    return this.status == AssignmentStatus.OVERDUE;
+  }
+
+  public canAcknowledge(): boolean {
+    const notOverdue = this.status != AssignmentStatus.OVERDUE;
+    const isCritical = this.notificationLevel == NotificationLevel.CRITICAL;
+
+    return (
+      notOverdue && (isCritical || this.notificationRequiresAcknowledgment)
+    );
+  }
+
   public getResponseTimeInMs(): number | null {
     if (!this.deliveredAt || !this.acknowledgedAt) return null;
     return this.acknowledgedAt.getTime() - this.deliveredAt.getTime();
+  }
+
+  public getId() {
+    return this.id;
+  }
+
+  public getUserId() {
+    return this.userId;
+  }
+
+  public getNotificationId() {
+    return this.notificationId;
+  }
+
+  public getNotificationLevel() {
+    return this.notificationLevel;
+  }
+
+  public getNotificationRequiresAcknowledge() {
+    return this.notificationRequiresAcknowledgment;
+  }
+
+  public getStatus() {
+    return this.status;
+  }
+
+  public getCreatedAt() {
+    return this.createdAt;
+  }
+
+  public getDueAt() {
+    return this.dueAt;
+  }
+
+  public getDeliveredAt() {
+    return this.deliveredAt;
+  }
+
+  public getViewedAt() {
+    return this.viewedAt;
+  }
+
+  public getAcknowledgedAt() {
+    return this.acknowledgedAt;
   }
 }

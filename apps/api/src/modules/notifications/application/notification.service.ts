@@ -53,6 +53,7 @@ export class NotificationService {
           userId: user.getId(),
           notificationId: newNotification.getId(),
           notificationLevel: newNotification.getLevel(),
+          requiresAcknowledge: newNotification.getRequiresAcknowledgment(),
         }),
       ),
     );
@@ -79,18 +80,26 @@ export class NotificationService {
   ) {
     const isCritical = level === 'CRITICAL';
 
-    console.log(`[FCM] Enviando notificação | level=${level} | notificationId=${notificationId} | destinatários=${users.length}`);
+    console.log(
+      `[FCM] Enviando notificação | level=${level} | notificationId=${notificationId} | destinatários=${users.length}`,
+    );
 
     const usersWithToken = users.filter((u) => Boolean(u.getFcmToken()));
     const usersWithoutToken = users.filter((u) => !u.getFcmToken());
 
-    console.log(`[FCM] Tokens disponíveis: ${usersWithToken.length} | Sem token: ${usersWithoutToken.length}`);
+    console.log(
+      `[FCM] Tokens disponíveis: ${usersWithToken.length} | Sem token: ${usersWithoutToken.length}`,
+    );
     if (usersWithoutToken.length > 0) {
-      console.log(`[FCM] Usuários sem token: ${usersWithoutToken.map((u) => u.getId()).join(', ')}`);
+      console.log(
+        `[FCM] Usuários sem token: ${usersWithoutToken.map((u) => u.getId()).join(', ')}`,
+      );
     }
 
     if (isCritical) {
-      const assignmentByUserId = new Map(assignments.map((a) => [a.getUserId(), a]));
+      const assignmentByUserId = new Map(
+        assignments.map((a) => [a.getUserId(), a]),
+      );
 
       const failedTokens = (
         await Promise.all(
@@ -101,20 +110,31 @@ export class NotificationService {
               return null;
             }
             const assignment = assignmentByUserId.get(user.getId());
-            console.log(`[FCM] Enviando individual para userId=${user.getId()} assignmentId=${assignment?.getId()}`);
-            const failed = await this.fcmService.sendToToken(token, title, message, {
-              level: level ?? '',
-              notificationId,
-              assignmentId: assignment?.getId() ?? '',
-            }, level);
-            if (failed) console.log(`[FCM] Token inválido para userId=${user.getId()}`);
+            console.log(
+              `[FCM] Enviando individual para userId=${user.getId()} assignmentId=${assignment?.getId()}`,
+            );
+            const failed = await this.fcmService.sendToToken(
+              token,
+              title,
+              message,
+              {
+                level: level ?? '',
+                notificationId,
+                assignmentId: assignment?.getId() ?? '',
+              },
+              level,
+            );
+            if (failed)
+              console.log(`[FCM] Token inválido para userId=${user.getId()}`);
             return failed;
           }),
         )
       ).filter((t): t is string => t !== null);
 
       if (failedTokens.length > 0) {
-        console.log(`[FCM] Removendo ${failedTokens.length} token(s) inválido(s)`);
+        console.log(
+          `[FCM] Removendo ${failedTokens.length} token(s) inválido(s)`,
+        );
         await this.usersService.removeTokensByUser(failedTokens);
       }
       return;
@@ -138,7 +158,9 @@ export class NotificationService {
     );
 
     if (failedTokens?.length > 0) {
-      console.log(`[FCM] Removendo ${failedTokens.length} token(s) inválido(s) após multicast`);
+      console.log(
+        `[FCM] Removendo ${failedTokens.length} token(s) inválido(s) após multicast`,
+      );
       await this.usersService.removeTokensByUser(failedTokens);
     }
   }

@@ -13,8 +13,11 @@ export class AssignmentService {
     return await this.assignmentRepo.findall();
   }
 
-  async listMyAssignments(userId: string): Promise<NotificationAssignment[]> {
-    return await this.assignmentRepo.findAllByUserId(userId);
+  async listMyAssignments(
+    userId: string,
+    status?: string,
+  ): Promise<NotificationAssignment[]> {
+    return await this.assignmentRepo.findAllByUserId(userId, status);
   }
 
   async getAssigmentDetails(
@@ -34,6 +37,7 @@ export class AssignmentService {
       dto.userId,
       dto.notificationId,
       dto.notificationLevel,
+      dto.requiresAcknowledge,
     );
 
     await this.assignmentRepo.save(assignment);

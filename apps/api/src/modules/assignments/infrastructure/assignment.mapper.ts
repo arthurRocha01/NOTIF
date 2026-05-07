@@ -18,17 +18,13 @@ export class NotificationAssignmentMapper {
       raw.userId,
       raw.notificationId,
       this.mapLevel(notification.level),
+      notification.requiresAcknowledgment,
       this.mapStatus(raw.status),
       raw.createdAt,
       raw.dueAt,
       raw.deliveredAt,
       raw.viewedAt,
       raw.acknowledgedAt,
-      notification.title,
-      notification.message,
-      notification.slaMinutes,
-      notification.requiresAcknowledgment,
-      notification.authorId,
     );
   }
 

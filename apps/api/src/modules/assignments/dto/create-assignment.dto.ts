@@ -13,4 +13,6 @@ export class CreateAssignmentDto {
   @IsEnum(NotificationLevel, { message: 'O nível da notificação é inválido' })
   @IsNotEmpty({ message: 'O nível da notificação é obrigatório' })
   notificationLevel: NotificationLevel;
+
+  requiresAcknowledge: boolean;
 }

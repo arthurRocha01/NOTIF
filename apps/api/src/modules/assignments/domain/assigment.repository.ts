@@ -4,7 +4,10 @@ export interface INotificationAssignment {
   findall(): Promise<NotificationAssignment[]>;
   findById(id: string): Promise<NotificationAssignment | null>;
   findByUserId(userId: string): Promise<NotificationAssignment[]>;
-  findAllByUserId(userId: string): Promise<NotificationAssignment[]>;
+  findAllByUserId(
+    userId: string,
+    status?: string,
+  ): Promise<NotificationAssignment[]>;
   findBlockingByUserId(userId: string): Promise<NotificationAssignment[]>;
   findPendingOverdue(now: Date): Promise<NotificationAssignment[]>;
   save(notificationAssignment: NotificationAssignment): Promise<void>;
