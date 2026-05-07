@@ -11,9 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/infrastructure/guards/jwt-auth.guard';
 import { CriticalBlockGuard } from './modules/assignments/infrastructure/guards/critical-block.guard';
 import { RolesGuard } from './modules/auth/infrastructure/guards/roles.guard';
-import { DashboardModule } from './dashboard/dashboard.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
+
 @Module({
   imports: [
     UsersModule,
