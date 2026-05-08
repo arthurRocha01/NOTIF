@@ -10,7 +10,7 @@ import { NotificationLevel } from '../../notifications/domain/type';
 export class NotificationAssignmentRepository implements INotificationAssignment {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findall(): Promise<NotificationAssignment[]> {
+  async findAll(): Promise<NotificationAssignment[]> {
     const assignments = await this.prisma.notificationAssignment.findMany({
       include: { notification: true },
     });
@@ -76,6 +76,81 @@ export class NotificationAssignmentRepository implements INotificationAssignment
         assigment.notification,
       );
     });
+  }
+
+  async getInboxCounts(userId: string) {
+    const [total, pending, overdue, critical, blocking, alerts] =
+      await Promise.all([
+        this.prisma.notificationAssignment.count({ where: { userId } }),
+        this.prisma.notificationAssignment.count({
+          where: {
+            userId,
+            status: { in: ['PENDING', 'VIEWED'] },
+          },
+        }),
+        this.prisma.notificationAssignment.count({
+          where: {
+            userId,
+            status: 'OVERDUE',
+          },
+        }),
+        this.prisma.notificationAssignment.count({
+          where: {
+            userId,
+            notification: { level: NotificationLevel.CRITICAL },
+          },
+        }),
+        this.prisma.notificationAssignment.count({
+          where: {
+            userId,
+            status: { notIn: ['ACKNOWLEDGED', 'OVERDUE'] },
+            notification: { level: NotificationLevel.CRITICAL },
+          },
+        }),
+        this.findMineWithNotification(userId),
+      ]);
+
+    return {
+      total,
+      pending,
+      overdue,
+      critical,
+      isBlocked: blocking > 0,
+      alerts: alerts.map(({ assignment, notification }) => ({
+        assignment,
+        notification,
+      })),
+    };
+  }
+
+  async findMineWithNotification(
+    userId: string,
+    status?: string,
+  ): Promise<
+    {
+      assignment: NotificationAssignment;
+      notification: { title: string; message: string };
+    }[]
+  > {
+    const where: any = { userId };
+
+    if (status) {
+      where.status = { in: status.split(',').map((s) => s.toUpperCase()) };
+    }
+
+    const rows = await this.prisma.notificationAssignment.findMany({
+      where,
+      include: { notification: true },
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    return rows.map((row) => ({
+      assignment: NotificationAssignmentMapper.toDomain(row, row.notification),
+      notification: {
+        title: row.notification.title,
+        message: row.notification.message,
+      },
+    }));
   }
 
   async findBlockingByUserId(

@@ -1,7 +1,7 @@
 import type { Notification } from './notification.entity';
 
 export interface INotificarionRepository {
-  findAll(): Promise<Notification[]>;
+  findAll(level?: string, sectorId?: string): Promise<Notification[]>;
   findById(id: string): Promise<Notification | null>;
   save(notification: Notification): Promise<void>;
   update(notification: Notification): Promise<void>;

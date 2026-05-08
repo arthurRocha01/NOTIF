@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { UserRepository } from '../infrastructure/user.repository.impl';
+import { SectorRepository } from '../../sectors/infrastructure/sector.repository.impl';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('UserService', () => {
@@ -46,6 +47,15 @@ describe('UserService', () => {
             update: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn().mockResolvedValue(undefined),
             removeTokens: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: SectorRepository,
+          useValue: {
+            findById: jest.fn().mockResolvedValue({
+              getId: () => 'sector-1',
+              getName: () => 'TI',
+            }),
           },
         },
       ],

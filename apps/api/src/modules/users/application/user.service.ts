@@ -7,11 +7,22 @@ import { User } from '../domain/user.entity';
 import { UserRepository } from '../infrastructure/user.repository.impl';
 import type { CreateUserDto } from '../dto/create-user.dto';
 import type { UpdateUserDto } from '../dto/update-user.dto';
+import { UserProfileDto } from '../dto/user-profile.dto';
+import { SectorRepository } from '../../sectors/infrastructure/sector.repository.impl';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepo: UserRepository) {}
+  constructor(
+    private readonly userRepo: UserRepository,
+    private readonly sectorRepo: SectorRepository,
+  ) {}
+
+  async getUserProfile(userId: string): Promise<UserProfileDto> {
+    const user = await this.userRepo.findById(userId);
+    const sector = await this.sectorRepo.findById(user.getSectorId());
+    return new UserProfileDto(user, sector?.getName() ?? '');
+  }
 
   async listUsers(): Promise<User[]> {
     return this.userRepo.findAll();

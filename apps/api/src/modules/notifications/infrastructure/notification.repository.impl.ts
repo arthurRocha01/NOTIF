@@ -8,8 +8,24 @@ import { NotificationMapper } from './notification.mapper';
 export class NotificationRepository implements INotificarionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Notification[]> {
-    const notifications = await this.prisma.notification.findMany();
+  async findAll(
+    level?: string,
+    sectorId?: string,
+  ): Promise<Notification[]> {
+    const where: any = {};
+
+    if (level) {
+      where.level = level.toUpperCase();
+    }
+
+    if (sectorId) {
+      where.sectorId = sectorId;
+    }
+
+    const notifications = await this.prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
     return notifications.map((notification) =>
       NotificationMapper.toDomain(notification),
     );

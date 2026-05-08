@@ -68,7 +68,10 @@ describe('SectorController', () => {
   describe('update', () => {
     it('should update sector and return DTO', async () => {
       const result = await controller.update('sector-1', mockUpdateDto);
-      expect(service.updateSector).toHaveBeenCalledWith('sector-1', mockUpdateDto);
+      expect(service.updateSector).toHaveBeenCalledWith(
+        'sector-1',
+        mockUpdateDto,
+      );
       expect(result).toBeDefined();
     });
   });

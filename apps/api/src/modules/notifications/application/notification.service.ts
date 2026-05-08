@@ -17,8 +17,11 @@ export class NotificationService {
     private readonly assignmentService: AssignmentService,
   ) {}
 
-  async listNotifications(): Promise<Notification[]> {
-    return await this.notificationRepo.findAll();
+  async listNotifications(
+    level?: string,
+    sectorId?: string,
+  ): Promise<Notification[]> {
+    return await this.notificationRepo.findAll(level, sectorId);
   }
 
   async getNotificationById(id: string): Promise<Notification | null> {

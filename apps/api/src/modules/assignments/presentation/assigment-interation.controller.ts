@@ -2,14 +2,15 @@ import { Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { AssignmentsInteractionService } from '../application/assignments-interaction.service';
 import { BypassBlock } from '../infrastructure/decorators/bypass-block.decorator';
 import { AssignmentResponseDto } from '../dto/assignment-response.dto';
+import type { AuthenticatedRequest } from '../../../auth/domain/authenticated-request.interface';
 
 @Controller('assignments')
-export class AssigmentInterationController {
+export class AssignmentInteractionController {
   constructor(private readonly service: AssignmentsInteractionService) {}
 
   @Get('blocking')
   @BypassBlock()
-  async getBlocking(@Req() req: any): Promise<AssignmentResponseDto[]> {
+  async getBlocking(@Req() req: AuthenticatedRequest): Promise<AssignmentResponseDto[]> {
     const assignments = await this.service.getBlockingAssignments(
       req.user.userId,
     );
@@ -18,7 +19,7 @@ export class AssigmentInterationController {
 
   @Post('sync')
   @BypassBlock()
-  async sync(@Req() req: any) {
+  async sync(@Req() req: AuthenticatedRequest) {
     const syncedCount = await this.service.syncDeliveries(req.user.userId);
 
     return {
@@ -28,7 +29,7 @@ export class AssigmentInterationController {
   }
 
   @Post(':assignmentId/view')
-  async view(@Param('assignmentId') assignmentId: string, @Req() req: any) {
+  async view(@Param('assignmentId') assignmentId: string, @Req() req: AuthenticatedRequest) {
     const userId = req.user.userId;
     await this.service.markAsViewed(userId, assignmentId);
 
@@ -41,7 +42,7 @@ export class AssigmentInterationController {
   @BypassBlock()
   async acknowledge(
     @Param('assignmentId') assignmentId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.userId;
     await this.service.acknowledge(userId, assignmentId);

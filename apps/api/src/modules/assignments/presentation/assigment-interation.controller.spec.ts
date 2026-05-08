@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AssigmentInterationController } from './assigment-interation.controller';
+import { AssignmentInteractionController } from './assigment-interation.controller';
 import { AssignmentsInteractionService } from '../application/assignments-interaction.service';
 
-describe('AssigmentInterationController', () => {
-  let controller: AssigmentInterationController;
+describe('AssignmentInteractionController', () => {
+  let controller: AssignmentInteractionController;
   let service: jest.Mocked<AssignmentsInteractionService>;
 
   const mockAssignment = {
@@ -38,12 +38,14 @@ describe('AssigmentInterationController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AssigmentInterationController],
+      controllers: [AssignmentInteractionController],
       providers: [
         {
           provide: AssignmentsInteractionService,
           useValue: {
-            getBlockingAssignments: jest.fn().mockResolvedValue([mockAssignment]),
+            getBlockingAssignments: jest
+              .fn()
+              .mockResolvedValue([mockAssignment]),
             syncDeliveries: jest.fn().mockResolvedValue(3),
             markAsViewed: jest.fn().mockResolvedValue(undefined),
             acknowledge: jest.fn().mockResolvedValue(undefined),
@@ -52,7 +54,9 @@ describe('AssigmentInterationController', () => {
       ],
     }).compile();
 
-    controller = module.get<AssigmentInterationController>(AssigmentInterationController);
+    controller = module.get<AssignmentInteractionController>(
+      AssignmentInteractionController,
+    );
     service = module.get(AssignmentsInteractionService);
   });
 
@@ -89,7 +93,10 @@ describe('AssigmentInterationController', () => {
       const req = mockReq();
       const result = await controller.view('assignment-1', req as any);
 
-      expect(service.markAsViewed).toHaveBeenCalledWith('user-1', 'assignment-1');
+      expect(service.markAsViewed).toHaveBeenCalledWith(
+        'user-1',
+        'assignment-1',
+      );
       expect(result).toEqual({ message: 'Notificação visualizada' });
     });
   });
@@ -99,7 +106,10 @@ describe('AssigmentInterationController', () => {
       const req = mockReq();
       const result = await controller.acknowledge('assignment-1', req as any);
 
-      expect(service.acknowledge).toHaveBeenCalledWith('user-1', 'assignment-1');
+      expect(service.acknowledge).toHaveBeenCalledWith(
+        'user-1',
+        'assignment-1',
+      );
       expect(result).toEqual({ message: 'Ciência confirmada com sucesso' });
     });
   });

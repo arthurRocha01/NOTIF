@@ -67,10 +67,23 @@ describe('NotificationController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all notifications as DTOs', async () => {
+    it('should return all notifications without filters', async () => {
       const result = await controller.findAll();
 
-      expect(service.listNotifications).toHaveBeenCalled();
+      expect(service.listNotifications).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+      );
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it('should filter by level and sectorId', async () => {
+      const result = await controller.findAll('CRITICAL', 'sector-1');
+
+      expect(service.listNotifications).toHaveBeenCalledWith(
+        'CRITICAL',
+        'sector-1',
+      );
       expect(Array.isArray(result)).toBe(true);
     });
   });
@@ -89,7 +102,10 @@ describe('NotificationController', () => {
       const req = mockReq();
       const result = await controller.create(mockDto as any, req as any);
 
-      expect(service.createNotification).toHaveBeenCalledWith(mockDto, 'user-1');
+      expect(service.createNotification).toHaveBeenCalledWith(
+        mockDto,
+        'user-1',
+      );
       expect(result).toBeDefined();
     });
   });
@@ -98,7 +114,10 @@ describe('NotificationController', () => {
     it('should update notification and return DTO', async () => {
       const result = await controller.update('notif-1', mockUpdateDto as any);
 
-      expect(service.updateNotification).toHaveBeenCalledWith('notif-1', mockUpdateDto);
+      expect(service.updateNotification).toHaveBeenCalledWith(
+        'notif-1',
+        mockUpdateDto,
+      );
       expect(result).toBeDefined();
     });
   });

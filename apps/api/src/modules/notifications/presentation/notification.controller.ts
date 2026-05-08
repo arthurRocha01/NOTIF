@@ -1,15 +1,5 @@
 import type { AuthenticatedRequest } from '../../../modules/auth/domain/authenticated-request.interface';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-  Post,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req } from '@nestjs/common';
 import { NotificationService } from '../application/notification.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { NotificationResponseDto } from '../dto/notification-response.dto';
@@ -21,8 +11,14 @@ export class NotificationController {
   constructor(private readonly serviceNotification: NotificationService) {}
 
   @Get()
-  async findAll(): Promise<NotificationResponseDto[]> {
-    const notifications = await this.serviceNotification.listNotifications();
+  async findAll(
+    @Query('level') level?: string,
+    @Query('sectorId') sectorId?: string,
+  ): Promise<NotificationResponseDto[]> {
+    const notifications = await this.serviceNotification.listNotifications(
+      level,
+      sectorId,
+    );
 
     return notifications.map((notification) =>
       NotificationResponseDto.fromDomain(notification),

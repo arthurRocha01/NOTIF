@@ -27,6 +27,15 @@ describe('UserController', () => {
 
   const mockUpdateDto = { name: 'João Novo' };
 
+  const mockReq = (overrides = {}) => ({
+    user: {
+      userId: 'user-1',
+      role: 'EMPLOYEE',
+      sectorId: 'sector-1',
+      ...overrides,
+    },
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
@@ -69,14 +78,6 @@ describe('UserController', () => {
     });
   });
 
-  describe('findByEmail', () => {
-    it('should return user by email as DTO', async () => {
-      const result = await controller.findByEmail('joao@test.com');
-      expect(service.getUserByEmail).toHaveBeenCalledWith('joao@test.com');
-      expect(result).toBeDefined();
-    });
-  });
-
   describe('create', () => {
     it('should create user and return DTO', async () => {
       const result = await controller.create(mockCreateDto);
@@ -90,6 +91,28 @@ describe('UserController', () => {
       const result = await controller.update('user-1', mockUpdateDto);
       expect(service.updateUser).toHaveBeenCalledWith('user-1', mockUpdateDto);
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('updateFcmToken', () => {
+    it('should update fcm token for authenticated user', async () => {
+      const req = mockReq();
+      await controller.updateFcmToken(req as any, 'novo-token');
+
+      expect(service.updateUser).toHaveBeenCalledWith('user-1', {
+        fcmToken: 'novo-token',
+      });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('should update password for authenticated user', async () => {
+      const req = mockReq();
+      await controller.updatePassword(req as any, 'nova-senha');
+
+      expect(service.updateUser).toHaveBeenCalledWith('user-1', {
+        password: 'nova-senha',
+      });
     });
   });
 

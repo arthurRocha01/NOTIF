@@ -41,8 +41,21 @@ describe('AssignmentController', () => {
           provide: AssignmentService,
           useValue: {
             listAssignments: jest.fn().mockResolvedValue([mockAssignment]),
-            listMyAssignments: jest.fn().mockResolvedValue([mockAssignment]),
-            getAssigmentDetails: jest.fn().mockResolvedValue(mockAssignment),
+            listMyAlerts: jest.fn().mockResolvedValue([
+              {
+                assignment: mockAssignment,
+                notification: { title: 'Título', message: 'Mensagem' },
+              },
+            ]),
+            getInboxSummary: jest.fn().mockResolvedValue({
+              total: 1,
+              pending: 1,
+              overdue: 0,
+              critical: 1,
+              isBlocked: true,
+              alerts: [],
+            }),
+            getAssignmentDetails: jest.fn().mockResolvedValue(mockAssignment),
             deleteAssignment: jest.fn().mockResolvedValue(undefined),
           },
         },
@@ -72,7 +85,7 @@ describe('AssignmentController', () => {
       const req = mockReq();
       const result = await controller.findMine(req as any);
 
-      expect(service.listMyAssignments).toHaveBeenCalledWith(
+      expect(service.listMyAlerts).toHaveBeenCalledWith(
         'user-1',
         undefined,
       );
@@ -84,7 +97,7 @@ describe('AssignmentController', () => {
       const req = mockReq();
       const result = await controller.findMine(req as any, 'pending,viewed');
 
-      expect(service.listMyAssignments).toHaveBeenCalledWith(
+      expect(service.listMyAlerts).toHaveBeenCalledWith(
         'user-1',
         'pending,viewed',
       );
@@ -97,7 +110,7 @@ describe('AssignmentController', () => {
     it('should return assignment by id as DTO', async () => {
       const result = await controller.findById('assignment-1');
 
-      expect(service.getAssigmentDetails).toHaveBeenCalledWith('assignment-1');
+      expect(service.getAssignmentDetails).toHaveBeenCalledWith('assignment-1');
       expect(result).toBeDefined();
     });
   });
@@ -107,6 +120,21 @@ describe('AssignmentController', () => {
       await controller.delete('assignment-1');
 
       expect(service.deleteAssignment).toHaveBeenCalledWith('assignment-1');
+    });
+  });
+
+  describe('inboxSummary', () => {
+    it('should return inbox summary for authenticated user', async () => {
+      const req = mockReq();
+      const result = await controller.inboxSummary(req as any);
+
+      expect(service.getInboxSummary).toHaveBeenCalledWith('user-1');
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('pending');
+      expect(result).toHaveProperty('overdue');
+      expect(result).toHaveProperty('critical');
+      expect(result).toHaveProperty('isBlocked');
+      expect(result).toHaveProperty('alerts');
     });
   });
 });

@@ -9,24 +9,25 @@ export class AssignmentService {
     private readonly assignmentRepo: NotificationAssignmentRepository,
   ) {}
 
+  async getInboxSummary(userId: string) {
+    return await this.assignmentRepo.getInboxCounts(userId);
+  }
+
   async listAssignments(): Promise<NotificationAssignment[]> {
-    return await this.assignmentRepo.findall();
+    return await this.assignmentRepo.findAll();
   }
 
-  async listMyAssignments(
-    userId: string,
-    status?: string,
-  ): Promise<NotificationAssignment[]> {
-    return await this.assignmentRepo.findAllByUserId(userId, status);
+  async listMyAlerts(userId: string, status?: string) {
+    return await this.assignmentRepo.findMineWithNotification(userId, status);
   }
 
-  async getAssigmentDetails(
+  async getAssignmentDetails(
     id: string,
   ): Promise<NotificationAssignment | null> {
     return await this.assignmentRepo.findById(id);
   }
 
-  async listPeddingDeliveries(
+  async listPendingDeliveries(
     userId: string,
   ): Promise<NotificationAssignment[]> {
     return await this.assignmentRepo.findByUserId(userId);

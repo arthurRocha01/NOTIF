@@ -31,10 +31,29 @@ describe('AssignmentService', () => {
         {
           provide: NotificationAssignmentRepository,
           useValue: {
-            findall: jest.fn().mockResolvedValue([mockAssignment]),
+            findAll: jest.fn().mockResolvedValue([mockAssignment]),
             findById: jest.fn().mockResolvedValue(mockAssignment),
             findAllByUserId: jest.fn().mockResolvedValue([mockAssignment]),
             findByUserId: jest.fn().mockResolvedValue([mockAssignment]),
+            findMineWithNotification: jest.fn().mockResolvedValue([
+              {
+                assignment: mockAssignment,
+                notification: { title: 'Título', message: 'Mensagem' },
+              },
+            ]),
+            getInboxCounts: jest.fn().mockResolvedValue({
+              total: 1,
+              pending: 1,
+              overdue: 0,
+              critical: 1,
+              isBlocked: true,
+              alerts: [
+                {
+                  assignment: mockAssignment,
+                  notification: { title: 'Título', message: 'Mensagem' },
+                },
+              ],
+            }),
             save: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn().mockResolvedValue(undefined),
           },
@@ -53,36 +72,46 @@ describe('AssignmentService', () => {
   describe('listAssignments', () => {
     it('should return all assignments', async () => {
       const result = await service.listAssignments();
-      expect(repo.findall).toHaveBeenCalled();
+      expect(repo.findAll).toHaveBeenCalled();
       expect(result).toEqual([mockAssignment]);
     });
   });
 
-  describe('listMyAssignments', () => {
-    it('should return assignments for user without status filter', async () => {
-      const result = await service.listMyAssignments('user-1');
-      expect(repo.findAllByUserId).toHaveBeenCalledWith('user-1', undefined);
-      expect(result).toEqual([mockAssignment]);
+  describe('listMyAlerts', () => {
+    it('should return alerts for user without status filter', async () => {
+      const result = await service.listMyAlerts('user-1');
+      expect(repo.findMineWithNotification).toHaveBeenCalledWith('user-1', undefined);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('assignment');
+      expect(result[0]).toHaveProperty('notification');
     });
 
-    it('should return assignments for user with status filter', async () => {
-      const result = await service.listMyAssignments('user-1', 'pending,viewed');
-      expect(repo.findAllByUserId).toHaveBeenCalledWith('user-1', 'pending,viewed');
-      expect(result).toEqual([mockAssignment]);
+    it('should return alerts for user with status filter', async () => {
+      const result = await service.listMyAlerts(
+        'user-1',
+        'pending,viewed',
+      );
+      expect(repo.findMineWithNotification).toHaveBeenCalledWith(
+        'user-1',
+        'pending,viewed',
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('assignment');
+      expect(result[0]).toHaveProperty('notification');
     });
   });
 
-  describe('getAssigmentDetails', () => {
+  describe('getAssignmentDetails', () => {
     it('should return assignment by id', async () => {
-      const result = await service.getAssigmentDetails('assignment-1');
+      const result = await service.getAssignmentDetails('assignment-1');
       expect(repo.findById).toHaveBeenCalledWith('assignment-1');
       expect(result).toEqual(mockAssignment);
     });
   });
 
-  describe('listPeddingDeliveries', () => {
+  describe('listPendingDeliveries', () => {
     it('should return pending deliveries for user', async () => {
-      const result = await service.listPeddingDeliveries('user-1');
+      const result = await service.listPendingDeliveries('user-1');
       expect(repo.findByUserId).toHaveBeenCalledWith('user-1');
       expect(result).toEqual([mockAssignment]);
     });
@@ -101,6 +130,20 @@ describe('AssignmentService', () => {
 
       expect(repo.save).toHaveBeenCalled();
       expect(result.getUserId()).toBe('user-1');
+    });
+  });
+
+  describe('getInboxSummary', () => {
+    it('should return summary with counts and alerts', async () => {
+      const result = await service.getInboxSummary('user-1');
+
+      expect(repo.getInboxCounts).toHaveBeenCalledWith('user-1');
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('pending');
+      expect(result).toHaveProperty('overdue');
+      expect(result).toHaveProperty('critical');
+      expect(result).toHaveProperty('isBlocked');
+      expect(Array.isArray(result.alerts)).toBe(true);
     });
   });
 
