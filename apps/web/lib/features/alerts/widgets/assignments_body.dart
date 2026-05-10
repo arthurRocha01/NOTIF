@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../models/alert_model.dart';
+import '../models/my_assignment_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../screen/alert_details_screen.dart';
@@ -10,7 +10,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 
 class AssignmentsBody extends StatefulWidget {
-  final List<AssignmentModel> assignments;
+  final List<MyAssignmentModel> assignments;
   final bool isLoading;
   final bool isBlocked;
   final bool isSupervisor;
@@ -34,48 +34,56 @@ class AssignmentsBody extends StatefulWidget {
 class _AssignmentsBodyState extends State<AssignmentsBody>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late List<MyAssignmentModel> _pending;
+  late List<MyAssignmentModel> _overdue;
+  late List<MyAssignmentModel> _done;
+  late List<MyAssignmentModel> _all;
+  late int _criticalCount;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _buildCaches(widget.assignments);
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant AssignmentsBody old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.assignments, widget.assignments)) {
+      _buildCaches(widget.assignments);
+    }
   }
 
-  List<AssignmentModel> get _pending => widget.assignments
-      .where((a) =>
-          a.status == AssignmentStatus.pending ||
-          a.status == AssignmentStatus.viewed)
-      .toList()
-    ..sort((a, b) {
-      final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
-      final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
-      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
-      return b.createdAt.compareTo(a.createdAt);
-    });
+  void _buildCaches(List<MyAssignmentModel> assignments) {
+    _pending = assignments
+        .where((a) =>
+            a.status == AssignmentStatus.pending ||
+            a.status == AssignmentStatus.viewed)
+        .toList()
+      ..sort((a, b) {
+        final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
+        final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
+        if (aPriority != bPriority) return aPriority.compareTo(bPriority);
+        return b.createdAt.compareTo(a.createdAt);
+      });
 
-  List<AssignmentModel> get _overdue => widget.assignments
-      .where((a) => a.status == AssignmentStatus.overdue)
-      .toList()
-    ..sort((a, b) {
-      final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
-      final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
-      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    _overdue = assignments
+        .where((a) => a.status == AssignmentStatus.overdue)
+        .toList()
+      ..sort((a, b) {
+        final aPriority = a.notificationLevel == AlertLevel.critical ? 0 : 1;
+        final bPriority = b.notificationLevel == AlertLevel.critical ? 0 : 1;
+        if (aPriority != bPriority) return aPriority.compareTo(bPriority);
+        return b.createdAt.compareTo(a.createdAt);
+      });
 
-  List<AssignmentModel> get _done => widget.assignments
-      .where((a) => a.status == AssignmentStatus.acknowledged)
-      .toList()
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    _done = assignments
+        .where((a) => a.status == AssignmentStatus.acknowledged)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-  List<AssignmentModel> get _all {
-    final all = [...widget.assignments]..sort((a, b) {
+    _all = [...assignments]..sort((a, b) {
         final aScore = a.status == AssignmentStatus.overdue
             ? 0
             : a.notificationLevel == AlertLevel.critical
@@ -93,14 +101,19 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
         if (aScore != bScore) return aScore.compareTo(bScore);
         return b.createdAt.compareTo(a.createdAt);
       });
-    return all;
+
+    _criticalCount = assignments
+        .where((a) =>
+            a.notificationLevel == AlertLevel.critical &&
+            a.status != AssignmentStatus.acknowledged)
+        .length;
   }
 
-  int get _criticalCount => widget.assignments
-      .where((a) =>
-          a.notificationLevel == AlertLevel.critical &&
-          a.status != AssignmentStatus.acknowledged)
-      .length;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +251,7 @@ class _AssignmentsBodyState extends State<AssignmentsBody>
     );
   }
 
-  Widget _buildList(List<AssignmentModel> items, {String? emptyLabel}) {
+  Widget _buildList(List<MyAssignmentModel> items, {String? emptyLabel}) {
     if (widget.isLoading && widget.assignments.isEmpty) {
       return CustomScrollView(
         slivers: [
@@ -458,7 +471,7 @@ class _BlockingBanner extends StatelessWidget {
 // ── Assignment card ───────────────────────────────────────────────────────────
 
 class _AssignmentCard extends ConsumerWidget {
-  final AssignmentModel assignment;
+  final MyAssignmentModel assignment;
   final VoidCallback? onAcknowledge;
 
   const _AssignmentCard({required this.assignment, this.onAcknowledge});

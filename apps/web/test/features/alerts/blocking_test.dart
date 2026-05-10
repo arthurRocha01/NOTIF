@@ -21,10 +21,10 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
-    await alertService.createNotification(
+    final criticalNotif = await alertService.createNotification(
       title: 'Bloqueio Crítico TDD',
       message: 'Notificação crítica para testar o bloqueio sistêmico do colaborador.',
       level: AlertLevel.critical,
@@ -46,7 +46,7 @@ void main() {
     await alertService.syncDeliveries();
 
     final blocking = await alertService.getBlockingAssignments();
-    assignmentId = blocking.first.id;
+    assignmentId = blocking.firstWhere((a) => a.notificationId == criticalNotif.id).id;
 
     final all = await alertService.getMyAssignments();
     pendingAssignmentId = all

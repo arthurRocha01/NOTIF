@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
+import 'package:notif_app/features/sectors/services/sector_service.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-import 'package:notif_app/features/sectors/models/sector_model.dart';
 import '../../helpers/alert_test_helpers.dart';
 
 void main() {
@@ -20,22 +20,6 @@ void main() {
 
     await loginAs(authService, kAdminEmail);
     await clearBlocking(alertService);
-  });
-
-  group('AdminSectorService.getSectors', () {
-    test('retorna lista de SectorModel', () async {
-      final sectors = await service.getSectors();
-      expect(sectors, isA<List<SectorModel>>());
-    });
-
-    test('cada setor tem id e name não vazios', () async {
-      final sectors = await service.getSectors();
-      expect(sectors, isNotEmpty);
-      for (final s in sectors) {
-        expect(s.id, isNotEmpty);
-        expect(s.name, isNotEmpty);
-      }
-    });
   });
 
   group('AdminSectorService.createSector', () {
@@ -95,7 +79,7 @@ void main() {
       final created = await service.createSector('Setor Efêmero $ts');
       await service.deleteSector(created.id);
 
-      final sectors = await service.getSectors();
+      final sectors = await SectorService().getSectors();
       expect(sectors.any((s) => s.id == created.id), isFalse);
     });
 
@@ -136,7 +120,7 @@ void main() {
       await loginAs(authService, kAdminEmail);
       await service.deleteSector(sector.id);
 
-      final sectors = await service.getSectors();
+      final sectors = await SectorService().getSectors();
       expect(sectors.any((s) => s.id == sector.id), isFalse);
     });
   });

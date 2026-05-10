@@ -5,10 +5,6 @@ import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import '../../helpers/alert_test_helpers.dart';
 
-// Testa o fluxo de negligência: employee bloqueado por alerta CRITICAL
-// não confirma ciência dentro do SLA. O cron vence o assignment para OVERDUE
-// e o bloqueio é levantado automaticamente.
-
 void main() {
   late AlertService alertService;
   late AuthService authService;
@@ -24,8 +20,8 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
     final notif = await alertService.createNotification(
       title: 'CRITICAL SLA Negligência TDD',
@@ -51,11 +47,6 @@ void main() {
   });
 
   group('CRITICAL não confirmado dentro do SLA — desbloqueio por negligência', () {
-    test('assignment estava bloqueante antes do vencimento', () async {
-      // Se assignmentId foi obtido no setUpAll, o bloqueio existia após o sync.
-      expect(assignmentId, isNotEmpty);
-    });
-
     test('assignment vira OVERDUE após vencimento do SLA', () async {
       final assignments = await alertService.getMyAssignments();
       final a = assignments.firstWhere((a) => a.id == assignmentId);
@@ -63,14 +54,11 @@ void main() {
           reason: 'assignment CRITICAL não confirmado deveria ser OVERDUE após slaMinutes=1');
     });
 
-    test('assignment OVERDUE não aparece em getBlockingAssignments', () async {
+    test('assignment OVERDUE não aparece em getBlockingAssignments e libera o employee', () async {
       final blocking = await alertService.getBlockingAssignments();
       expect(blocking.any((a) => a.id == assignmentId), isFalse,
           reason: 'OVERDUE não deve bloquear — bloqueio serve para forçar ciência, não punir');
-    });
 
-    test('employee acessa GET /notifications normalmente após desbloqueio por OVERDUE',
-        () async {
       final notifications = await alertService.getNotifications();
       expect(notifications, isA<List>());
     });

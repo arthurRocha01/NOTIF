@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../models/alert_model.dart';
+import '../models/my_assignment_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../../../core/utils/date_formatter.dart';
 
 class AlertDetailsScreen extends ConsumerWidget {
-  final AssignmentModel assignment;
+  final MyAssignmentModel assignment;
 
   const AlertDetailsScreen({super.key, required this.assignment});
 

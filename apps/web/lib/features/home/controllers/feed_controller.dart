@@ -1,36 +1,52 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/home/model/post_model.dart';
 import '../services/post_service.dart';
 
-final feedProvider = ChangeNotifierProvider((ref) => FeedController());
+class FeedState {
+  final List<PostModel> posts;
+  final bool loading;
+  final int pageIndex;
 
-class FeedController extends ChangeNotifier {
+  const FeedState({
+    this.posts = const [],
+    this.loading = false,
+    this.pageIndex = 0,
+  });
+
+  FeedState copyWith({
+    List<PostModel>? posts,
+    bool? loading,
+    int? pageIndex,
+  }) {
+    return FeedState(
+      posts: posts ?? this.posts,
+      loading: loading ?? this.loading,
+      pageIndex: pageIndex ?? this.pageIndex,
+    );
+  }
+}
+
+final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>(
+  (ref) => FeedNotifier(),
+);
+
+class FeedNotifier extends StateNotifier<FeedState> {
   final PostService _service = PostService();
 
-  List<PostModel> posts = [];
-  bool loading = false;
-
-  int pageIndex = 0;
+  FeedNotifier() : super(const FeedState());
 
   Future<void> loadPosts() async {
-    loading = true;
-    notifyListeners();
+    state = state.copyWith(loading: true);
     try {
-      posts = await _service.fetchPosts();
-    } catch (e) {
-      debugPrint('Erro ao carregar posts: $e');
-    } finally {
-      loading = false;
-      notifyListeners();
+      final posts = await _service.fetchPosts();
+      state = state.copyWith(posts: posts, loading: false);
+    } catch (_) {
+      state = state.copyWith(loading: false);
     }
   }
 
-  void changePage(int page) {
-    pageIndex = page;
-    notifyListeners();
-  }
+  void changePage(int page) => state = state.copyWith(pageIndex: page);
 
   Future<void> publish({
     required String title,
@@ -43,27 +59,28 @@ class FeedController extends ChangeNotifier {
         content: content,
         user: currentUser,
       );
-      posts = [post, ...posts];
-      pageIndex = 0;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Erro ao publicar: $e');
-    }
+      state = state.copyWith(
+        posts: [post, ...state.posts],
+        pageIndex: 0,
+      );
+    } catch (_) {}
   }
 
-  Future<void> toggleLike(PostModel post) async {
-    final index = posts.indexWhere((p) => p.id == post.id);
+  void toggleLike(PostModel post) {
+    final index = state.posts.indexWhere((p) => p.id == post.id);
     if (index == -1) return;
     final wasLiked = post.isLiked;
-    posts[index] = post.copyWith(
+    final updated = List<PostModel>.from(state.posts);
+    updated[index] = post.copyWith(
       isLiked: !wasLiked,
       likesCount: wasLiked ? post.likesCount - 1 : post.likesCount + 1,
     );
-    notifyListeners();
+    state = state.copyWith(posts: updated);
   }
 
-  Future<void> delete(PostModel post) async {
-    posts.removeWhere((p) => p.id == post.id);
-    notifyListeners();
+  void delete(PostModel post) {
+    state = state.copyWith(
+      posts: state.posts.where((p) => p.id != post.id).toList(),
+    );
   }
 }

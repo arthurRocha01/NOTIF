@@ -1,22 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
-
-const _email = 'employee.dev@notif.com';
-const _password = 'password123';
+import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AuthService service;
 
+  final _uuidPattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+  );
+
   setUpAll(() async {
-    final authService = AuthService();
-    final alertService = AlertService();
-    final token = await authService.login(_email, _password);
-    ApiClient.setToken(token);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
+    final auth = AuthService();
+    await loginAsEmployee(auth);
+    await clearBlocking(AlertService());
     ApiClient.clearToken();
   });
 
@@ -25,55 +24,84 @@ void main() {
     ApiClient.clearToken();
   });
 
-  group('AuthService.login', () {
-    test('retorna token para credenciais válidas', () async {
-      final token = await service.login(_email, _password);
+  group('login', () {
+    test('retorna token JWT não-vazio para credenciais válidas', () async {
+      final token = await service.login(kEmployeeEmail, kPassword);
       expect(token, isNotEmpty);
     });
 
-    test('lança ApiException para credenciais inválidas', () async {
+    test('lança ApiException(401) para senha incorreta', () async {
       await expectLater(
-        service.login('invalid@notif.com', 'wrongpass'),
-        throwsA(isA<ApiException>()),
+        service.login(kEmployeeEmail, 'senha-errada'),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
+      );
+    });
+
+    test('lança ApiException(401) para e-mail inexistente', () async {
+      await expectLater(
+        service.login('naoexiste@notif.com', kPassword),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
       );
     });
   });
 
-  group('AuthService.fetchUser', () {
+  group('fetchProfile', () {
     setUp(() async {
-      final token = await service.login(_email, _password);
-      ApiClient.setToken(token);
+      ApiClient.setToken(await service.login(kEmployeeEmail, kPassword));
     });
 
-    test('retorna contrato completo do usuário', () async {
-      final user = await service.fetchUser(_email);
-      expect(user.email, _email);
-      expect(user.role.name, isNotEmpty);
-      expect(user.sectorId, matches(
-        RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'),
-      ));
+    test('retorna perfil completo do usuário autenticado', () async {
+      final user = await service.fetchProfile();
+      expect(user.id, matches(_uuidPattern));
+      expect(user.name, isNotEmpty);
+      expect(user.email, kEmployeeEmail);
+      expect(user.sectorId, matches(_uuidPattern));
+      expect(user.role, UserRole.employee);
+    });
+
+    test('lança ApiException(401) sem token', () async {
+      ApiClient.clearToken();
+      await expectLater(
+        service.fetchProfile(),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
+      );
     });
   });
 
-  group('AuthService.updatePassword', () {
-    test('atualiza senha com sucesso via PATCH /users/:id', () async {
-      final token = await service.login(_email, _password);
-      ApiClient.setToken(token);
-      final user = await service.fetchUser(_email);
-      await expectLater(
-        service.updatePassword(userId: user.id, newPassword: _password),
-        completes,
-      );
+  group('updatePassword', () {
+    test('nova senha é persistida e permite login imediatamente', () async {
+      ApiClient.setToken(await service.login(kEmployeeEmail, kPassword));
+      await service.updatePassword(kPassword);
+      ApiClient.clearToken();
+      final token = await service.login(kEmployeeEmail, kPassword);
+      expect(token, isNotEmpty);
     });
 
-    test('permite login com senha recém-atualizada', () async {
-      final token = await service.login(_email, _password);
-      ApiClient.setToken(token);
-      final user = await service.fetchUser(_email);
-      await service.updatePassword(userId: user.id, newPassword: _password);
+    test('lança ApiException(401) sem token', () async {
+      await expectLater(
+        service.updatePassword(kPassword),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
+      );
+    });
+  });
+
+  group('updateFcmToken', () {
+    setUp(() async {
+      ApiClient.setToken(await service.login(kEmployeeEmail, kPassword));
+    });
+
+    test('token salvo é refletido no fetchProfile', () async {
+      await service.updateFcmToken(kFakeToken);
+      final user = await service.fetchProfile();
+      expect(user.fcmToken, equals(kFakeToken));
+    });
+
+    test('lança ApiException(401) sem token', () async {
       ApiClient.clearToken();
-      final newToken = await service.login(_email, _password);
-      expect(newToken, isNotEmpty);
+      await expectLater(
+        service.updateFcmToken(kFakeToken),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401)),
+      );
     });
   });
 }

@@ -101,6 +101,10 @@ export class User {
     return this.createdAt;
   }
 
+  changeEmail(email: string): void {
+    this.email = email;
+  }
+
   changeName(name: string): void {
     if (name === this.name) {
       return;

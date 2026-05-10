@@ -15,32 +15,28 @@ void main() {
     alertService = AlertService();
     authService = AuthService();
 
-    await loginAs(authService, kAdminEmail);
-
-    final employee = await authService.fetchUser(kEmployeeEmail);
-    employeeSectorId = employee.sectorId;
+    await loginAsEmployee(authService);
+    employeeSectorId = (await authService.fetchProfile()).sectorId;
   });
 
   group('Push delivery — token real (app rodando no Chrome)', () {
-    // Pré-condição: rode o app com `flutter run -d chrome`, faça login como
-    // employee.dev@notif.com e aceite a permissão de notificação.
-    // O app registra o token FCM real no backend automaticamente.
-    // Ao rodar este teste, a notificação deve aparecer no Chrome.
-    test('notificação chega no app quando token real está registrado', skip: 'requer app rodando no Chrome com employee logado e permissão FCM concedida', () async {
+    test('notificação chega no app quando token real está registrado', () async {
       final empToken = await loginAsEmployee(authService);
+      final employeeAntes = await authService.fetchProfile();
+      final fcmToken = employeeAntes.fcmToken;
 
-      final employeeAntes = await authService.fetchUser(kEmployeeEmail);
-      expect(
-        employeeAntes.fcmToken,
-        isNotNull,
-        reason:
-            'Pré-condição falhou: rode o app em flutter run -d chrome, '
-            'faça login como employee e aceite a permissão de notificação.',
-      );
+      if (fcmToken == null || fcmToken == kFakeToken) {
+        markTestSkipped(
+          'Pré-condição não atendida: rode o app com "flutter run -d chrome", '
+          'faça login como ${kEmployeeEmail} e aceite a permissão de notificação. '
+          'O token FCM real será registrado automaticamente.',
+        );
+        return;
+      }
 
-      final tokenAntes = employeeAntes.fcmToken!;
+      final tokenAntes = fcmToken;
 
-      await loginAs(authService, kAdminEmail);
+      await loginAsSupervisor(authService);
 
       await alertService.createNotification(
         title: 'Teste de Push Real',
@@ -52,7 +48,7 @@ void main() {
       );
 
       ApiClient.setToken(empToken);
-      final employeeDepois = await authService.fetchUser(kEmployeeEmail);
+      final employeeDepois = await authService.fetchProfile();
       expect(
         employeeDepois.fcmToken,
         equals(tokenAntes),
@@ -66,19 +62,15 @@ void main() {
   group('Push delivery — token inválido (sem app rodando)', () {
     test(
         'fcmToken é zerado após criação de notificação com token inválido registrado',
-        skip: 'requer Firebase real — token inválido só é detectado quando FCM tenta entregar',
         () async {
       final empToken = await loginAsEmployee(authService);
-      await authService.updateFcmToken(
-        userId: (await authService.fetchUser(kEmployeeEmail)).id,
-        fcmToken: kFakeToken,
-      );
+      await authService.updateFcmToken(kFakeToken);
 
-      final antes = await authService.fetchUser(kEmployeeEmail);
+      final antes = await authService.fetchProfile();
       expect(antes.fcmToken, equals(kFakeToken),
           reason: 'pré-condição: token falso deve estar salvo no servidor');
 
-      await loginAs(authService, kAdminEmail);
+      await loginAsSupervisor(authService);
 
       await alertService.createNotification(
         title: 'Push Delivery Test',
@@ -90,7 +82,7 @@ void main() {
       );
 
       ApiClient.setToken(empToken);
-      final depois = await authService.fetchUser(kEmployeeEmail);
+      final depois = await authService.fetchProfile();
       expect(depois.fcmToken, isNull,
           reason:
               'Firebase rejeitou o token inválido; backend deve ter zerado fcmToken');

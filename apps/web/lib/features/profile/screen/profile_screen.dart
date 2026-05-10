@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/home/controllers/feed_controller.dart';
 import 'package:notif_app/features/home/widgets/post_card.dart';
@@ -20,6 +21,15 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  void _showEditNameModal(BuildContext context, String currentName) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditNameSheet(currentName: currentName),
+    );
+  }
+
   Future<void> _pickAvatar() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
@@ -82,7 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    profile.displayName.isNotEmpty ? profile.displayName : (user?.name ?? ''),
+                    user?.name ?? '',
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 20,
@@ -120,9 +130,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileInfoRow(
                       icon: LucideIcons.user,
                       label: 'Nome exibido',
-                      value: profile.displayName.isNotEmpty
-                          ? profile.displayName
-                          : (user?.name ?? '—'),
+                      value: user?.name ?? '—',
+                      trailing: const Icon(LucideIcons.pencil, size: 16, color: Color(0xFF94A3B8)),
+                      onTap: user != null
+                          ? () => _showEditNameModal(context, user.name)
+                          : null,
                     ),
                     ProfileInfoRow(
                       icon: LucideIcons.mail,
@@ -188,6 +200,121 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onDelete: () => ref.read(feedProvider.notifier).delete(post),
                 )),
             if (myPosts.isNotEmpty) const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Modal de editar nome ───────────────────────────────────────────────────
+
+class _EditNameSheet extends ConsumerStatefulWidget {
+  final String currentName;
+  const _EditNameSheet({required this.currentName});
+
+  @override
+  ConsumerState<_EditNameSheet> createState() => _EditNameSheetState();
+}
+
+class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
+  late final TextEditingController _ctrl;
+  String? _error;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _ctrl.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'O nome não pode ser vazio.');
+      return;
+    }
+    if (name == widget.currentName) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() { _error = null; _isLoading = true; });
+
+    try {
+      await ref.read(authProvider.notifier).updateName(name);
+      if (mounted) Navigator.pop(context);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Editar nome',
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _ctrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                isDense: true,
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(_error!, style: GoogleFonts.inter(color: Colors.red, fontSize: 13)),
+            ],
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 18, width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Salvar'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

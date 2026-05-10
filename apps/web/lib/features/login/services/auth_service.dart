@@ -10,22 +10,16 @@ class AuthService {
     return data['access_token'] as String;
   }
 
-  Future<UserModel> fetchUser(String email) async {
-    final data = await ApiClient.get('/users/by-email/$email');
+  Future<UserModel> fetchProfile() async {
+    final data = await ApiClient.get('/users/profile');
     return UserModel.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<void> updateFcmToken({
-    required String userId,
-    required String fcmToken,
-  }) async {
-    await ApiClient.patch('/users/$userId', {'fcmToken': fcmToken});
+  Future<void> updateFcmToken(String fcmToken) async {
+    await ApiClient.patch('/users/fcm-token', {'fcmToken': fcmToken});
   }
 
-  Future<void> updatePassword({
-    required String userId,
-    required String newPassword,
-  }) async {
-    await ApiClient.patch('/users/$userId', {'password': newPassword});
+  Future<void> updatePassword(String newPassword) async {
+    await ApiClient.patch('/users/password', {'password': newPassword});
   }
 }

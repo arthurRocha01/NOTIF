@@ -39,7 +39,7 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
 
     final user = ref.read(authProvider);
     if (user == null) return;
-    final ok = await ref.read(alertProvider.notifier).createGlobalNotification(
+    final ok = await ref.read(alertProvider.notifier).createNotification(
           title: _titleCtrl.text.trim(),
           message: _contentCtrl.text.trim(),
           level: AlertLevel.low,

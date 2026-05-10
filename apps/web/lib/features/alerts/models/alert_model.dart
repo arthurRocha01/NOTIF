@@ -24,9 +24,8 @@ class AlertModel {
   });
 
   bool get isGlobal => targetSectorId == null;
-
   bool get effectiveRequiresAcknowledgment =>
-      level == AlertLevel.critical ? true : requiresAcknowledgment;
+      level == AlertLevel.critical || requiresAcknowledgment;
 
   AlertModel copyWith({
     String? id,
@@ -78,121 +77,5 @@ class AlertModel {
       'requiresAcknowledgment': requiresAcknowledgment,
       if (targetSectorId != null) 'sectorId': targetSectorId,
     };
-  }
-}
-
-class AssignmentModel {
-  final String id;
-  final String userId;
-  final String notificationId;
-  final String? notificationTitle;
-  final String? notificationMessage;
-  final AlertLevel notificationLevel;
-  final AssignmentStatus status;
-  final DateTime createdAt;
-  final DateTime? dueAt;
-  final DateTime? deliveredAt;
-  final DateTime? viewedAt;
-  final DateTime? acknowledgedAt;
-  final bool? requiresAcknowledgment;
-  final String? notificationAuthorId;
-  final int? notificationSlaMinutes;
-
-  AssignmentModel({
-    required this.id,
-    required this.userId,
-    required this.notificationId,
-    this.notificationTitle,
-    this.notificationMessage,
-    required this.notificationLevel,
-    required this.status,
-    required this.createdAt,
-    this.dueAt,
-    this.deliveredAt,
-    this.viewedAt,
-    this.acknowledgedAt,
-    this.requiresAcknowledgment,
-    this.notificationAuthorId,
-    this.notificationSlaMinutes,
-  });
-
-  bool get isCritical => notificationLevel == AlertLevel.critical;
-
-  bool get canAcknowledge =>
-      status != AssignmentStatus.overdue &&
-      (isCritical || (requiresAcknowledgment ?? false));
-
-  bool get isBlocking =>
-      isCritical &&
-      status != AssignmentStatus.acknowledged &&
-      status != AssignmentStatus.overdue;
-
-  bool get isOverdue => status == AssignmentStatus.overdue;
-
-  AssignmentModel copyWith({
-    String? id,
-    String? userId,
-    String? notificationId,
-    String? notificationTitle,
-    String? notificationMessage,
-    AlertLevel? notificationLevel,
-    AssignmentStatus? status,
-    DateTime? createdAt,
-    DateTime? dueAt,
-    DateTime? deliveredAt,
-    DateTime? viewedAt,
-    DateTime? acknowledgedAt,
-    bool? requiresAcknowledgment,
-    String? notificationAuthorId,
-    int? notificationSlaMinutes,
-  }) {
-    return AssignmentModel(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      notificationId: notificationId ?? this.notificationId,
-      notificationTitle: notificationTitle ?? this.notificationTitle,
-      notificationMessage: notificationMessage ?? this.notificationMessage,
-      notificationLevel: notificationLevel ?? this.notificationLevel,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      dueAt: dueAt ?? this.dueAt,
-      deliveredAt: deliveredAt ?? this.deliveredAt,
-      viewedAt: viewedAt ?? this.viewedAt,
-      acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
-      requiresAcknowledgment:
-          requiresAcknowledgment ?? this.requiresAcknowledgment,
-      notificationAuthorId: notificationAuthorId ?? this.notificationAuthorId,
-      notificationSlaMinutes:
-          notificationSlaMinutes ?? this.notificationSlaMinutes,
-    );
-  }
-
-  factory AssignmentModel.fromJson(Map<String, dynamic> json) {
-    return AssignmentModel(
-      id: json['id']?.toString() ?? '',
-      userId: json['userId']?.toString() ?? '',
-      notificationId: json['notificationId']?.toString() ?? '',
-      notificationTitle: json['notificationTitle'] as String?,
-      notificationMessage: json['notificationMessage'] as String?,
-      notificationLevel:
-          AlertLevel.fromBackend(json['notificationLevel']?.toString()),
-      status: AssignmentStatus.fromBackend(json['status']?.toString()),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      dueAt: json['dueAt'] != null ? DateTime.parse(json['dueAt']) : null,
-      deliveredAt: json['deliveredAt'] != null
-          ? DateTime.parse(json['deliveredAt'])
-          : null,
-      viewedAt:
-          json['viewedAt'] != null ? DateTime.parse(json['viewedAt']) : null,
-      acknowledgedAt: json['acknowledgedAt'] != null
-          ? DateTime.parse(json['acknowledgedAt'])
-          : null,
-      requiresAcknowledgment:
-          json['notificationRequiresAcknowledgment'] as bool?,
-      notificationAuthorId: json['notificationAuthorId'] as String?,
-      notificationSlaMinutes: json['notificationSlaMinutes'] as int?,
-    );
   }
 }

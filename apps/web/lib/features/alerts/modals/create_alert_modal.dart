@@ -89,7 +89,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
     final bool ok;
     if (_sendToAll) {
-      ok = await ref.read(alertProvider.notifier).createGlobalNotification(
+      ok = await ref.read(alertProvider.notifier).createNotification(
             title: title,
             message: message,
             level: _level,

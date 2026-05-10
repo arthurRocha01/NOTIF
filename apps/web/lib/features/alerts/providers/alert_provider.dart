@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_state.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
@@ -16,11 +15,11 @@ class AlertNotifier extends StateNotifier<AlertState> {
 
   AlertNotifier(this._service) : super(const AlertState());
 
-  Future<void> loadNotifications() async {
+  Future<void> loadNotifications({AlertLevel? level, String? sectorId}) async {
     if (state.isLoadingNotifications) return;
     state = state.copyWith(isLoadingNotifications: true, clearError: true);
     try {
-      final notifications = await _service.getNotifications();
+      final notifications = await _service.getNotifications(level: level, sectorId: sectorId);
       state = state.copyWith(
         notifications: notifications,
         isLoadingNotifications: false,
@@ -90,52 +89,10 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<bool> createGlobalNotification({
-    required String title,
-    required String message,
-    required AlertLevel level,
-    required int slaMinutes,
-    required bool requiresAcknowledgment,
-  }) async {
-    try {
-      final created = await _service.createNotification(
-        title: title,
-        message: message,
-        level: level,
-        slaMinutes: slaMinutes,
-        requiresAcknowledgment: requiresAcknowledgment,
-        sectorId: null,
-      );
-      state = state.copyWith(
-        notifications: [created, ...state.notifications],
-      );
-      return true;
-    } on ApiException catch (e) {
-      state = state.copyWith(errorMessage: e.message);
-      return false;
-    } catch (_) {
-      state = state.copyWith(errorMessage: 'Erro inesperado. Tente novamente.');
-      return false;
-    }
-  }
-
   Future<void> markAsViewed(String assignmentId) async {
     try {
       await _service.markAsViewed(assignmentId);
-      final now = DateTime.now();
-      state = state.copyWith(
-        assignments: state.assignments.map((a) {
-          if (a.id != assignmentId) return a;
-          final autoAck = !(a.requiresAcknowledgment ?? false) && !a.isCritical;
-          return autoAck
-              ? a.copyWith(
-                  status: AssignmentStatus.acknowledged,
-                  viewedAt: now,
-                  acknowledgedAt: now,
-                )
-              : a.copyWith(status: AssignmentStatus.viewed, viewedAt: now);
-        }).toList(),
-      );
+      await loadAssignments();
     } on ApiException catch (e) {
       state = state.copyWith(errorMessage: e.message);
     } catch (_) {
@@ -165,25 +122,6 @@ class AlertNotifier extends StateNotifier<AlertState> {
               : a)
           .toList(),
     );
-  }
-
-  Future<void> loadAllAssignments() async {
-    if (state.isLoadingAllAssignments) return;
-    state = state.copyWith(isLoadingAllAssignments: true, clearError: true);
-    try {
-      final all = await _service.getAllAssignments();
-      state = state.copyWith(allAssignments: all, isLoadingAllAssignments: false);
-    } on ApiException catch (e) {
-      state = state.copyWith(
-        isLoadingAllAssignments: false,
-        errorMessage: e.message,
-      );
-    } catch (_) {
-      state = state.copyWith(
-        isLoadingAllAssignments: false,
-        errorMessage: 'Erro inesperado. Tente novamente.',
-      );
-    }
   }
 
   Future<void> syncDeliveries() async {

@@ -1,63 +1,92 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
-import 'package:notif_app/features/alerts/models/alert_status.dart';
-import 'package:notif_app/features/alerts/services/alert_service.dart';
+import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/features/dashboard/services/dashboard_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import '../../helpers/alert_test_helpers.dart';
 
 void main() {
-  late AlertService alertService;
-  late AuthService authService;
+  final auth = AuthService();
+  final dashboard = DashboardService();
 
-  setUp(() async {
-    alertService = AlertService();
-    authService = AuthService();
-
-    await loginAsSupervisor(authService);
-    await clearBlocking(alertService);
+  setUpAll(() async {
+    await loginAsSupervisor(auth);
   });
 
-  group('AlertService.getAllAssignments', () {
-    test('retorna lista de AssignmentModel', () async {
-      final assignments = await alertService.getAllAssignments();
-      expect(assignments, isA<List<AssignmentModel>>());
+  group('DashboardService.getSummary — sem filtros', () {
+    late DashboardData data;
+
+    setUpAll(() async {
+      data = await dashboard.getSummary();
     });
 
-    test('cada assignment tem id, userId e notificationId não vazios', () async {
-      final assignments = await alertService.getAllAssignments();
-      if (assignments.isEmpty) return;
-
-      for (final a in assignments) {
-        expect(a.id, isNotEmpty);
-        expect(a.userId, isNotEmpty);
-        expect(a.notificationId, isNotEmpty);
-      }
+    test('campos numéricos são não-negativos', () {
+      expect(data.totalNotifications, greaterThanOrEqualTo(0));
+      expect(data.totalAcknowledged, greaterThanOrEqualTo(0));
+      expect(data.totalPending, greaterThanOrEqualTo(0));
+      expect(data.totalCritical, greaterThanOrEqualTo(0));
     });
 
-    test('status é um valor válido de AssignmentStatus', () async {
-      final assignments = await alertService.getAllAssignments();
-      if (assignments.isEmpty) return;
+    test('topSector não é vazio e topSectorRate está entre 0 e 1', () {
+      expect(data.topSector, isNotEmpty);
+      expect(data.topSectorRate, greaterThanOrEqualTo(0.0));
+      expect(data.topSectorRate, lessThanOrEqualTo(1.0));
+    });
 
-      for (final a in assignments) {
+    test('attentionSectors contêm apenas setores com taxa < 0.6', () {
+      for (final s in data.attentionSectors) {
         expect(
-          AssignmentStatus.values.contains(a.status),
-          isTrue,
-          reason: 'status inválido: ${a.status}',
+          s.rate,
+          lessThan(0.6),
+          reason: 'Setor ${s.name} tem taxa ${s.rate} mas deveria ser < 0.6',
         );
       }
     });
 
-    test('notificationLevel é um valor válido de AlertLevel', () async {
-      final assignments = await alertService.getAllAssignments();
-      if (assignments.isEmpty) return;
+    test('selectedSectorBreakdown é null sem sectorId', () {
+      expect(data.selectedSectorBreakdown, isNull);
+    });
+  });
 
-      for (final a in assignments) {
-        expect(
-          AlertLevel.values.contains(a.notificationLevel),
-          isTrue,
-          reason: 'notificationLevel inválido: ${a.notificationLevel}',
-        );
-      }
+  group('DashboardService.getSummary — filtro de período', () {
+    test('period=week retorna subset de period=all', () async {
+      final all = await dashboard.getSummary();
+      final week = await dashboard.getSummary(period: 'week');
+      expect(
+        week.totalNotifications,
+        lessThanOrEqualTo(all.totalNotifications),
+      );
+    });
+  });
+
+  group('DashboardService.getSummary — filtro de setor', () {
+    test('selectedSectorBreakdown preenchido e com campos não-negativos', () async {
+      final sectors = await ApiClient.get('/sectors') as List<dynamic>;
+      if (sectors.isEmpty) return;
+      final sectorId = sectors.first['id'] as String;
+
+      final data = await dashboard.getSummary(sectorId: sectorId);
+      final bd = data.selectedSectorBreakdown!;
+
+      expect(bd.pending, greaterThanOrEqualTo(0));
+      expect(bd.viewed, greaterThanOrEqualTo(0));
+      expect(bd.acknowledged, greaterThanOrEqualTo(0));
+      expect(bd.overdue, greaterThanOrEqualTo(0));
+    });
+  });
+
+  group('DashboardService.getSummary — sem autenticação', () {
+    tearDown(() async {
+      await loginAsSupervisor(auth);
+    });
+
+    test('lança ApiException com status 401', () async {
+      ApiClient.clearToken();
+      await expectLater(
+        dashboard.getSummary(),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
+      );
     });
   });
 }

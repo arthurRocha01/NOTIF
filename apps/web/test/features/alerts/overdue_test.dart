@@ -21,8 +21,8 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
     final notif = await alertService.createNotification(
       title: 'Notificação SLA Overdue TDD',
@@ -41,8 +41,9 @@ void main() {
         .firstWhere((a) => a.notificationId == notif.id)
         .id;
 
+    await loginAs(authService, kEmployeeOpsEmail);
+    final opsEmployee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final opsEmployee = await authService.fetchUser(kEmployeeOpsEmail);
     final notif2 = await alertService.createNotification(
       title: 'Notificação Sem Sync TDD',
       message: 'Criada para validar que assignment sem deliveredAt não vira OVERDUE.',

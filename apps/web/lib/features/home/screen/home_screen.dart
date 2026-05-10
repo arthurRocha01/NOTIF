@@ -43,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(feedProvider).loadPosts());
+    Future.microtask(() => ref.read(feedProvider.notifier).loadPosts());
     _initNotificationHandlers();
     if (kIsWeb) {
       html.window.addEventListener('pointerdown', _unlockWebAudio);
@@ -167,7 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
     if (level != AlertLevel.critical) {
-      ref.read(feedProvider).changePage(2);
+      ref.read(feedProvider.notifier).changePage(2);
     }
   }
 
@@ -188,7 +188,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () {
               _bannerEntry?.remove();
               _bannerEntry = null;
-              ref.read(feedProvider).changePage(2);
+              ref.read(feedProvider.notifier).changePage(2);
             },
             onDismiss: () {
               _bannerEntry?.remove();
@@ -219,35 +219,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // Mapeia o tap na nav bar → pageIndex (0=Feed, 1=Dashboard, 2=Alerts)
-  void _onNavTap(
-      int navIndex, bool isSupervisor, FeedController controller, dynamic user) {
+  void _onNavTap(int navIndex, bool isSupervisor, dynamic user) {
+    final feed = ref.read(feedProvider.notifier);
     if (isSupervisor) {
       // Supervisor: [Home=0, Publicar=1, Dashboard=2, Alertas=3]
       switch (navIndex) {
-        case 0:
-          controller.changePage(0);
-          break;
-        case 1:
-          _handlePublish(user, controller);
-          break;
-        case 2:
-          controller.changePage(1);
-          break;
-        case 3:
-          controller.changePage(2);
-          break;
+        case 0: feed.changePage(0); break;
+        case 1: _handlePublish(user); break;
+        case 2: feed.changePage(1); break;
+        case 3: feed.changePage(2); break;
       }
     } else {
       // Employee: [Home=0, Publicar=1, Alertas=2]
       switch (navIndex) {
-        case 0:
-          controller.changePage(0);
-          break;
-        case 1:
-          _handlePublish(user, controller);
-          break;
+        case 0: feed.changePage(0); break;
+        case 1: _handlePublish(user); break;
         case 2:
-          controller.changePage(2);
+          feed.changePage(2);
           ref.read(alertProvider.notifier).markAllPendingAsViewed();
           break;
       }
@@ -257,7 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
-    final feedController = ref.watch(feedProvider);
+    final feedState = ref.watch(feedProvider);
     final bool isSupervisor = user?.isSupervisor ?? false;
 
     ref.listen<bool>(
@@ -287,9 +275,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       drawer: const AppDrawer(),
       body: SafeArea(
         child: IndexedStack(
-          index: feedController.pageIndex,
+          index: feedState.pageIndex,
           children: [
-            FeedContent(controller: feedController), // 0 = Feed
+            const FeedContent(), // 0 = Feed
             isSupervisor || (user?.isAdmin ?? false)
                 ? const DashboardScreen()
                 : const SizedBox.shrink(), // 1 = Dashboard (somente supervisor/admin)
@@ -300,16 +288,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       bottomNavigationBar: HomeBottomNav(
-        pageIndex: feedController.pageIndex,
+        pageIndex: feedState.pageIndex,
         isSupervisor: isSupervisor,
         notificationCount: pendingCount,
-        onItemTapped: (navIndex) =>
-            _onNavTap(navIndex, isSupervisor, feedController, user),
+        onItemTapped: (navIndex) => _onNavTap(navIndex, isSupervisor, user),
       ),
     );
   }
 
-  void _handlePublish(dynamic user, FeedController controller) {
+  void _handlePublish(dynamic user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -317,7 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => PublishModal(
         onPublish: (title, content) async {
           final nav = Navigator.of(context);
-          await controller.publish(
+          await ref.read(feedProvider.notifier).publish(
             title: title,
             content: content,
             currentUser: user,

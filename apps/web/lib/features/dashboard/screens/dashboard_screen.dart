@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/dashboard/providers/dashboard_filter_provider.dart';
 import 'package:notif_app/features/dashboard/providers/dashboard_provider.dart';
 import 'package:notif_app/features/dashboard/widgets/attention_sector_card.dart';
@@ -10,8 +9,6 @@ import 'package:notif_app/features/dashboard/widgets/dashboard_bar_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_donut_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_kpi_row.dart';
 import 'package:notif_app/features/dashboard/widgets/highlight_card.dart';
-import 'package:notif_app/features/login/providers/auth_provider.dart';
-import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -25,28 +22,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(sectorProvider.notifier).loadSectors();
+    });
   }
 
   Future<void> _refresh() async {
-    final user = ref.read(authProvider);
-    final isPrivileged = user?.role == UserRole.supervisor || user?.role == UserRole.admin;
-    await Future.wait([
-      ref.read(alertProvider.notifier).loadNotifications(),
-      if (isPrivileged) ref.read(alertProvider.notifier).loadAllAssignments(),
-      ref.read(sectorProvider.notifier).loadSectors(),
-    ]);
+    ref.invalidate(dashboardProvider);
+    await ref.read(sectorProvider.notifier).loadSectors();
   }
 
   @override
   Widget build(BuildContext context) {
-    final alertState = ref.watch(alertProvider);
-    final stats      = ref.watch(dashboardProvider);
-    final filter     = ref.watch(dashboardFilterProvider);
-    final sectors    = ref.watch(sectorProvider).sectors;
-
-    final isLoading = alertState.isLoadingNotifications ||
-        alertState.isLoadingAllAssignments;
+    final dashboardAsync = ref.watch(dashboardProvider);
+    final filter         = ref.watch(dashboardFilterProvider);
+    final sectors        = ref.watch(sectorProvider).sectors;
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -54,7 +44,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          // ── Título da página ────────────────────────────────────────────
+          // ── Título da página ──────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 12, 0),
@@ -97,7 +87,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
 
-          // ── Filtro de período ────────────────────────────────────────────
+          // ── Filtro de período ─────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -105,77 +95,108 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
 
-          if (isLoading)
-            const SliverFillRemaining(
-              child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF4A6CF7)),
-              ),
-            )
-          else ...[
-            // ── KPI cards (grid 2×2) ────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: DashboardKpiRow(
-                  totalNotifications: stats.totalNotifications,
-                  totalAcknowledged:  stats.totalAcknowledged,
-                  totalPending:       stats.totalPending,
-                  totalCritical:      stats.totalCritical,
+          // ── Conteúdo principal ────────────────────────────────────────────
+          ...dashboardAsync.when(
+            loading: () => [
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF4A6CF7)),
                 ),
               ),
-            ),
-
-            // ── Setor mais atento ────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: HighlightCard(
-                  sector: stats.topSector,
-                  rate: stats.topSectorRate,
+            ],
+            error: (_, __) => [
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.alertCircle,
+                          color: Color(0xFF94A3B8), size: 32),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Não foi possível carregar o painel.',
+                        style: GoogleFonts.inter(
+                            fontSize: 14, color: const Color(0xFF64748B)),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _refresh,
+                        child: const Text('Tentar novamente'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-
-            // ── Taxa por setor ───────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: _SectionCard(
-                  title: 'Taxa de Adesão por Setor',
-                  subtitle: filter.selectedSectorId != null
-                      ? 'Detalhes do setor selecionado'
-                      : 'Todos os setores · ${filter.periodLabel}',
-                  trailing: sectors.isNotEmpty
-                      ? _SectorDropdown(
-                          sectors:    sectors.map((s) => (id: s.id, name: s.name)).toList(),
-                          selectedId: filter.selectedSectorId,
-                          onChanged:  (id) =>
-                              ref.read(dashboardFilterProvider.notifier).setSector(id),
-                        )
-                      : null,
-                  child: filter.selectedSectorId != null &&
-                          stats.selectedSectorBreakdown != null
-                      ? DashboardDonutChart(
-                          breakdown:  stats.selectedSectorBreakdown!,
-                          sectorName: sectors
-                                  .where((s) => s.id == filter.selectedSectorId)
-                                  .firstOrNull
-                                  ?.name ??
-                              filter.selectedSectorId!,
-                        )
-                      : DashboardBarChart(sectorRates: stats.sectorRates),
+            ],
+            data: (stats) => [
+              // ── KPI cards (grid 2×2) ────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: DashboardKpiRow(
+                    totalNotifications: stats.totalNotifications,
+                    totalAcknowledged: stats.totalAcknowledged,
+                    totalPending: stats.totalPending,
+                    totalCritical: stats.totalCritical,
+                  ),
                 ),
               ),
-            ),
 
-            // ── Atenção necessária ───────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: AttentionCard(sectors: stats.attentionSectors),
+              // ── Setor mais atento ────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: HighlightCard(
+                    sector: stats.topSector,
+                    rate: stats.topSectorRate,
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              // ── Taxa por setor ───────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: _SectionCard(
+                    title: 'Taxa de Adesão por Setor',
+                    subtitle: filter.selectedSectorId != null
+                        ? 'Detalhes do setor selecionado'
+                        : 'Todos os setores · ${filter.periodLabel}',
+                    trailing: sectors.isNotEmpty
+                        ? _SectorDropdown(
+                            sectors: sectors
+                                .map((s) => (id: s.id, name: s.name))
+                                .toList(),
+                            selectedId: filter.selectedSectorId,
+                            onChanged: (id) => ref
+                                .read(dashboardFilterProvider.notifier)
+                                .setSector(id),
+                          )
+                        : null,
+                    child: filter.selectedSectorId != null &&
+                            stats.selectedSectorBreakdown != null
+                        ? DashboardDonutChart(
+                            breakdown: stats.selectedSectorBreakdown!,
+                            sectorName: sectors
+                                    .where((s) => s.id == filter.selectedSectorId)
+                                    .firstOrNull
+                                    ?.name ??
+                                filter.selectedSectorId!,
+                          )
+                        : DashboardBarChart(sectorRates: stats.sectorRates),
+                  ),
+                ),
+              ),
+
+              // ── Atenção necessária ───────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  child: AttentionCard(sectors: stats.attentionSectors),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -191,9 +212,9 @@ class _PeriodFilter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final options = [
-      (period: DashboardPeriod.week,  label: '7 dias'),
+      (period: DashboardPeriod.week, label: '7 dias'),
       (period: DashboardPeriod.month, label: '30 dias'),
-      (period: DashboardPeriod.all,   label: 'Todos'),
+      (period: DashboardPeriod.all, label: 'Todos'),
     ];
 
     return Container(
@@ -214,9 +235,8 @@ class _PeriodFilter extends ConsumerWidget {
           final selected = o.period == current;
           return Expanded(
             child: GestureDetector(
-              onTap: () => ref
-                  .read(dashboardFilterProvider.notifier)
-                  .setPeriod(o.period),
+              onTap: () =>
+                  ref.read(dashboardFilterProvider.notifier).setPeriod(o.period),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 9),
@@ -272,8 +292,8 @@ class _SectorDropdown extends StatelessWidget {
           isDense: true,
           icon: const Icon(LucideIcons.chevronDown,
               size: 14, color: Color(0xFF64748B)),
-          style: GoogleFonts.inter(
-              fontSize: 12, color: const Color(0xFF0F172A)),
+          style:
+              GoogleFonts.inter(fontSize: 12, color: const Color(0xFF0F172A)),
           items: [
             DropdownMenuItem<String?>(
               value: null,
@@ -281,8 +301,7 @@ class _SectorDropdown extends StatelessWidget {
             ),
             ...sectors.map((s) => DropdownMenuItem<String?>(
                   value: s.id,
-                  child:
-                      Text(s.name, style: GoogleFonts.inter(fontSize: 12)),
+                  child: Text(s.name, style: GoogleFonts.inter(fontSize: 12)),
                 )),
           ],
           onChanged: onChanged,

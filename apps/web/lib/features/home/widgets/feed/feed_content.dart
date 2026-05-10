@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/features/home/controllers/feed_controller.dart';
 import 'feed_header.dart';
 import 'feed_list.dart';
 import 'feed_skeleton.dart';
 
-class FeedContent extends StatelessWidget {
-  final FeedController controller;
-
-  const FeedContent({super.key, required this.controller});
+class FeedContent extends ConsumerWidget {
+  const FeedContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    if (controller.loading && controller.posts.isEmpty) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(feedProvider);
+    final notifier = ref.read(feedProvider.notifier);
+
+    if (state.loading && state.posts.isEmpty) {
       return const FeedSkeleton();
     }
 
@@ -21,10 +23,10 @@ class FeedContent extends StatelessWidget {
         const FeedHeader(),
         Expanded(
           child: FeedList(
-            posts: controller.posts,
-            onLike: (post) => controller.toggleLike(post),
+            posts: state.posts,
+            onLike: (post) => notifier.toggleLike(post),
             onDelete: (post) =>
-                _showDeleteDialog(context, () => controller.delete(post)),
+                _showDeleteDialog(context, () => notifier.delete(post)),
           ),
         ),
       ],

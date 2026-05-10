@@ -10,6 +10,8 @@ void main() {
   late AuthService authService;
 
   late String notificationId;
+  late String tiSectorId;
+  late String opsUserId;
 
   setUpAll(() async {
     alertService = AlertService();
@@ -18,14 +20,15 @@ void main() {
     final supervisorToken = await loginAsSupervisor(authService);
     await clearBlocking(alertService);
 
-    for (final email in [kEmployeeEmail, kEmployeeOpsEmail]) {
-      await loginAs(authService, email);
-      await clearBlocking(alertService);
-    }
+    await loginAs(authService, kEmployeeEmail);
+    await clearBlocking(alertService);
+    tiSectorId = (await authService.fetchProfile()).sectorId;
+
+    await loginAs(authService, kEmployeeOpsEmail);
+    await clearBlocking(alertService);
+    opsUserId = (await authService.fetchProfile()).id;
 
     ApiClient.setToken(supervisorToken);
-
-    final tiEmployee = await authService.fetchUser(kEmployeeEmail);
 
     final notification = await alertService.createNotification(
       title: 'Notificação Setorial TDD',
@@ -33,7 +36,7 @@ void main() {
       level: AlertLevel.low,
       slaMinutes: 60,
       requiresAcknowledgment: false,
-      sectorId: tiEmployee.sectorId,
+      sectorId: tiSectorId,
     );
 
     notificationId = notification.id;
@@ -67,9 +70,7 @@ void main() {
       final forNotification = all.where((a) => a.notificationId == notificationId).toList();
       final userIds = forNotification.map((a) => a.userId).toSet();
 
-      final opsUser = await authService.fetchUser(kEmployeeOpsEmail);
-
-      expect(userIds, isNot(contains(opsUser.id)),
+      expect(userIds, isNot(contains(opsUserId)),
           reason: 'userId do employee Ops está nos assignments da notificação setorial TI');
     });
   });

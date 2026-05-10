@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
+import 'package:notif_app/features/alerts/models/my_assignment_model.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 
 class CriticalBlockScreen extends ConsumerWidget {
@@ -85,7 +85,7 @@ class CriticalBlockScreen extends ConsumerWidget {
 }
 
 class _BlockingCard extends ConsumerWidget {
-  final AssignmentModel assignment;
+  final MyAssignmentModel assignment;
 
   const _BlockingCard({required this.assignment});
 

@@ -24,6 +24,7 @@ class UserModel {
         name: data['name'] as String,
         email: data['email'] as String,
         sectorId: data['sectorId'] as String? ?? '',
+        sectorName: data['sectorName'] as String? ?? '',
         role: data['role'] == 'ADMIN'
             ? UserRole.admin
             : data['role'] == 'SUPERVISOR'

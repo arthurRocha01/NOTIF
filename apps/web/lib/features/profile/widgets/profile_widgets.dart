@@ -45,6 +45,7 @@ class ProfileInfoRow extends StatelessWidget {
   final String value;
   final Widget? trailing;
   final bool isLast;
+  final VoidCallback? onTap;
 
   const ProfileInfoRow({
     super.key,
@@ -53,6 +54,7 @@ class ProfileInfoRow extends StatelessWidget {
     required this.value,
     this.trailing,
     this.isLast = false,
+    this.onTap,
   });
 
   @override
@@ -69,6 +71,7 @@ class ProfileInfoRow extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF1E293B))),
           trailing: trailing,
+          onTap: onTap,
         ),
         if (!isLast) const Divider(height: 1, indent: 56),
       ],

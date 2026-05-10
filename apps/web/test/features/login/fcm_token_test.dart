@@ -3,69 +3,52 @@ import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
+import '../../helpers/alert_test_helpers.dart';
 
-const _emailA = 'employee.dev@notif.com';
-const _emailB = 'employee.ops@notif.com';
-const _password = 'password123';
+const _kTokenA1 = '${kFakeToken}V1';
+const _kTokenA2 = '${kFakeToken}V2';
+const _kTokenB  = '${kFakeToken}B';
 
 void main() {
   late AuthService service;
   late AlertService alertService;
-  late String userAId;
-  late String userBId;
 
   setUpAll(() async {
     service = AuthService();
     alertService = AlertService();
 
-    final tokenA = await service.login(_emailA, _password);
-    ApiClient.setToken(tokenA);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
-    userAId = (await service.fetchUser(_emailA)).id;
+    await loginAsEmployee(service);
+    await clearBlocking(alertService);
 
-    final tokenB = await service.login(_emailB, _password);
-    ApiClient.setToken(tokenB);
-    for (final a in await alertService.getBlockingAssignments()) {
-      await alertService.acknowledge(a.id);
-    }
-    userBId = (await service.fetchUser(_emailB)).id;
+    await loginAs(service, kEmployeeOpsEmail);
+    await clearBlocking(alertService);
   });
 
   setUp(() async {
-    final token = await service.login(_emailA, _password);
-    ApiClient.setToken(token);
+    await loginAsEmployee(service);
   });
 
   group('updateFcmToken — comportamento básico', () {
-    test('token é persistido no servidor após PATCH', () async {
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-basico');
-      final user = await service.fetchUser(_emailA);
-      expect(user.fcmToken, equals('token-basico'));
-    });
-
     test('token novo sobrescreve o anterior', () async {
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-antigo');
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-novo');
-      final user = await service.fetchUser(_emailA);
-      expect(user.fcmToken, equals('token-novo'));
+      await service.updateFcmToken(_kTokenA1);
+      await service.updateFcmToken(_kTokenA2);
+      final user = await service.fetchProfile();
+      expect(user.fcmToken, equals(_kTokenA2));
     });
 
     test('PATCH com mesmo token é idempotente', () async {
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-fixo');
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-fixo');
-      final user = await service.fetchUser(_emailA);
-      expect(user.fcmToken, equals('token-fixo'));
+      await service.updateFcmToken(_kTokenA1);
+      await service.updateFcmToken(_kTokenA1);
+      final user = await service.fetchProfile();
+      expect(user.fcmToken, equals(_kTokenA1));
     });
   });
 
   group('updateFcmToken — employee bloqueado por CRITICAL', () {
     test('registra token FCM mesmo com CRITICAL não confirmado', () async {
-      final supervisorToken = await service.login('supervisor.dev@notif.com', _password);
-      ApiClient.setToken(supervisorToken);
-      final employee = await service.fetchUser(_emailA);
+      final employee = await service.fetchProfile();
 
+      await loginAsSupervisor(service);
       await alertService.createNotification(
         title: 'CRITICAL para teste de FCM bloqueado',
         message: 'Valida que updateFcmToken funciona mesmo durante bloqueio.',
@@ -75,17 +58,16 @@ void main() {
         sectorId: employee.sectorId,
       );
 
-      final tokenA = await service.login(_emailA, _password);
-      ApiClient.setToken(tokenA);
+      await loginAsEmployee(service);
       await alertService.syncDeliveries();
 
       final blocking = await alertService.getBlockingAssignments();
       expect(blocking, isNotEmpty, reason: 'employee deve estar bloqueado neste ponto');
 
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-enquanto-bloqueado');
+      await service.updateFcmToken(_kTokenA1);
 
-      final user = await service.fetchUser(_emailA);
-      expect(user.fcmToken, equals('token-enquanto-bloqueado'));
+      final user = await service.fetchProfile();
+      expect(user.fcmToken, equals(_kTokenA1));
 
       for (final a in blocking) {
         await alertService.acknowledge(a.id);
@@ -95,32 +77,28 @@ void main() {
 
   group('updateFcmToken — isolamento entre usuários', () {
     test('token de A não afeta token de B', () async {
-      final tokenB = await service.login(_emailB, _password);
-      ApiClient.setToken(tokenB);
-      await service.updateFcmToken(userId: userBId, fcmToken: 'token-b-inicial');
+      await loginAs(service, kEmployeeOpsEmail);
+      await service.updateFcmToken(_kTokenB);
 
-      final tokenA = await service.login(_emailA, _password);
-      ApiClient.setToken(tokenA);
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a');
+      await loginAsEmployee(service);
+      await service.updateFcmToken(_kTokenA1);
 
-      ApiClient.setToken(tokenB);
-      final userB = await service.fetchUser(_emailB);
-      expect(userB.fcmToken, equals('token-b-inicial'));
+      await loginAs(service, kEmployeeOpsEmail);
+      final userB = await service.fetchProfile();
+      expect(userB.fcmToken, equals(_kTokenB));
     });
 
-    test('atualização de A não altera token de B', () async {
-      final tokenB = await service.login(_emailB, _password);
-      ApiClient.setToken(tokenB);
-      await service.updateFcmToken(userId: userBId, fcmToken: 'token-b-estavel');
+    test('múltiplas atualizações de A não alteram token de B', () async {
+      await loginAs(service, kEmployeeOpsEmail);
+      await service.updateFcmToken(_kTokenB);
 
-      final tokenA = await service.login(_emailA, _password);
-      ApiClient.setToken(tokenA);
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a-novo');
-      await service.updateFcmToken(userId: userAId, fcmToken: 'token-a-atualizado');
+      await loginAsEmployee(service);
+      await service.updateFcmToken(_kTokenA1);
+      await service.updateFcmToken(_kTokenA2);
 
-      ApiClient.setToken(tokenB);
-      final userB = await service.fetchUser(_emailB);
-      expect(userB.fcmToken, equals('token-b-estavel'));
+      await loginAs(service, kEmployeeOpsEmail);
+      final userB = await service.fetchProfile();
+      expect(userB.fcmToken, equals(_kTokenB));
     });
   });
 }

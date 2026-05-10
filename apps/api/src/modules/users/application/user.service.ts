@@ -70,6 +70,12 @@ export class UserService {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
 
+    if (dto.email && dto.email !== user.getEmail()) {
+      const conflict = await this.userRepo.findByEmail(dto.email);
+      if (conflict) throw new ConflictException('Email já cadastrado');
+      user.changeEmail(dto.email);
+    }
+
     if (dto.name) user.changeName(dto.name);
     if (dto.fcmToken) user.changeFcmToken(dto.fcmToken);
     if (dto.password) {

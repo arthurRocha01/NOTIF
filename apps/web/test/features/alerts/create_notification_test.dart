@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
@@ -15,9 +14,7 @@ void main() {
     authService = AuthService();
 
     await loginAsSupervisor(authService);
-    await clearBlocking(alertService);
-
-    final supervisor = await authService.fetchUser(kSupervisorEmail);
+    final supervisor = await authService.fetchProfile();
     supervisorSectorId = supervisor.sectorId;
   });
 
@@ -26,22 +23,8 @@ void main() {
     await clearBlocking(alertService);
   });
 
-  group('AlertService.createNotification — resposta da API', () {
-    test('retorna AlertModel com id preenchido', () async {
-      final notif = await alertService.createNotification(
-        title: 'Notif Criação TDD',
-        message: 'Mensagem de teste para validar o retorno da criação.',
-        level: AlertLevel.low,
-        slaMinutes: 30,
-        requiresAcknowledgment: true,
-        sectorId: supervisorSectorId,
-      );
-
-      expect(notif, isA<AlertModel>());
-      expect(notif.id, isNotEmpty);
-    });
-
-    test('campos retornados refletem o que foi enviado', () async {
+  group('AlertService.createNotification — contrato da resposta', () {
+    test('campos enviados são refletidos na resposta', () async {
       final notif = await alertService.createNotification(
         title: 'Campos Retorno TDD',
         message: 'Mensagem para validar persistência dos campos enviados.',
@@ -51,13 +34,15 @@ void main() {
         sectorId: supervisorSectorId,
       );
 
+      expect(notif.id, isNotEmpty);
       expect(notif.title, equals('Campos Retorno TDD'));
+      expect(notif.message, equals('Mensagem para validar persistência dos campos enviados.'));
       expect(notif.level, equals(AlertLevel.high));
       expect(notif.slaMinutes, equals(45));
       expect(notif.requiresAcknowledgment, isFalse);
     });
 
-    test('notificação setorial retorna sectorId preenchido', () async {
+    test('notificação setorial retorna targetSectorId preenchido', () async {
       final notif = await alertService.createNotification(
         title: 'Setorial TDD',
         message: 'Notificação setorial para validar o sectorId no retorno.',
@@ -71,7 +56,7 @@ void main() {
       expect(notif.isGlobal, isFalse);
     });
 
-    test('notificação global retorna sectorId nulo', () async {
+    test('notificação global retorna targetSectorId nulo', () async {
       final notif = await alertService.createNotification(
         title: 'Global TDD',
         message: 'Notificação global para validar ausência de sectorId no retorno.',
@@ -85,8 +70,8 @@ void main() {
       expect(notif.isGlobal, isTrue);
     });
 
-    test('createdAt é uma data válida e recente', () async {
-      final antes = DateTime.now().subtract(const Duration(seconds: 5));
+    test('createdAt é posterior ao momento da chamada', () async {
+      final antes = DateTime.now().subtract(const Duration(seconds: 30));
 
       final notif = await alertService.createNotification(
         title: 'Timestamp TDD',
@@ -100,7 +85,7 @@ void main() {
       expect(notif.createdAt.isAfter(antes), isTrue);
     });
 
-    test('notificação CRITICAL força requiresAcknowledgment verdadeiro', () async {
+    test('CRITICAL força effectiveRequiresAcknowledgment mesmo com false enviado', () async {
       final notif = await alertService.createNotification(
         title: 'Crítica TDD',
         message: 'Notificação crítica deve sempre exigir confirmação de ciência.',

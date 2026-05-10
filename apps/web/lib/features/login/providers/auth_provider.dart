@@ -8,9 +8,6 @@ import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import 'package:notif_app/features/login/services/fcm_service.dart';
-import 'package:notif_app/features/sectors/providers/sector_provider.dart';
-import 'package:notif_app/features/sectors/services/sector_service.dart';
-
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 final fcmServiceProvider = Provider<FcmService>((ref) => FcmService());
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
@@ -19,7 +16,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, UserModel?>((ref) {
   return AuthNotifier(
     ref.read(authServiceProvider),
     ref.read(tokenStorageProvider),
-    ref.read(sectorServiceProvider),
     ref.read(alertServiceProvider),
     ref.read(fcmServiceProvider),
   );
@@ -32,7 +28,6 @@ final authInitProvider = FutureProvider<void>((ref) async {
 class AuthNotifier extends StateNotifier<UserModel?> {
   final AuthService _service;
   final TokenStorage _storage;
-  final SectorService _sectorService;
   final AlertService _alertService;
   final FcmService _fcmService;
   String? _errorMessage;
@@ -41,7 +36,6 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   AuthNotifier(
     this._service,
     this._storage,
-    this._sectorService,
     this._alertService,
     this._fcmService,
   ) : super(null) {
@@ -50,32 +44,19 @@ class AuthNotifier extends StateNotifier<UserModel?> {
 
   String? get errorMessage => _errorMessage;
 
-  Future<UserModel> _resolveUser(UserModel user) async {
-    try {
-      final sectors = await _sectorService.getSectors();
-      final match = sectors.firstWhere(
-        (s) => s.id == user.sectorId,
-        orElse: () => throw StateError('not found'),
-      );
-      return user.copyWith(sectorName: match.name);
-    } catch (_) {
-      return user;
-    }
-  }
-
   Future<bool> login(String email, String password) async {
     _errorMessage = null;
     try {
       final token = await _service.login(email, password);
       ApiClient.setToken(token);
-      final raw = await _service.fetchUser(email);
+      final user = await _service.fetchProfile();
       await _storage.saveToken(token);
-      await _storage.saveEmail(email);
-      state = await _resolveUser(raw);
+      state = user;
       _syncDeliveriesSilently(state!.id);
       _startTokenRefreshListener();
       _fcmService.requestPermission().then((_) => _syncFcmTokenSilently(state!)).catchError((_) {});
       return true;
+
     } on ApiException catch (e) {
       ApiClient.clearToken();
       _errorMessage = e.message;
@@ -91,12 +72,10 @@ class AuthNotifier extends StateNotifier<UserModel?> {
 
   Future<void> tryRestoreSession() async {
     final token = await _storage.getToken();
-    final email = await _storage.getEmail();
-    if (token == null || email == null) return;
+    if (token == null) return;
     try {
       ApiClient.setToken(token);
-      final raw = await _service.fetchUser(email);
-      state = await _resolveUser(raw);
+      state = await _service.fetchProfile();
       _syncDeliveriesSilently(state!.id);
       _startTokenRefreshListener();
       _fcmService.requestPermission().then((_) => _syncFcmTokenSilently(state!)).catchError((_) {});
@@ -108,6 +87,11 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     } catch (_) {
       ApiClient.clearToken();
     }
+  }
+
+  Future<void> updateName(String name) async {
+    await ApiClient.patch('/users/${state!.id}', {'name': name});
+    state = state!.copyWith(name: name);
   }
 
   void logout() {
@@ -132,7 +116,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         final current = state;
         if (current == null) return;
         try {
-          await _service.updateFcmToken(userId: current.id, fcmToken: newToken);
+          await _service.updateFcmToken(newToken);
           if (state != null) {
             state = state!.copyWith(fcmToken: newToken);
           }
@@ -152,7 +136,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   Future<void> _syncFcmToken(UserModel user) async {
     final deviceToken = await _fcmService.getToken();
     if (deviceToken == null || deviceToken == user.fcmToken) return;
-    await _service.updateFcmToken(userId: user.id, fcmToken: deviceToken);
+    await _service.updateFcmToken(deviceToken);
     if (state != null) {
       state = state!.copyWith(fcmToken: deviceToken);
     }

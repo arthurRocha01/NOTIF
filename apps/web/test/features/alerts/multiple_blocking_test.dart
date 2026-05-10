@@ -21,8 +21,8 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
     final notif1 = await alertService.createNotification(
       title: 'Bloqueio Crítico 1 TDD',

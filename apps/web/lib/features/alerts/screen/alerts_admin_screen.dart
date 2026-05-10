@@ -48,18 +48,19 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     super.dispose();
   }
 
-  List<AlertModel> _getFilteredAlerts(List<AlertModel> alerts) {
-    return alerts.where((alert) {
-      final matchesSector = _selectedSectorId == null ||
-          alert.isGlobal ||
-          alert.targetSectorId == _selectedSectorId;
-      final matchesLevel =
-          _selectedLevel == null || alert.level == _selectedLevel;
-      final query = _searchCtrl.text.toLowerCase();
-      final matchesSearch = alert.title.toLowerCase().contains(query) ||
-          alert.message.toLowerCase().contains(query);
-      return matchesSector && matchesLevel && matchesSearch;
-    }).toList();
+  void _applyFilters() {
+    ref.read(alertProvider.notifier).loadNotifications(
+      level: _selectedLevel,
+      sectorId: _selectedSectorId,
+    );
+  }
+
+  List<AlertModel> _applySearchFilter(List<AlertModel> alerts) {
+    final query = _searchCtrl.text.toLowerCase();
+    if (query.isEmpty) return alerts;
+    return alerts.where((alert) =>
+        alert.title.toLowerCase().contains(query) ||
+        alert.message.toLowerCase().contains(query)).toList();
   }
 
   @override
@@ -88,7 +89,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
 
     final myAssignments = state.assignments;
 
-    final myNotifications = user?.isSupervisor == true
+    final myNotifications = (user?.isSupervisor == true)
         ? state.notifications
             .where((n) => n.targetSectorId == user!.sectorId)
             .toList()
@@ -210,12 +211,12 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
     bool isLoading,
     SectorState sectorState,
   ) {
-    final filtered      = _getFilteredAlerts(alerts);
+    final filtered      = _applySearchFilter(alerts);
     final criticalCount = alerts.where((a) => a.level == AlertLevel.critical).length;
 
     return RefreshIndicator(
       onRefresh: () async {
-        await ref.read(alertProvider.notifier).loadNotifications();
+        _applyFilters();
         await ref.read(sectorProvider.notifier).loadSectors();
       },
       color: const Color(0xFF4A6CF7),
@@ -363,7 +364,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
               _SectorChip(
                 label: 'Todos',
                 isSelected: _selectedLevel == null,
-                onTap: () => setState(() => _selectedLevel = null),
+                onTap: () { setState(() => _selectedLevel = null); _applyFilters(); },
               ),
               ...AlertLevel.values.map((level) => Padding(
                     padding: const EdgeInsets.only(left: 8),
@@ -371,7 +372,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                       label: level.label,
                       isSelected: _selectedLevel == level,
                       selectedColor: level.color,
-                      onTap: () => setState(() => _selectedLevel = level),
+                      onTap: () { setState(() => _selectedLevel = level); _applyFilters(); },
                     ),
                   )),
             ],
@@ -386,7 +387,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
               _SectorChip(
                 label: 'Todos',
                 isSelected: _selectedSectorId == null,
-                onTap: () => setState(() => _selectedSectorId = null),
+                onTap: () { setState(() => _selectedSectorId = null); _applyFilters(); },
               ),
               if (sectorState.isLoading)
                 const Padding(
@@ -403,8 +404,10 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen>
                       child: _SectorChip(
                         label: sector.name,
                         isSelected: _selectedSectorId == sector.id,
-                        onTap: () =>
-                            setState(() => _selectedSectorId = sector.id),
+                        onTap: () {
+                          setState(() => _selectedSectorId = sector.id);
+                          _applyFilters();
+                        },
                       ),
                     )),
             ],

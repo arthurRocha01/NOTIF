@@ -1,22 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
-import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
+import 'package:notif_app/features/sectors/services/sector_service.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import '../../helpers/alert_test_helpers.dart';
 
 void main() {
   late AdminUserService service;
-  late AdminSectorService sectorService;
+  late SectorService sectorService;
   late AuthService authService;
   late AlertService alertService;
   late String testSectorId;
 
   setUp(() async {
     service = AdminUserService();
-    sectorService = AdminSectorService();
+    sectorService = SectorService();
     authService = AuthService();
     alertService = AlertService();
 
@@ -135,6 +135,26 @@ void main() {
         role: 'SUPERVISOR',
       );
       expect(updated.role, equals(UserRole.supervisor));
+    });
+
+    test('rejeita email duplicado com 409', () async {
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final other = await service.createUser(
+        name: 'Outro Usuario TDD',
+        email: 'tdd.other.$ts@notif.com',
+        password: kPassword,
+        role: 'EMPLOYEE',
+        sectorId: testSectorId,
+      );
+
+      try {
+        await expectLater(
+          service.updateUser(userId: createdUser.id, email: other.email),
+          throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409)),
+        );
+      } finally {
+        await service.deleteUser(other.id);
+      }
     });
 
     test('atualiza sectorId e retorna com novo setor', () async {

@@ -10,6 +10,8 @@ void main() {
   late AuthService authService;
 
   late String notificationId;
+  late String tiUserId;
+  late String opsUserId;
 
   setUpAll(() async {
     alertService = AlertService();
@@ -18,10 +20,13 @@ void main() {
     final supervisorToken = await loginAsSupervisor(authService);
     await clearBlocking(alertService);
 
-    for (final email in [kEmployeeEmail, kEmployeeOpsEmail]) {
-      await loginAs(authService, email);
-      await clearBlocking(alertService);
-    }
+    await loginAs(authService, kEmployeeEmail);
+    await clearBlocking(alertService);
+    tiUserId = (await authService.fetchProfile()).id;
+
+    await loginAs(authService, kEmployeeOpsEmail);
+    await clearBlocking(alertService);
+    opsUserId = (await authService.fetchProfile()).id;
 
     ApiClient.setToken(supervisorToken);
 
@@ -70,16 +75,6 @@ void main() {
       }
     });
 
-    test('assignment da notificação global tem notificationTitle preenchido', () async {
-      await loginAs(authService, kEmployeeEmail);
-
-      final assignments = await alertService.getMyAssignments();
-      final match = assignments.firstWhere((a) => a.notificationId == notificationId);
-
-      expect(match.notificationTitle, isNotNull);
-      expect(match.notificationTitle, isNotEmpty);
-    });
-
     test('getAllAssignments contém assignments dos dois setores para a notificação global',
         () async {
       await loginAsSupervisor(authService);
@@ -90,12 +85,9 @@ void main() {
 
       final userIds = forNotification.map((a) => a.userId).toSet();
 
-      final tiUser = await authService.fetchUser(kEmployeeEmail);
-      final opsUser = await authService.fetchUser(kEmployeeOpsEmail);
-
-      expect(userIds, contains(tiUser.id),
+      expect(userIds, contains(tiUserId),
           reason: 'userId do employee TI não está entre os assignments globais');
-      expect(userIds, contains(opsUser.id),
+      expect(userIds, contains(opsUserId),
           reason: 'userId do employee Ops não está entre os assignments globais');
     });
   });

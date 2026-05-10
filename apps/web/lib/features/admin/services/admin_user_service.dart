@@ -30,11 +30,13 @@ class AdminUserService {
   Future<UserModel> updateUser({
     required String userId,
     String? name,
+    String? email,
     String? role,
     String? sectorId,
   }) async {
     final body = <String, dynamic>{
       if (name != null) 'name': name,
+      if (email != null) 'email': email,
       if (role != null) 'role': role,
       if (sectorId != null) 'sectorId': sectorId,
     };

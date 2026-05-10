@@ -60,7 +60,7 @@ class AppDrawer extends ConsumerWidget {
                           const SizedBox(height: 12),
                           // H2: nome legível
                           Text(
-                            profile.displayName.isNotEmpty ? profile.displayName : user.name,
+                            user.name,
                             style: GoogleFonts.inter(
                               color: Colors.white,
                               fontSize: 18,

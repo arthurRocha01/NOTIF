@@ -20,8 +20,8 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
     await alertService.createNotification(
       title: 'Ciclo de Vida TDD',
@@ -46,49 +46,29 @@ void main() {
   });
 
   group('Ciclo de vida do assignment — caminho feliz', () {
-    test('assignment recém-sincronizado está com status PENDING', () async {
+    test('assignment recém-sincronizado está PENDING com deliveredAt preenchido', () async {
       final assignments = await alertService.getMyAssignments();
       final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.status, equals(AssignmentStatus.pending));
-    });
-
-    test('syncDeliveries preenche deliveredAt', () async {
-      final assignments = await alertService.getMyAssignments();
-      final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.deliveredAt, isNotNull);
     });
 
-    test('markAsViewed transiciona status para VIEWED', () async {
+    test('markAsViewed transiciona para VIEWED e preenche viewedAt', () async {
       await alertService.markAsViewed(assignmentId);
 
       final assignments = await alertService.getMyAssignments();
       final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.status, equals(AssignmentStatus.viewed));
-    });
-
-    test('markAsViewed preenche viewedAt', () async {
-      final assignments = await alertService.getMyAssignments();
-      final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.viewedAt, isNotNull);
     });
 
-    test('acknowledge transiciona status para ACKNOWLEDGED', () async {
+    test('acknowledge transiciona para ACKNOWLEDGED e acknowledgedAt é posterior a deliveredAt', () async {
       await alertService.acknowledge(assignmentId);
 
       final assignments = await alertService.getMyAssignments();
       final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.status, equals(AssignmentStatus.acknowledged));
-    });
-
-    test('acknowledge preenche acknowledgedAt', () async {
-      final assignments = await alertService.getMyAssignments();
-      final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.acknowledgedAt, isNotNull);
-    });
-
-    test('acknowledgedAt é posterior a deliveredAt', () async {
-      final assignments = await alertService.getMyAssignments();
-      final a = assignments.firstWhere((a) => a.id == assignmentId);
       expect(a.acknowledgedAt!.isAfter(a.deliveredAt!), isTrue);
     });
   });

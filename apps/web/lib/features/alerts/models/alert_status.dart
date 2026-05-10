@@ -71,6 +71,8 @@ enum AssignmentStatus {
     }
   }
 
+  String get backendValue => name.toUpperCase();
+
   Color get color {
     switch (this) {
       case AssignmentStatus.pending:      return const Color(0xFF94A3B8);

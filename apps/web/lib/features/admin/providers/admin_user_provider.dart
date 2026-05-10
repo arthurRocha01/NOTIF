@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
-import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
-import 'package:notif_app/features/admin/services/admin_sector_service.dart';
 import 'package:notif_app/features/admin/services/admin_user_service.dart';
+import 'package:notif_app/features/sectors/providers/sector_provider.dart';
+import 'package:notif_app/features/sectors/services/sector_service.dart';
 
 class AdminUserState {
   final List<UserModel> users;
@@ -37,13 +37,13 @@ final adminUserProvider =
     StateNotifierProvider<AdminUserNotifier, AdminUserState>((ref) {
   return AdminUserNotifier(
     ref.read(adminUserServiceProvider),
-    ref.read(adminSectorServiceProvider),
+    ref.read(sectorServiceProvider),
   );
 });
 
 class AdminUserNotifier extends StateNotifier<AdminUserState> {
   final AdminUserService _service;
-  final AdminSectorService _sectorService;
+  final SectorService _sectorService;
 
   AdminUserNotifier(this._service, this._sectorService)
       : super(const AdminUserState());

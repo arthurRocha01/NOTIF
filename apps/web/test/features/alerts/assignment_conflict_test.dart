@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notif_app/core/api/api_client.dart';
-import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
+import 'package:notif_app/features/alerts/models/my_assignment_model.dart';
 import 'package:notif_app/features/alerts/services/alert_service.dart';
 import 'package:notif_app/features/login/services/auth_service.dart';
 import '../../helpers/alert_test_helpers.dart';
@@ -10,8 +10,8 @@ void main() {
   late AlertService alertService;
   late AuthService authService;
 
-  late AssignmentModel assignment;
-  late AssignmentModel pendingAssignment;
+  late MyAssignmentModel assignment;
+  late MyAssignmentModel pendingAssignment;
 
   setUpAll(() async {
     alertService = AlertService();
@@ -22,8 +22,8 @@ void main() {
     await loginAsEmployee(authService);
     await clearBlocking(alertService);
 
+    final employee = await authService.fetchProfile();
     ApiClient.setToken(supervisorToken);
-    final employee = await authService.fetchUser(kEmployeeEmail);
 
     final conflictNotif = await alertService.createNotification(
       title: 'Conflito Teste TDD',
@@ -108,11 +108,13 @@ void main() {
       );
     });
 
-    test('lança ApiException ao tentar confirmar assignment PENDING sem ter visualizado',
+    test('lança 409 ao tentar confirmar assignment PENDING sem ter visualizado',
         () async {
       await expectLater(
         alertService.acknowledge(pendingAssignment.id),
-        throwsA(isA<ApiException>()),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409),
+        ),
       );
     });
   });

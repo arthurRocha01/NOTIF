@@ -16,6 +16,7 @@ void main() {
 
   setUp(() async {
     await loginAsEmployee(authService);
+    await clearBlocking(alertService);
   });
 
   group('Permissões — endpoints restritos a supervisor', () {
@@ -40,6 +41,55 @@ void main() {
         alertService.getAllAssignments(),
         throwsA(
           isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+        ),
+      );
+    });
+  });
+
+  group('Permissões — endpoints sem token', () {
+    setUp(() {
+      ApiClient.clearToken();
+    });
+
+    test('createNotification sem token retorna 401', () async {
+      await expectLater(
+        alertService.createNotification(
+          title: 'Sem token',
+          message: 'Requisição sem autenticação.',
+          level: AlertLevel.low,
+          slaMinutes: 60,
+          requiresAcknowledgment: false,
+          sectorId: null,
+        ),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
+      );
+    });
+
+    test('getAllAssignments sem token retorna 401', () async {
+      await expectLater(
+        alertService.getAllAssignments(),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
+      );
+    });
+
+    test('getNotifications sem token retorna 401', () async {
+      await expectLater(
+        alertService.getNotifications(),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
+        ),
+      );
+    });
+
+    test('getMyAssignments sem token retorna 401', () async {
+      await expectLater(
+        alertService.getMyAssignments(),
+        throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 401),
         ),
       );
     });

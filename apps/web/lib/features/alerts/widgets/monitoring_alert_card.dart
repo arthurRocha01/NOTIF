@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/features/alerts/models/alert_status.dart';
 import '../../alerts/models/alert_model.dart';
 import '../../../core/utils/date_formatter.dart';
 
@@ -14,8 +13,7 @@ class MonitoringAlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final level = alert.level;
-    final requiresAck = alert.requiresAcknowledgment ||
-        level == AlertLevel.critical;
+    final requiresAck = alert.requiresAcknowledgment;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
