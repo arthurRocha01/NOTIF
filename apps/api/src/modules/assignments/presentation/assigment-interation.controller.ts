@@ -2,7 +2,7 @@ import { Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { AssignmentsInteractionService } from '../application/assignments-interaction.service';
 import { BypassBlock } from '../infrastructure/decorators/bypass-block.decorator';
 import { AssignmentResponseDto } from '../dto/assignment-response.dto';
-import type { AuthenticatedRequest } from '../../../auth/domain/authenticated-request.interface';
+import type { AuthenticatedRequest } from '../../auth/domain/authenticated-request.interface';
 
 @Controller('assignments')
 export class AssignmentInteractionController {
