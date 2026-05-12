@@ -8,44 +8,37 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       elevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0B1120), Color(0xFF1A2340)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      surfaceTintColor: Colors.transparent,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: const Color(0xFFE8EAF0)),
       ),
-      leadingWidth: 64,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: _IconBtn(
-          icon: LucideIcons.menu,
-          onTap: () => Scaffold.of(context).openDrawer(),
+      leadingWidth: 56,
+      leading: GestureDetector(
+        onTap: () => Scaffold.of(context).openDrawer(),
+        child: const Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Icon(LucideIcons.menu, size: 22, color: Color(0xFF1A2340)),
         ),
       ),
       titleSpacing: 0,
       title: const _NotifLogo(),
+      centerTitle: true,
       actions: const [
-        _IconBtn(icon: LucideIcons.search),
-        SizedBox(width: 4),
-        _BellBtn(),
-        SizedBox(width: 8),
         _AvatarChip(),
-        SizedBox(width: 14),
+        SizedBox(width: 16),
       ],
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 1);
 }
 
-// ── Logo ──────────────────────────────────────────────────────────────────────
+// ── Logo  N 🔔 TIF ────────────────────────────────────────────────────────────
 
 class _NotifLogo extends StatelessWidget {
   const _NotifLogo();
@@ -54,90 +47,50 @@ class _NotifLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3B5BDB), Color(0xFF6741D9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(9),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3B5BDB).withValues(alpha: 0.55),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.notifications_rounded, color: Colors.white, size: 17),
-        ),
-        const SizedBox(width: 9),
         const Text(
-          'NOTIF',
+          'N',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
+            color: Color(0xFF1A2340),
+            fontSize: 22,
             fontWeight: FontWeight.w900,
-            letterSpacing: 2.5,
+            letterSpacing: 1,
           ),
         ),
-      ],
-    );
-  }
-}
-
-// ── Reusable icon button ───────────────────────────────────────────────────────
-
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _IconBtn({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap ?? () {},
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(11),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
-        ),
-        child: Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 18),
-      ),
-    );
-  }
-}
-
-// ── Bell with live dot ────────────────────────────────────────────────────────
-
-class _BellBtn extends StatelessWidget {
-  const _BellBtn();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        const _IconBtn(icon: LucideIcons.bell),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEF4444),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF0B1120), width: 1.5),
+        const SizedBox(width: 2),
+        Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(
+              LucideIcons.bell,
+              size: 20,
+              color: Color(0xFF3B5BDB),
             ),
+            Positioned(
+              top: 0,
+              right: -1,
+              child: Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 2),
+        const Text(
+          'TIF',
+          style: TextStyle(
+            color: Color(0xFF1A2340),
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
           ),
         ),
       ],
@@ -152,39 +105,38 @@ class _AvatarChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFF3B5BDB), Color(0xFF6741D9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF3B5BDB).withValues(alpha: 0.45),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            'SL',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Supervisor',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF6B7280),
           ),
         ),
-      ),
+        const SizedBox(width: 8),
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A2340),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFE8EAF0), width: 2),
+          ),
+          child: const Center(
+            child: Text(
+              'S',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
