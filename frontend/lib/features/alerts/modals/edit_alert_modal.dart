@@ -1,39 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class CreateAlertModal extends StatefulWidget {
-  const CreateAlertModal({super.key});
+class EditAlertModal extends StatefulWidget {
+  final String initialTitle;
+  final String initialSector;
+  final String initialType;
+  final String initialDescription;
 
-  static Future<void> show(BuildContext context) {
+  const EditAlertModal({
+    super.key,
+    required this.initialTitle,
+    required this.initialSector,
+    required this.initialType,
+    required this.initialDescription,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String title,
+    required String sector,
+    required String type,
+    required String description,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useSafeArea: true,
-      builder: (_) => const CreateAlertModal(),
+      builder: (_) => EditAlertModal(
+        initialTitle: title,
+        initialSector: sector,
+        initialType: type,
+        initialDescription: description,
+      ),
     );
   }
 
   @override
-  State<CreateAlertModal> createState() => _CreateAlertModalState();
+  State<EditAlertModal> createState() => _EditAlertModalState();
 }
 
-class _CreateAlertModalState extends State<CreateAlertModal> {
-  final _titleCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
-
-  String _type = 'comunicado'; // 'critico' | 'alerta' | 'comunicado'
-  int _urgency = 3;
-  final Set<String> _sectors = {};
-  final Set<String> _channels = {'push'};
-  bool _requireConfirm = false;
+class _EditAlertModalState extends State<EditAlertModal> {
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _descCtrl;
+  late String _type;
+  late Set<String> _sectors;
 
   static const _sectorOptions = ['TI', 'Operações', 'RH', 'Financeiro', 'Logística', 'Comercial'];
-  static const _channelOptions = [
-    (icon: Icons.notifications_outlined, label: 'Push', key: 'push'),
-    (icon: Icons.email_outlined, label: 'E-mail', key: 'email'),
-    (icon: Icons.sms_outlined, label: 'SMS', key: 'sms'),
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleCtrl = TextEditingController(text: widget.initialTitle);
+    _descCtrl = TextEditingController(text: widget.initialDescription);
+    _type = widget.initialType;
+    _sectors = {widget.initialSector};
+  }
 
   @override
   void dispose() {
@@ -66,15 +88,15 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
           children: [
             _handle(),
             _header(context),
+            _warningBanner(),
             Expanded(
               child: ListView(
                 controller: controller,
-                padding: EdgeInsets.fromLTRB(20, 0, 20, kb + 100),
+                padding: EdgeInsets.fromLTRB(20, 8, 20, kb + 100),
                 children: [
-                  const SizedBox(height: 4),
                   _fieldLabel('Título do Alerta'),
                   const SizedBox(height: 8),
-                  _textField(_titleCtrl, 'Ex: Manutenção programada do servidor'),
+                  _textField(_titleCtrl, 'Título do alerta'),
                   const SizedBox(height: 20),
 
                   _fieldLabel('Setor Destinatário'),
@@ -87,22 +109,10 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
                   _typeSelector(),
                   const SizedBox(height: 20),
 
-                  _fieldLabel('Urgência'),
-                  const SizedBox(height: 8),
-                  _urgencyBar(),
-                  const SizedBox(height: 20),
-
                   _fieldLabel('Descrição'),
                   const SizedBox(height: 8),
-                  _textField(_descCtrl, 'Descreva o alerta com detalhes relevantes...', maxLines: 4),
-                  const SizedBox(height: 20),
-
-                  _fieldLabel('Canais de Envio'),
+                  _textField(_descCtrl, 'Descrição do alerta...', maxLines: 4),
                   const SizedBox(height: 8),
-                  _channelToggle(),
-                  const SizedBox(height: 16),
-
-                  _confirmToggle(),
                 ],
               ),
             ),
@@ -113,7 +123,7 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
     );
   }
 
-  // ── Structural widgets ────────────────────────────────────────────────────────
+  // ── Structure ─────────────────────────────────────────────────────────────────
 
   Widget _handle() => Center(
         child: Container(
@@ -129,17 +139,17 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
 
   Widget _header(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 4, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: _typeColor.withValues(alpha: 0.12),
+              color: const Color(0xFFD97706).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.campaign_rounded, color: _typeColor, size: 22),
+            child: const Icon(LucideIcons.pencil, color: Color(0xFFD97706), size: 19),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -147,7 +157,7 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Criar Novo Alerta',
+                  'Editar Alerta',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -155,7 +165,7 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
                   ),
                 ),
                 Text(
-                  'Preencha as informações do alerta',
+                  'Alterações serão notificadas aos destinatários',
                   style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                 ),
               ],
@@ -171,6 +181,34 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF6B7280)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _warningBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.4)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFD97706)),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Ao salvar, os destinatários serão re-notificados com a versão atualizada.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFFB45309),
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -197,11 +235,7 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
               ),
               child: const Text(
                 'Cancelar',
-                style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
           ),
@@ -229,18 +263,14 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.send_rounded, color: Colors.white, size: 16),
-                    const SizedBox(width: 8),
+                    Icon(Icons.save_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
                     Text(
-                      _type == 'critico' ? 'Enviar Alerta Crítico' : 'Criar Alerta',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      'Salvar Alterações',
+                      style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -256,11 +286,7 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
 
   Widget _fieldLabel(String label) => Text(
         label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1A2340),
-        ),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A2340)),
       );
 
   Widget _textField(TextEditingController ctrl, String hint, {int maxLines = 1}) {
@@ -294,65 +320,29 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: [
-        ..._sectorOptions.map((s) {
-          final sel = _sectors.contains(s);
-          return GestureDetector(
-            onTap: () => setState(() => sel ? _sectors.remove(s) : _sectors.add(s)),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: sel ? const Color(0xFF3B5BDB) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: sel ? const Color(0xFF3B5BDB) : const Color(0xFFE8EAF0),
-                ),
-              ),
-              child: Text(
-                s,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: sel ? Colors.white : const Color(0xFF6B7280),
-                ),
-              ),
-            ),
-          );
-        }),
-        GestureDetector(
-          onTap: () => setState(() {
-            if (_sectors.length == _sectorOptions.length) {
-              _sectors.clear();
-            } else {
-              _sectors.addAll(_sectorOptions);
-            }
-          }),
+      children: _sectorOptions.map((s) {
+        final sel = _sectors.contains(s);
+        return GestureDetector(
+          onTap: () => setState(() => sel ? _sectors.remove(s) : _sectors.add(s)),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: _sectors.length == _sectorOptions.length
-                  ? const Color(0xFF059669)
-                  : Colors.white,
+              color: sel ? const Color(0xFF3B5BDB) : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _sectors.length == _sectorOptions.length
-                    ? const Color(0xFF059669)
-                    : const Color(0xFFE8EAF0),
-              ),
+              border: Border.all(color: sel ? const Color(0xFF3B5BDB) : const Color(0xFFE8EAF0)),
             ),
             child: Text(
-              'Todos',
+              s,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _sectors.length == _sectorOptions.length ? Colors.white : const Color(0xFF059669),
+                fontWeight: FontWeight.w600,
+                color: sel ? Colors.white : const Color(0xFF6B7280),
               ),
             ),
           ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 
@@ -413,131 +403,6 @@ class _CreateAlertModalState extends State<CreateAlertModal> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _urgencyBar() {
-    return Row(
-      children: List.generate(5, (i) {
-        final level = i + 1;
-        final sel = _urgency >= level;
-        final color = level <= 2
-            ? const Color(0xFF059669)
-            : level <= 3
-                ? const Color(0xFFD97706)
-                : const Color(0xFFDC2626);
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: i < 4 ? 6 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _urgency = level),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: 44,
-                decoration: BoxDecoration(
-                  color: sel ? color : Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: sel ? color : const Color(0xFFE8EAF0)),
-                ),
-                child: Center(
-                  child: Text(
-                    '$level',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: sel ? Colors.white : const Color(0xFF9CA3AF),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _channelToggle() {
-    return Row(
-      children: _channelOptions.map((ch) {
-        final sel = _channels.contains(ch.key);
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: ch.key != 'sms' ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => sel ? _channels.remove(ch.key) : _channels.add(ch.key)),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: sel ? const Color(0xFF3B5BDB).withValues(alpha: 0.08) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: sel ? const Color(0xFF3B5BDB) : const Color(0xFFE8EAF0),
-                    width: sel ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(ch.icon, size: 18, color: sel ? const Color(0xFF3B5BDB) : const Color(0xFF9CA3AF)),
-                    const SizedBox(height: 4),
-                    Text(
-                      ch.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: sel ? const Color(0xFF3B5BDB) : const Color(0xFF9CA3AF),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _confirmToggle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8EAF0)),
-      ),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.checkSquare, size: 18, color: Color(0xFF3B5BDB)),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Exigir confirmação de leitura',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A2340),
-                  ),
-                ),
-                Text(
-                  'Colaboradores devem confirmar que leram',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: _requireConfirm || _type == 'critico',
-            onChanged: _type == 'critico' ? null : (v) => setState(() => _requireConfirm = v),
-            activeThumbColor: const Color(0xFF3B5BDB),
-            activeTrackColor: const Color(0xFF3B5BDB).withValues(alpha: 0.35),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_spacing.dart';
 
 class AttentionCard extends StatelessWidget {
   final List<String> sectors;
@@ -9,50 +11,101 @@ class AttentionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(color: AppColors.shadowLight, blurRadius: 8, offset: Offset(0, 2)),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Atenção necessária (Baixa Adesão)", 
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(height: 16),
-          ...sectors.map((s) => _buildItem(s)),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.critical,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Atenção — Baixa Adesão',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Setores com taxa de leitura abaixo de 70%',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...sectors.map(_buildSectorItem),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: onNotify,
+              icon: const Icon(Icons.send_rounded, size: 16),
+              label: const Text('Notificar pendentes'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E3A8A),
+                backgroundColor: AppColors.textPrimary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+                elevation: 0,
               ),
-              child: const Text("Notificar pendentes"),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildItem(String sector) {
+  Widget _buildSectorItem(String sector) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade100),
+        color: AppColors.critical.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.critical.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
-          const SizedBox(width: 12),
-          Text(sector, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.critical,
+            size: 18,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            sector,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );

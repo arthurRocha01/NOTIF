@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_spacing.dart';
 
 class SectorProgressBar extends StatelessWidget {
   final String label;
@@ -6,32 +8,51 @@ class SectorProgressBar extends StatelessWidget {
 
   const SectorProgressBar({super.key, required this.label, required this.value});
 
+  Color get _barColor {
+    if (value < 0.5) return AppColors.critical;
+    if (value < 0.70) return const Color(0xFFD97706);
+    return const Color(0xFF059669);
+  }
+
   @override
   Widget build(BuildContext context) {
-    Color barColor = const Color(0xFF1E3A8A); // Azul escuro
-    if (label == "TI") barColor = const Color(0xFF991B1B); // Vermelho escuro
-    if (label == "Operações") barColor = const Color(0xFFD97706); // Dourado
-
+    final pct = (value * 100).toInt();
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 85, child: Text(label, 
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: value,
-                minHeight: 18,
-                backgroundColor: const Color(0xFFF1F5F9),
-                color: barColor,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
+              Text(
+                '$pct%',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _barColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 8,
+              backgroundColor: AppColors.background,
+              valueColor: AlwaysStoppedAnimation(_barColor),
             ),
           ),
-          const SizedBox(width: 12),
-          Text("${(value * 100).toInt()}%", 
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );
