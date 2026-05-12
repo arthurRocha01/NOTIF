@@ -43,6 +43,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 class _NotifLogo extends StatelessWidget {
   const _NotifLogo();
 
+  // Azul escuro meio opaco — mesmo tom em texto, sino e ponto
+  static const _logoColor = Color(0x99152440);
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -52,45 +55,38 @@ class _NotifLogo extends StatelessWidget {
         const Text(
           'N',
           style: TextStyle(
-            color: Color(0xFF1A2340),
+            color: _logoColor,
             fontSize: 22,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+            letterSpacing: 0,
           ),
         ),
-        const SizedBox(width: 2),
         Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            const Icon(
-              LucideIcons.bell,
-              size: 20,
-              color: Color(0xFF3B5BDB),
-            ),
+            const Icon(LucideIcons.bell, size: 21, color: _logoColor),
             Positioned(
-              top: 0,
+              top: 1,
               right: -1,
               child: Container(
                 width: 6,
                 height: 6,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444),
+                decoration: const BoxDecoration(
+                  color: _logoColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(width: 2),
         const Text(
-          'TIF',
+          'IF',
           style: TextStyle(
-            color: Color(0xFF1A2340),
+            color: _logoColor,
             fontSize: 22,
             fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+            letterSpacing: 0,
           ),
         ),
       ],
