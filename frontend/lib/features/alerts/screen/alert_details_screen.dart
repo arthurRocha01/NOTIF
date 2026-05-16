@@ -13,13 +13,23 @@ class AlertDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final title   = assignment.notificationTitle ?? 'Notificação';
-    final message = assignment.notificationMessage;
+    // O backend não retorna title/message/requiresAcknowledgment no assignment.
+    // Fazemos lookup na lista de notifications carregada (disponível para supervisores).
+    final notifications = ref.watch(alertProvider).notifications;
+    final notification = notifications
+        .where((n) => n.id == assignment.notificationId)
+        .firstOrNull;
+
+    final title   = assignment.notificationTitle ?? notification?.title ?? 'Notificação';
+    final message = assignment.notificationMessage ?? notification?.message;
     final level   = assignment.notificationLevel;
     final status  = assignment.status;
     final isDone    = status == AssignmentStatus.acknowledged;
     final isOverdue = status == AssignmentStatus.overdue;
-    final canAcknowledge = !isDone && assignment.canAcknowledge;
+    final requiresAck = assignment.requiresAcknowledgment
+        ?? notification?.requiresAcknowledgment
+        ?? false;
+    final canAcknowledge = !isDone && (assignment.isCritical || requiresAck);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),

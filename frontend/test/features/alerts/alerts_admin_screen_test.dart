@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_state.dart';
@@ -87,26 +88,30 @@ AlertModel _makeAlert({
     );
 
 void main() {
-  group('AlertAdminScreen tabs', () {
-    testWidgets('exibe a aba Painel', (tester) async {
+  setUpAll(() async {
+    await initializeDateFormatting('pt_BR');
+  });
+
+  group('AlertAdminScreen header', () {
+    testWidgets('exibe título Central de Alertas', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
-      expect(find.text('Painel'), findsOneWidget);
+      expect(find.text('Central de Alertas'), findsOneWidget);
     });
 
-    testWidgets('não exibe a aba Histórico', (tester) async {
+    testWidgets('não exibe aba Histórico', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
       expect(find.text('Histórico'), findsNothing);
     });
 
-    testWidgets('exibe a aba Minhas notificações', (tester) async {
+    testWidgets('não exibe aba Minhas notificações', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 
-      expect(find.text('Minhas notificações'), findsOneWidget);
+      expect(find.text('Minhas notificações'), findsNothing);
     });
   });
 
@@ -131,7 +136,7 @@ void main() {
   });
 
   group('AlertAdminScreen filtro por nível', () {
-    testWidgets('exibe chips de nível na aba Notificações', (tester) async {
+    testWidgets('exibe chips de nível', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pump();
 

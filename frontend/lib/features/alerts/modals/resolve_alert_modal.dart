@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/shared/widgets/notif_button.dart';
 import 'package:notif_app/shared/widgets/notif_input.dart';
@@ -89,7 +91,7 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
               child: Row(
                 children: [
                   Icon(
-                    isCritical ? Icons.warning_amber_rounded : Icons.check_circle,
+                    isCritical ? LucideIcons.alertTriangle : LucideIcons.checkCircle2,
                     color: isCritical ? Colors.red : AppColors.resolved,
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -99,7 +101,7 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
                       children: [
                         Text(
                           widget.alert.title,
-                          style: const TextStyle(
+                          style: GoogleFonts.inter(
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
@@ -109,7 +111,7 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
                         const SizedBox(height: 2),
                         Text(
                           isCritical ? "Alerta CRÍTICO" : "Alerta normal",
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
                             color: isCritical ? Colors.red : AppColors.textSecondary,
                           ),
@@ -119,17 +121,17 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(LucideIcons.x),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Mensagem de resolução',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -149,7 +151,7 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
                 label: 'Finalizar alerta',
                 onPressed: _submit,
                 isLoading: _isLoading,
-                icon: Icons.check,
+                icon: LucideIcons.check,
                 color: isCritical ? Colors.red : AppColors.resolved,
               ),
             ),

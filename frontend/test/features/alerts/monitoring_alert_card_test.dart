@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/widgets/monitoring_alert_card.dart';
@@ -28,6 +29,10 @@ Widget _buildCard({required AlertModel alert, String? sectorName}) {
 }
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('pt_BR');
+  });
+
   group('MonitoringAlertCard — escopo', () {
     testWidgets('exibe "Global" quando alerta não tem setor', (tester) async {
       await tester.pumpWidget(_buildCard(alert: _makeAlert()));

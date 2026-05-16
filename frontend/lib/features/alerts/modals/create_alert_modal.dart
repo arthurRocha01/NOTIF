@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
 import '../../login/providers/auth_provider.dart';
@@ -148,12 +150,12 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
               children: [
                 CircleAvatar(
                   backgroundColor: _currentThemeColor.withValues(alpha: 0.1),
-                  child: Icon(Icons.campaign, color: _currentThemeColor),
+                  child: Icon(LucideIcons.megaphone, color: _currentThemeColor),
                 ),
                 const SizedBox(width: 12),
-                const Text('Novo Alerta Administrativo',
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Novo Alerta Administrativo',
+                    style: GoogleFonts.inter(
+                        fontSize: 18, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -212,7 +214,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                       onPressed: _submit,
                       isLoading: _isLoading,
                       color: _currentThemeColor,
-                      icon: isCritical ? Icons.report_problem : Icons.send,
+                      icon: isCritical ? LucideIcons.alertTriangle : LucideIcons.send,
                     ),
                   ],
                 ),
@@ -227,12 +229,13 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   Widget _buildSectorHeader() {
     return Row(
       children: [
-        const Icon(Icons.groups_outlined, size: 20, color: Colors.grey),
+        const Icon(LucideIcons.users, size: 20, color: Color(0xFF94A3B8)),
         const SizedBox(width: 8),
-        const Text('Destinatários',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        Text('Destinatários',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
         const Spacer(),
-        const Text('Todos', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        Text('Todos',
+            style: GoogleFonts.inter(fontSize: 12, color: Color(0xFF94A3B8))),
         Switch.adaptive(
           activeThumbColor: AppColors.primary,
           value: _sendToAll,
@@ -295,12 +298,12 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.timer_outlined, size: 20, color: Colors.grey),
-            SizedBox(width: 8),
+            const Icon(LucideIcons.timer, size: 20, color: Color(0xFF94A3B8)),
+            const SizedBox(width: 8),
             Text('Prazo (SLA)',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ],
         ),
         const SizedBox(height: 8),
@@ -345,11 +348,11 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Exigir confirmação de ciência',
-            style: TextStyle(fontSize: 14)),
+        title: Text('Exigir confirmação de ciência',
+            style: GoogleFonts.inter(fontSize: 14)),
         subtitle: isCritical
-            ? const Text('Obrigatório para alertas críticos',
-                style: TextStyle(fontSize: 11, color: Colors.red))
+            ? Text('Obrigatório para alertas críticos',
+                style: GoogleFonts.inter(fontSize: 11, color: Colors.red))
             : null,
         value: isCritical ? true : _requiresAcknowledgment,
         onChanged: isCritical

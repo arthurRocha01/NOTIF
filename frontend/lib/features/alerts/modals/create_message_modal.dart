@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../login/providers/auth_provider.dart';
 import '../../sectors/providers/sector_provider.dart';
+import '../../../shared/widgets/notif_input.dart';
+import '../../../shared/widgets/notif_button.dart';
 
-class CreateMessageModal extends ConsumerStatefulWidget { // Alterado para Consumer
+class CreateMessageModal extends ConsumerStatefulWidget {
   const CreateMessageModal({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -26,12 +30,18 @@ class CreateMessageModal extends ConsumerStatefulWidget { // Alterado para Consu
 class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
   final TextEditingController _titleCtrl = TextEditingController();
   final TextEditingController _contentCtrl = TextEditingController();
-  bool _isLoading = false; // Adicionado controle de loading
+  bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty || _contentCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha todos os campos")),
+        SnackBar(
+          content: Text('Preencha todos os campos', style: GoogleFonts.inter()),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
       return;
     }
@@ -53,9 +63,7 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (ok) {
-      Navigator.pop(context);
-    }
+    if (ok) Navigator.pop(context);
   }
 
   @override
@@ -72,7 +80,7 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
@@ -83,62 +91,52 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
           children: [
             Center(
               child: Container(
-                width: 40, height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            const Row(
+            Row(
               children: [
-                Icon(LucideIcons.megaphone, color: Color(0xFF1E3A8A)),
-                SizedBox(width: 12),
-                Text("Novo Comunicado", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Icon(LucideIcons.megaphone, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Novo Comunicado',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
-            const Text("Título", style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            TextField(
+            const SizedBox(height: AppSpacing.xl),
+            NotifInput(
               controller: _titleCtrl,
-              decoration: InputDecoration(
-                hintText: "Ex: Manutenção do Ar-condicionado",
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
+              label: 'Título',
+              hint: 'Ex: Manutenção do Ar-condicionado',
+              isRequired: true,
             ),
-            const SizedBox(height: 16),
-            const Text("Mensagem", style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            TextField(
+            const SizedBox(height: AppSpacing.md),
+            NotifInput(
               controller: _contentCtrl,
+              label: 'Mensagem',
+              hint: 'Escreva os detalhes do aviso aqui...',
               maxLines: 5,
-              decoration: InputDecoration(
-                hintText: "Escreva os detalhes do aviso aqui...",
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
+              isRequired: true,
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submit, // Desabilita se estiver carregando
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E3A8A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isLoading 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Enviar Comunicado", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
+            const SizedBox(height: AppSpacing.xl),
+            NotifButton(
+              label: 'Enviar Comunicado',
+              onPressed: _submit,
+              isLoading: _isLoading,
+              color: AppColors.primary,
+              icon: LucideIcons.send,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),

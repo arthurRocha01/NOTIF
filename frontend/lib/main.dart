@@ -3,19 +3,50 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/notifications/notification_service.dart';
 import 'package:notif_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
+import 'package:notif_app/features/sectors/providers/sector_provider.dart';
+
+// Altere para false para restaurar o fluxo normal de login.
+const _kTestMode = true;
+
+const _testSupervisor = UserModel(
+  id: 'debug-sup-01',
+  name: 'Supervisor Teste',
+  email: 'supervisor@notif.com',
+  sector: 'TI',
+  role: UserRole.supervisor,
+);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().initialize();
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: _kTestMode
+          ? [
+              authProvider.overrideWith((ref) {
+                final n = AuthNotifier(
+                  ref.read(authServiceProvider),
+                  ref.read(tokenStorageProvider),
+                  ref.read(sectorServiceProvider),
+                  ref.read(alertServiceProvider),
+                  ref.read(fcmServiceProvider),
+                );
+                // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                n.state = _testSupervisor;
+                return n;
+              }),
+              authInitProvider.overrideWith((_) async {}),
+            ]
+          : const [],
+      child: const MyApp(),
     ),
   );
 }

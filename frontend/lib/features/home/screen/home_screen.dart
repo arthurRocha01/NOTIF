@@ -7,16 +7,13 @@ import 'package:notif_app/features/alerts/models/alert_model.dart';
 import 'package:notif_app/features/alerts/models/alert_status.dart';
 import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/alerts/screen/alerts_admin_screen.dart';
-import 'package:notif_app/features/alerts/screen/alerts_user_screen.dart';
 import 'package:notif_app/features/alerts/widgets/critical_alert_overlay.dart';
 import 'package:notif_app/features/alerts/widgets/in_app_banner_overlay.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
-import 'package:notif_app/features/home/controllers/feed_controller.dart';
-import 'package:notif_app/features/home/widgets/feed/feed_content.dart';
 import 'package:notif_app/features/home/widgets/home_bottom_nav.dart';
-import 'package:notif_app/features/home/widgets/publish_modal.dart';
 import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
+import 'package:notif_app/features/notifications/screens/notifications_screen.dart';
 import 'package:notif_app/shared/widgets/home_app_bar.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 
@@ -30,11 +27,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   OverlayEntry? _bannerEntry;
+  int _pageIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(feedProvider).loadPosts());
     _initNotificationHandlers();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final alert = ref.read(alertProvider.notifier);
@@ -79,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (level == AlertLevel.critical) {
       _showCriticalOverlay(message);
     } else {
-      ref.read(feedProvider).changePage(2);
+      setState(() => _pageIndex = 0);
       ref.read(alertProvider.notifier).markAllPendingAsViewed();
     }
   }
@@ -124,7 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () {
               _bannerEntry?.remove();
               _bannerEntry = null;
-              ref.read(feedProvider).changePage(2);
+              setState(() => _pageIndex = 0);
             },
             onDismiss: () {
               _bannerEntry?.remove();
@@ -146,99 +143,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (_) {}
   }
 
-  // Mapeia o tap na nav bar → pageIndex (0=Feed, 1=Dashboard, 2=Alerts)
-  void _onNavTap(
-      int navIndex, bool isSupervisor, FeedController controller, dynamic user) {
-    if (isSupervisor) {
-      // Supervisor: [Home=0, Publicar=1, Dashboard=2, Alertas=3]
-      switch (navIndex) {
-        case 0:
-          controller.changePage(0);
-          break;
-        case 1:
-          _handlePublish(user, controller);
-          break;
-        case 2:
-          controller.changePage(1);
-          break;
-        case 3:
-          controller.changePage(2);
-          break;
-      }
-    } else {
-      // Employee: [Home=0, Publicar=1, Alertas=2]
-      switch (navIndex) {
-        case 0:
-          controller.changePage(0);
-          break;
-        case 1:
-          _handlePublish(user, controller);
-          break;
-        case 2:
-          controller.changePage(2);
-          ref.read(alertProvider.notifier).markAllPendingAsViewed();
-          break;
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
-    final feedController = ref.watch(feedProvider);
     final bool isSupervisor = user?.isSupervisor ?? false;
 
-    // Contagem real de assignments não confirmados — alimenta o badge da navbar
     final pendingCount = ref
         .watch(alertProvider)
         .assignments
         .where((a) => a.status != AssignmentStatus.acknowledged)
         .length;
 
+    // Employee: tela única de notificações, sem navbar
+    if (!isSupervisor) {
+      return Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF1F5F9),
+        appBar: HomeAppBar(
+          onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        drawer: const AppDrawer(),
+        body: const NotificationsScreen(),
+      );
+    }
+
+    // Supervisor: 3 abas com navbar
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: IndexedStack(
-          index: feedController.pageIndex,
-          children: [
-            FeedContent(controller: feedController), // 0 = Feed
-            const DashboardScreen(), // 1 = Dashboard
-            isSupervisor
-                ? const AlertAdminScreen()
-                : const AlertUserScreen(), // 2 = Alertas
-          ],
-        ),
+      body: IndexedStack(
+        index: _pageIndex,
+        children: const [
+          NotificationsScreen(), // 0 = Notificações
+          DashboardScreen(),     // 1 = Dashboard
+          AlertAdminScreen(),    // 2 = Painel
+        ],
       ),
       bottomNavigationBar: HomeBottomNav(
-        pageIndex: feedController.pageIndex,
-        isSupervisor: isSupervisor,
+        pageIndex: _pageIndex,
+        isSupervisor: true,
         notificationCount: pendingCount,
-        onItemTapped: (navIndex) =>
-            _onNavTap(navIndex, isSupervisor, feedController, user),
-      ),
-    );
-  }
-
-  void _handlePublish(dynamic user, FeedController controller) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PublishModal(
-        onPublish: (title, content) async {
-          final nav = Navigator.of(context);
-          await controller.publish(
-            title: title,
-            content: content,
-            currentUser: user,
-          );
-          nav.pop();
-        },
+        onItemTapped: (i) => setState(() => _pageIndex = i),
       ),
     );
   }

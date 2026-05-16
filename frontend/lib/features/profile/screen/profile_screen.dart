@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,19 +33,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickAvatar() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-      withData: true, // necessário para web — retorna bytes
-    );
-
-    if (result != null && result.files.first.bytes != null) {
-      final bytes = result.files.first.bytes!;
-      ref.read(profileProvider.notifier).setAvatar(bytes);
-    }
   }
 
   void _saveDisplayName() {
@@ -84,26 +70,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 28),
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: _pickAvatar,
-                    child: Stack(
-                      children: [
-                        _Avatar(bytes: profile.avatarBytes, name: user?.name ?? ''),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(6),
-                            child: const Icon(LucideIcons.camera, size: 14, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _Avatar(bytes: profile.avatarBytes, name: user?.name ?? ''),
                   const SizedBox(height: 12),
                   Text(
                     profile.displayName.isNotEmpty ? profile.displayName : (user?.name ?? ''),
@@ -119,18 +86,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       '${user.roleLabel} · ${user.sector}',
                       style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
                     ),
-                  const SizedBox(height: 20),
-                  // ── Stats ──────────────────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _StatItem(value: myPosts.length, label: 'posts'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followersCount, label: 'seguidores'),
-                      _StatDivider(),
-                      _StatItem(value: profile.followingCount, label: 'seguindo'),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -211,34 +166,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ]),
 
-                  const SizedBox(height: 24),
-                  ProfileSectionHeader(label: 'FOTO DE PERFIL'),
-                  const SizedBox(height: 8),
-
-                  ProfileInfoCard(children: [
-                    ListTile(
-                      leading: const Icon(LucideIcons.image, size: 20),
-                      title: Text('Alterar foto', style: GoogleFonts.inter(fontSize: 15)),
-                      subtitle: Text(
-                        'Selecione uma imagem da galeria',
-                        style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
-                      ),
-                      trailing: const Icon(LucideIcons.chevronRight, size: 18, color: Colors.grey),
-                      onTap: _pickAvatar,
-                    ),
-                    if (profile.avatarBytes != null) ...[
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(LucideIcons.trash2, size: 20, color: Colors.red),
-                        title: Text(
-                          'Remover foto',
-                          style: GoogleFonts.inter(fontSize: 15, color: Colors.red),
-                        ),
-                        onTap: () => ref.read(profileProvider.notifier).setAvatar(null),
-                      ),
-                    ],
-                  ]),
-
                   // ── Publicações ─────────────────────────────────────────
                   if (myPosts.isNotEmpty) ...[
                     const SizedBox(height: 24),
@@ -260,49 +187,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Stat item ─────────────────────────────────────────────────────────────
-
-class _StatItem extends StatelessWidget {
-  final int value;
-  final String label;
-  const _StatItem({required this.value, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          Text(
-            '$value',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 28,
-      color: Colors.white24,
     );
   }
 }

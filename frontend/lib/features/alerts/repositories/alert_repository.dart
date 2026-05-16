@@ -13,6 +13,7 @@ class AlertRepository {
 
   Future<AlertModel> createNotification({
     required String token,
+    required String authorId,
     required String title,
     required String message,
     required AlertLevel level,
@@ -22,6 +23,7 @@ class AlertRepository {
   }) =>
       _service.createNotification(
         token: token,
+        authorId: authorId,
         title: title,
         message: message,
         level: level,

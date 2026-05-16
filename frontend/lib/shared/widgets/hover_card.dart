@@ -45,7 +45,7 @@ class _HoverCardState extends State<HoverCard> {
             boxShadow: _hover
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(.08),
+                      color: Colors.black.withValues(alpha: .08),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     )

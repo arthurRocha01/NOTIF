@@ -106,7 +106,7 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: Icon(Icons.business,
                         color: AppColors.primary, size: 20),
                   ),

@@ -24,7 +24,7 @@ class DashboardKpiRow extends StatelessWidget {
           children: [
             Expanded(
               child: _KpiCard(
-                label: 'Total',
+                label: 'Total de alertas',
                 value: '$totalAssignments',
                 icon: LucideIcons.bellRing,
                 color: const Color(0xFF4A6CF7),
@@ -61,8 +61,8 @@ class DashboardKpiRow extends StatelessWidget {
                 label: 'Críticos',
                 value: '$totalCritical',
                 icon: LucideIcons.alertTriangle,
-                color: const Color(0xFFE53935),
-                bgColor: const Color(0xFFFFEBEE),
+                color: const Color(0xFFDC2626),
+                bgColor: const Color(0xFFFEE2E2),
               ),
             ),
           ],
@@ -90,51 +90,68 @@ class _KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 14, 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: color.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
                   label,
                   style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF94A3B8),
                   ),
                 ),
-              ],
+              ),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 15, color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: 28,
+            height: 3,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ],

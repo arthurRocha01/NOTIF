@@ -149,7 +149,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: Icon(Icons.person,
                           color: AppColors.primary, size: 20),
                     ),
@@ -279,7 +279,7 @@ class _DropdownField extends StatelessWidget {
                 fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           hint: hint != null ? Text(hint!) : null,
           items: items,
           onChanged: onChanged,

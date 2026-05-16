@@ -46,13 +46,13 @@ class _NotifButtonState extends State<NotifButton> {
         decoration: BoxDecoration(
           color: widget.isOutlined
               ? Colors.transparent
-              : primaryColor.withOpacity(_hover ? .9 : 1),
+              : primaryColor.withValues(alpha: _hover ? .9 : 1),
           borderRadius: BorderRadius.circular(10),
           border: widget.isOutlined ? Border.all(color: primaryColor) : null,
           boxShadow: _hover
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(.1),
+                    color: Colors.black.withValues(alpha: .1),
                     blurRadius: 6,
                   )
                 ]
