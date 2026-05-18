@@ -53,7 +53,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: const Color(0xFF1A2340),
         title: Text(
           'Meu Perfil',
           style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
@@ -66,8 +66,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // ── Cabeçalho ────────────────────────────────────────────────
             Container(
               width: double.infinity,
-              color: const Color(0xFF0F172A),
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 28),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1A2340), Color(0xFF4A3F8F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 36),
               child: Column(
                 children: [
                   _Avatar(bytes: profile.avatarBytes, name: user?.name ?? ''),
@@ -77,14 +87,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   if (user != null)
                     Text(
                       '${user.roleLabel} · ${user.sector}',
-                      style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
+                      style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
                     ),
                 ],
               ),

@@ -33,12 +33,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildHeader(int activeAlerts, int totalSectors) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 36),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1A2340), Color(0xFF4A3F8F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
       ),
       child: Column(
@@ -73,7 +77,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       'Painel de Gestão',
                       style: GoogleFonts.inter(
                         fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),

@@ -42,14 +42,18 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
-  Future<void> loadAssignments({String? token}) async {
+  Future<void> loadAssignments({String? token, String? currentUserId}) async {
     if (state.isLoadingAssignments) return;
     state = state.copyWith(isLoadingAssignments: true, clearError: true);
     try {
       final assignments =
           await _service.getMyAssignments(token: token ?? _token);
+      final deduped = _deduplicateAssignments(assignments);
+      final result = currentUserId != null
+          ? _filterSelfAuthored(deduped, state.notifications, currentUserId)
+          : deduped;
       state = state.copyWith(
-        assignments: assignments,
+        assignments: result,
         isLoadingAssignments: false,
       );
     } on AlertServiceException catch (e) {
@@ -64,6 +68,42 @@ class AlertNotifier extends StateNotifier<AlertState> {
         errorMessage: 'Erro inesperado. Tente novamente.',
       );
     }
+  }
+
+  static List<AssignmentModel> _deduplicateAssignments(
+      List<AssignmentModel> assignments) {
+    final map = <String, AssignmentModel>{};
+    for (final a in assignments) {
+      final existing = map[a.notificationId];
+      if (existing == null ||
+          _statusPriority(a.status) > _statusPriority(existing.status)) {
+        map[a.notificationId] = a;
+      }
+    }
+    return map.values.toList();
+  }
+
+  static int _statusPriority(AssignmentStatus status) {
+    switch (status) {
+      case AssignmentStatus.overdue:      return 3;
+      case AssignmentStatus.pending:      return 2;
+      case AssignmentStatus.viewed:       return 1;
+      case AssignmentStatus.acknowledged: return 0;
+    }
+  }
+
+  static List<AssignmentModel> _filterSelfAuthored(
+    List<AssignmentModel> assignments,
+    List<AlertModel> notifications,
+    String currentUserId,
+  ) {
+    final selfAuthoredIds = notifications
+        .where((n) => n.authorId == currentUserId)
+        .map((n) => n.id)
+        .toSet();
+    return assignments
+        .where((a) => !selfAuthoredIds.contains(a.notificationId))
+        .toList();
   }
 
   Future<bool> createNotification({
@@ -161,7 +201,7 @@ class AlertNotifier extends StateNotifier<AlertState> {
       );
     } on AlertServiceException catch (e) {
       if (e.statusCode == 401) ApiClient.onUnauthorized?.call();
-      state = state.copyWith(errorMessage: e.message);
+      if (e.statusCode != 403) state = state.copyWith(errorMessage: e.message);
     } catch (_) {}
   }
 

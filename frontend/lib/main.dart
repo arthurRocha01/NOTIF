@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:notif_app/core/api/api_client.dart';
 import 'package:notif_app/core/model/user_model.dart';
 import 'package:notif_app/core/notifications/notification_service.dart';
@@ -13,7 +14,7 @@ import 'package:notif_app/features/login/screen/login_screen.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 
 // Altere para false para restaurar o fluxo normal de login.
-const _kTestMode = true;
+const _kTestMode = false;
 
 const _testSupervisor = UserModel(
   id: 'debug-sup-01',
@@ -25,6 +26,7 @@ const _testSupervisor = UserModel(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('pt_BR');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().initialize();
   runApp(

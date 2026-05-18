@@ -65,7 +65,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),

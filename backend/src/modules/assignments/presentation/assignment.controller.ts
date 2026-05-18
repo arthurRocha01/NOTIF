@@ -16,7 +16,8 @@ export class AssignmentController {
 
   @Get('mine')
   async findMine(@Req() req: any): Promise<AssignmentResponseDto[]> {
-    const assignments = await this.assignmentService.listMyAssignments(req.user.userId);
+    const userId = req.user.userId ?? req.user.id;
+    const assignments = await this.assignmentService.listMyAssignments(userId);
     return assignments.map((a) => AssignmentResponseDto.fromDomain(a));
   }
 

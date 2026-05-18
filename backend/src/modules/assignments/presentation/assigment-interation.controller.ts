@@ -17,7 +17,7 @@ export class AssigmentInterationController {
 
   @Post(':assignmentId/view')
   async view(@Param('assignmentId') assignmentId: string, @Req() req: any) {
-    const userId = req.user.userId;
+    const userId = req.user.userId ?? req.user.id;
     await this.service.markAsViewed(userId, assignmentId);
 
     return {
@@ -30,7 +30,7 @@ export class AssigmentInterationController {
     @Param('assignmentId') assignmentId: string,
     @Req() req: any,
   ) {
-    const userId = req.user.userId;
+    const userId = req.user.userId ?? req.user.id;
     await this.service.acknowledge(userId, assignmentId);
 
     return { message: 'Ciência confirmada com sucesso' };

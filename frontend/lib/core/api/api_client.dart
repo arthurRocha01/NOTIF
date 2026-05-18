@@ -12,7 +12,7 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'https://notifta.vercel.app';
+  static const String baseUrl = 'http://localhost:3000';
   static String? _authToken;
   static void Function()? onUnauthorized;
 
