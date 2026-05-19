@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,18 +15,16 @@ class AlertDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // O backend não retorna title/message/requiresAcknowledgment no assignment.
-    // Fazemos lookup na lista de notifications carregada (disponível para supervisores).
     final notifications = ref.watch(alertProvider).notifications;
     final notification = notifications
         .where((n) => n.id == assignment.notificationId)
         .firstOrNull;
 
-    final title   = assignment.notificationTitle ?? notification?.title ?? 'Notificação';
+    final title = assignment.notificationTitle ?? notification?.title ?? 'Notificação';
     final message = assignment.notificationMessage ?? notification?.message;
-    final level   = assignment.notificationLevel;
-    final status  = assignment.status;
-    final isDone    = status == AssignmentStatus.acknowledged;
+    final level = assignment.notificationLevel;
+    final status = assignment.status;
+    final isDone = status == AssignmentStatus.acknowledged;
     final isOverdue = status == AssignmentStatus.overdue;
     final requiresAck = assignment.requiresAcknowledgment
         ?? notification?.requiresAcknowledgment
@@ -32,7 +32,7 @@ class AlertDetailsScreen extends ConsumerWidget {
     final canAcknowledge = !isDone && (assignment.isCritical || requiresAck);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0D1421),
       body: CustomScrollView(
         slivers: [
           // ── AppBar com gradiente por nível ──────────────────────────────
@@ -78,8 +78,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(level.icon,
-                                  size: 12, color: Colors.white),
+                              Icon(level.icon, size: 12, color: Colors.white),
                               const SizedBox(width: 4),
                               Text(
                                 level.label,
@@ -129,7 +128,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         message,
                         style: GoogleFonts.inter(
                           fontSize: 14,
-                          color: const Color(0xFF334155),
+                          color: Colors.white.withValues(alpha: 0.80),
                           height: 1.6,
                         ),
                       ),
@@ -149,24 +148,24 @@ class AlertDetailsScreen extends ConsumerWidget {
                           value: _formatDate(assignment.createdAt),
                         ),
                         if (assignment.dueAt != null) ...[
-                          const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          _RowDivider(),
                           _InfoRow(
                             icon: LucideIcons.clock,
                             label: 'Prazo',
                             value: _formatDueVerbose(
                                 assignment.dueAt!, isOverdue),
                             valueColor: isOverdue
-                                ? const Color(0xFFDC2626)
+                                ? const Color(0xFFFF6B6B)
                                 : null,
                           ),
                         ],
                         if (assignment.acknowledgedAt != null) ...[
-                          const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          _RowDivider(),
                           _InfoRow(
                             icon: LucideIcons.checkCircle2,
                             label: 'Confirmado em',
                             value: _formatDate(assignment.acknowledgedAt!),
-                            valueColor: const Color(0xFF10B981),
+                            valueColor: const Color(0xFF4ADE80),
                           ),
                         ],
                       ],
@@ -313,41 +312,41 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF94A3B8),
-                  letterSpacing: 0.8,
-                ),
+              Row(
+                children: [
+                  Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.40)),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.40),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 14),
+              child,
             ],
           ),
-          const SizedBox(height: 14),
-          child,
-        ],
+        ),
       ),
     );
   }
@@ -370,13 +369,13 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
+        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.40)),
         const SizedBox(width: 8),
         Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
-            color: const Color(0xFF64748B),
+            color: Colors.white.withValues(alpha: 0.55),
           ),
         ),
         const Spacer(),
@@ -385,12 +384,23 @@ class _InfoRow extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? const Color(0xFF0F172A),
+            color: valueColor ?? Colors.white,
           ),
         ),
       ],
     );
   }
+}
+
+class _RowDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Divider(
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      );
 }
 
 class _TimelineStep extends StatelessWidget {
@@ -413,41 +423,38 @@ class _TimelineStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color dotColor =
-        done ? const Color(0xFF10B981) : const Color(0xFFE2E8F0);
-    final Color lineColor =
-        done ? const Color(0xFF10B981).withValues(alpha: 0.3) : const Color(0xFFE2E8F0);
+        done ? const Color(0xFF4ADE80) : Colors.white.withValues(alpha: 0.20);
+    final Color lineColor = done
+        ? const Color(0xFF4ADE80).withValues(alpha: 0.30)
+        : Colors.white.withValues(alpha: 0.12);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Coluna do eixo vertical
         SizedBox(
           width: 28,
           child: Column(
             children: [
               if (!isFirst)
-                Container(
-                    width: 2, height: 10, color: lineColor),
+                Container(width: 2, height: 10, color: lineColor),
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
                   color: done
-                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                      : const Color(0xFFF1F5F9),
+                      ? const Color(0xFF4ADE80).withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.06),
                   shape: BoxShape.circle,
                   border: Border.all(color: dotColor, width: 1.5),
                 ),
                 child: Icon(icon, size: 13, color: dotColor),
               ),
               if (!isLast)
-                Container(
-                    width: 2, height: 10, color: lineColor),
+                Container(width: 2, height: 10, color: lineColor),
             ],
           ),
         ),
         const SizedBox(width: 12),
-        // Conteúdo
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(top: isFirst ? 0 : 10, bottom: 10),
@@ -458,11 +465,10 @@ class _TimelineStep extends StatelessWidget {
                     label,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight:
-                          done ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: done ? FontWeight.w600 : FontWeight.w400,
                       color: done
-                          ? const Color(0xFF0F172A)
-                          : const Color(0xFF94A3B8),
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.40),
                     ),
                   ),
                 ),
@@ -471,7 +477,7 @@ class _TimelineStep extends StatelessWidget {
                     time!,
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: const Color(0xFF94A3B8),
+                      color: Colors.white.withValues(alpha: 0.40),
                     ),
                   ),
               ],

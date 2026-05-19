@@ -8,7 +8,6 @@ import 'package:notif_app/shared/widgets/notif_input.dart';
 import '../models/alert_model.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_radius.dart';
 
 class ResolveAlertModal extends ConsumerStatefulWidget {
   final AlertModel alert;
@@ -38,14 +37,10 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
     super.dispose();
   }
 
-  // --- MÉTODO LIMPO E SEM ERROS ---
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     if (!mounted) return;
-
     setState(() => _isLoading = false);
     Navigator.pop(context, true);
   }
@@ -54,16 +49,16 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final isCritical = widget.alert.level == AlertLevel.critical;
+    final statusColor =
+        isCritical ? const Color(0xFFDC2626) : AppColors.success;
+    final statusColorLight =
+        isCritical ? const Color(0xFFFF6B6B) : const Color(0xFF4ADE80);
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        AppSpacing.lg,
-        AppSpacing.xl,
-        AppSpacing.xl + bottom,
-      ),
+          AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.xl + bottom),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: Color(0xFF1A2340),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Form(
@@ -71,67 +66,88 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Handle
             Container(
               width: 40,
               height: 4,
               margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(100),
+                color: Colors.white.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+
+            // Alert info card
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: isCritical
-                    ? Colors.red.withValues(alpha: 0.08)
-                    : AppColors.resolvedLight,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: statusColor.withValues(alpha: 0.30)),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isCritical ? LucideIcons.alertTriangle : LucideIcons.checkCircle2,
-                    color: isCritical ? Colors.red : AppColors.resolved,
+              child: Row(children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.20),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.alert.title,
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  child: Icon(
+                    isCritical
+                        ? LucideIcons.alertTriangle
+                        : LucideIcons.checkCircle2,
+                    color: statusColorLight,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.alert.title,
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isCritical ? "Alerta CRÍTICO" : "Alerta normal",
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: isCritical ? Colors.red : AppColors.textSecondary,
-                          ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isCritical ? 'Alerta CRÍTICO' : 'Alerta normal',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: statusColorLight,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(LucideIcons.x),
-                  ),
-                ],
-              ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Icon(LucideIcons.x,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.50)),
+                ),
+              ]),
             ),
+
             const SizedBox(height: AppSpacing.xl),
+
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'Mensagem de resolução',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.65),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -140,11 +156,14 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
               hint: 'Explique o que foi feito...',
               maxLines: 4,
               isRequired: true,
+              dark: true,
               validator: (v) => v == null || v.trim().length < 10
                   ? 'Mínimo 10 caracteres'
                   : null,
             ),
+
             const SizedBox(height: AppSpacing.xl),
+
             SizedBox(
               width: double.infinity,
               child: NotifButton(
@@ -152,10 +171,9 @@ class _ResolveAlertModalState extends ConsumerState<ResolveAlertModal> {
                 onPressed: _submit,
                 isLoading: _isLoading,
                 icon: LucideIcons.check,
-                color: isCritical ? Colors.red : AppColors.resolved,
+                color: statusColor,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),

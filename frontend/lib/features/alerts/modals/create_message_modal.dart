@@ -34,23 +34,26 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
 
   Future<void> _submit() async {
     if (_titleCtrl.text.trim().isEmpty || _contentCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Preencha todos os campos', style: GoogleFonts.inter()),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Preencha todos os campos',
+            style: GoogleFonts.inter(color: Colors.white)),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ));
       return;
     }
 
     setState(() => _isLoading = true);
 
     final user = ref.read(authProvider);
-    final sectorIds = ref.read(sectorProvider).sectors.map((s) => s.id).toList();
-    final ok = await ref.read(alertProvider.notifier).createNotificationForAllSectors(
+    final sectorIds =
+        ref.read(sectorProvider).sectors.map((s) => s.id).toList();
+    final ok = await ref
+        .read(alertProvider.notifier)
+        .createNotificationForAllSectors(
           title: _titleCtrl.text.trim(),
           message: _contentCtrl.text.trim(),
           level: AlertLevel.low,
@@ -62,7 +65,6 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
 
     if (!mounted) return;
     setState(() => _isLoading = false);
-
     if (ok) Navigator.pop(context);
   }
 
@@ -75,50 +77,79 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.xl + bottom),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: Color(0xFF1A2340),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Handle
             Center(
               child: Container(
                 width: 40,
                 height: 4,
                 margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: Colors.white.withValues(alpha: 0.20),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            Row(
-              children: [
-                const Icon(LucideIcons.megaphone, color: AppColors.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Novo Comunicado',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+
+            // Header
+            Row(children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xl),
+                child: const Icon(LucideIcons.megaphone,
+                    color: AppColors.accentLight, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Novo Comunicado',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(LucideIcons.x,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.60)),
+                ),
+              ),
+            ]),
+
+            Divider(height: 28, color: Colors.white.withValues(alpha: 0.10)),
+
             NotifInput(
               controller: _titleCtrl,
               label: 'Título',
               hint: 'Ex: Manutenção do Ar-condicionado',
               isRequired: true,
+              dark: true,
             ),
             const SizedBox(height: AppSpacing.md),
             NotifInput(
@@ -127,16 +158,16 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
               hint: 'Escreva os detalhes do aviso aqui...',
               maxLines: 5,
               isRequired: true,
+              dark: true,
             ),
             const SizedBox(height: AppSpacing.xl),
             NotifButton(
               label: 'Enviar Comunicado',
               onPressed: _submit,
               isLoading: _isLoading,
-              color: AppColors.primary,
+              color: AppColors.accent,
               icon: LucideIcons.send,
             ),
-            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),

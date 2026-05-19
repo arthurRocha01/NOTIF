@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -19,7 +21,7 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
     final sector = sectorName ?? (alert.isGlobal ? 'Global' : '—');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0D1421),
       body: CustomScrollView(
         slivers: [
           // ── AppBar com gradiente por nível ──────────────────────────────
@@ -55,10 +57,7 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        _Pill(
-                          icon: level.icon,
-                          label: level.label,
-                        ),
+                        _Pill(icon: level.icon, label: level.label),
                         const SizedBox(width: 8),
                         _Pill(
                           icon: alert.isGlobal
@@ -93,7 +92,6 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Mensagem
                   if (alert.message.isNotEmpty) ...[
                     _SectionCard(
                       title: 'MENSAGEM',
@@ -102,7 +100,7 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                         alert.message,
                         style: GoogleFonts.inter(
                           fontSize: 14,
-                          color: const Color(0xFF334155),
+                          color: Colors.white.withValues(alpha: 0.80),
                           height: 1.65,
                         ),
                       ),
@@ -110,7 +108,6 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                   ],
 
-                  // Informações
                   _SectionCard(
                     title: 'INFORMAÇÕES',
                     icon: LucideIcons.info,
@@ -121,19 +118,19 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                           label: 'Setor',
                           value: sector,
                         ),
-                        const _Divider(),
+                        const _RowDivider(),
                         _InfoRow(
                           icon: LucideIcons.calendar,
                           label: 'Criado em',
                           value: _formatDate(alert.createdAt),
                         ),
-                        const _Divider(),
+                        const _RowDivider(),
                         _InfoRow(
                           icon: LucideIcons.clock,
                           label: 'SLA',
                           value: _formatSla(alert.slaMinutes),
                         ),
-                        const _Divider(),
+                        const _RowDivider(),
                         _InfoRow(
                           icon: LucideIcons.checkCircle2,
                           label: 'Requer confirmação',
@@ -141,8 +138,8 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                               ? 'Sim'
                               : 'Não',
                           valueColor: alert.effectiveRequiresAcknowledgment
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFF94A3B8),
+                              ? const Color(0xFF4ADE80)
+                              : Colors.white.withValues(alpha: 0.40),
                         ),
                       ],
                     ),
@@ -212,6 +209,7 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget child;
+
   const _SectionCard({
     required this.title,
     required this.icon,
@@ -220,41 +218,41 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.045),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 13, color: const Color(0xFF94A3B8)),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF94A3B8),
-                  letterSpacing: 0.8,
-                ),
+              Row(
+                children: [
+                  Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.40)),
+                  const SizedBox(width: 6),
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white.withValues(alpha: 0.40),
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 14),
+              child,
             ],
           ),
-          const SizedBox(height: 14),
-          child,
-        ],
+        ),
       ),
     );
   }
@@ -265,6 +263,7 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
+
   const _InfoRow({
     required this.icon,
     required this.label,
@@ -276,13 +275,13 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF94A3B8)),
+        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.40)),
         const SizedBox(width: 8),
         Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
-            color: const Color(0xFF64748B),
+            color: Colors.white.withValues(alpha: 0.55),
           ),
         ),
         const Spacer(),
@@ -291,7 +290,7 @@ class _InfoRow extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? const Color(0xFF0F172A),
+            color: valueColor ?? Colors.white,
           ),
         ),
       ],
@@ -299,13 +298,15 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _Divider extends StatelessWidget {
-  const _Divider();
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
 
   @override
-  Widget build(BuildContext context) =>
-      const Padding(
-        padding: EdgeInsets.symmetric(vertical: 10),
-        child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Divider(
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
       );
 }

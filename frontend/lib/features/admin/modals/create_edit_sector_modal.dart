@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/constants/app_spacing.dart';
 import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';
@@ -26,7 +28,8 @@ class CreateEditSectorModal extends ConsumerStatefulWidget {
       _CreateEditSectorModalState();
 }
 
-class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
+class _CreateEditSectorModalState
+    extends ConsumerState<CreateEditSectorModal> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameCtrl;
   bool _isLoading = false;
@@ -63,8 +66,15 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
       final error = ref.read(adminSectorProvider).errorMessage;
       if (!mounted) return;
       if (error != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(error,
+              style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ));
         setState(() => _isLoading = false);
       } else {
         Navigator.of(context).pop(true);
@@ -76,54 +86,84 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: bottom),
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF1A2340),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.xxxl),
+            AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.xxxl),
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Handle
               Center(
                 child: Container(
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Colors.white.withValues(alpha: 0.20),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.business,
-                        color: AppColors.primary, size: 20),
+
+              // Header
+              Row(children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    _isEditing ? 'Editar Setor' : 'Novo Setor',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                  child: const Icon(LucideIcons.building2,
+                      color: AppColors.accentLight, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Text(
+                  _isEditing ? 'Editar Setor' : 'Novo Setor',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-                ],
-              ),
-              const Divider(height: 32),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(LucideIcons.x,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.60)),
+                  ),
+                ),
+              ]),
+
+              Divider(
+                  height: 28,
+                  color: Colors.white.withValues(alpha: 0.10)),
+
               NotifInput(
                 controller: _nameCtrl,
                 label: 'Nome do setor',
                 hint: 'Ex: TI, RH, Produção',
                 isRequired: true,
+                dark: true,
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? 'Informe o nome' : null,
               ),
@@ -132,6 +172,8 @@ class _CreateEditSectorModalState extends ConsumerState<CreateEditSectorModal> {
                 label: _isEditing ? 'Salvar' : 'Criar Setor',
                 onPressed: _submit,
                 isLoading: _isLoading,
+                color: AppColors.accent,
+                icon: _isEditing ? LucideIcons.check : LucideIcons.plus,
               ),
             ],
           ),

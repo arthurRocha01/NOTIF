@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/api/api_client.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
 
@@ -14,12 +15,16 @@ class AccountScreen extends ConsumerWidget {
     final user = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0D1421),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: const Color(0xFF0D1421),
+        elevation: 0,
         title: Text(
           'Dados da conta',
-          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -28,7 +33,7 @@ class AccountScreen extends ConsumerWidget {
         children: [
           // ── Identificação ─────────────────────────────────────────────
           ProfileSectionHeader(label: 'IDENTIFICAÇÃO'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ProfileInfoCard(children: [
             ProfileInfoRow(
               icon: LucideIcons.mail,
@@ -57,7 +62,7 @@ class AccountScreen extends ConsumerWidget {
 
           // ── Segurança ─────────────────────────────────────────────────
           ProfileSectionHeader(label: 'SEGURANÇA'),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ProfileInfoCard(children: [
             ProfileActionRow(
               icon: LucideIcons.lock,
@@ -65,7 +70,6 @@ class AccountScreen extends ConsumerWidget {
               subtitle: 'Altere sua senha de acesso',
               onTap: () => _showChangePasswordModal(context),
             ),
-            const Divider(height: 1, indent: 56),
             ProfileActionRow(
               icon: LucideIcons.keyRound,
               label: 'Recuperar senha',
@@ -98,13 +102,14 @@ class AccountScreen extends ConsumerWidget {
   }
 }
 
-// ── Modal de trocar senha ──────────────────────────────────────────────────
+// ── Modal de trocar senha ──────────────────────────────────────────────────────
 
 class _ChangePasswordSheet extends ConsumerStatefulWidget {
   const _ChangePasswordSheet();
 
   @override
-  ConsumerState<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
+  ConsumerState<_ChangePasswordSheet> createState() =>
+      _ChangePasswordSheetState();
 }
 
 class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
@@ -135,7 +140,10 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
       return;
     }
 
-    setState(() { _error = null; _isLoading = true; });
+    setState(() {
+      _error = null;
+      _isLoading = true;
+    });
 
     try {
       final user = ref.read(authProvider);
@@ -154,36 +162,66 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF1A2340),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Trocar senha',
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Trocar senha',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(height: 20),
-            _PasswordField(key: const Key('currentPassword'), label: 'Senha atual', controller: _currentCtrl),
+            _PasswordField(
+              key: const Key('currentPassword'),
+              label: 'Senha atual',
+              controller: _currentCtrl,
+            ),
             const SizedBox(height: 12),
-            _PasswordField(key: const Key('newPassword'), label: 'Nova senha', controller: _newCtrl),
+            _PasswordField(
+              key: const Key('newPassword'),
+              label: 'Nova senha',
+              controller: _newCtrl,
+            ),
             const SizedBox(height: 12),
-            _PasswordField(key: const Key('confirmPassword'), label: 'Confirmar nova senha', controller: _confirmCtrl),
+            _PasswordField(
+              key: const Key('confirmPassword'),
+              label: 'Confirmar nova senha',
+              controller: _confirmCtrl,
+            ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!,
-                  style: GoogleFonts.inter(color: Colors.red, fontSize: 13)),
+              Text(
+                _error!,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFFFF6B6B),
+                  fontSize: 13,
+                ),
+              ),
             ],
             const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    onPressed:
+                        _isLoading ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.20)),
+                    ),
                     child: const Text('Cancelar'),
                   ),
                 ),
@@ -192,13 +230,15 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
+                      backgroundColor: AppColors.accent,
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                            height: 18, width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
                           )
                         : const Text('Confirmar'),
                   ),
@@ -212,7 +252,7 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
   }
 }
 
-// ── Modal de recuperar senha ───────────────────────────────────────────────
+// ── Modal de recuperar senha ───────────────────────────────────────────────────
 
 class _RecoverPasswordSheet extends ConsumerStatefulWidget {
   const _RecoverPasswordSheet();
@@ -222,7 +262,8 @@ class _RecoverPasswordSheet extends ConsumerStatefulWidget {
       _RecoverPasswordSheetState();
 }
 
-class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
+class _RecoverPasswordSheetState
+    extends ConsumerState<_RecoverPasswordSheet> {
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   String? _error;
@@ -249,7 +290,10 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
       return;
     }
 
-    setState(() { _error = null; _isLoading = true; });
+    setState(() {
+      _error = null;
+      _isLoading = true;
+    });
 
     try {
       final user = ref.read(authProvider);
@@ -272,10 +316,12 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF1A2340),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: _success ? _buildSuccess(context) : _buildForm(context, user?.email ?? ''),
+        child: _success
+            ? _buildSuccess(context)
+            : _buildForm(context, user?.email ?? ''),
       ),
     );
   }
@@ -284,17 +330,24 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(LucideIcons.checkCircle, size: 48, color: Color(0xFF16A34A)),
+        const Icon(LucideIcons.checkCircle,
+            size: 48, color: Color(0xFF4ADE80)),
         const SizedBox(height: 16),
-        Text('Senha alterada com sucesso!',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          'Senha alterada com sucesso!',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
+              backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
             ),
             child: const Text('Fechar'),
@@ -309,19 +362,29 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recuperar senha',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          'Recuperar senha',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           'Defina uma nova senha para:',
-          style: GoogleFonts.inter(color: Colors.grey, fontSize: 14),
+          style: GoogleFonts.inter(
+            color: Colors.white.withValues(alpha: 0.45),
+            fontSize: 14,
+          ),
         ),
         Text(
           email,
           style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: const Color(0xFF0F172A)),
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 20),
         _PasswordField(
@@ -337,8 +400,13 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 10),
-          Text(_error!,
-              style: GoogleFonts.inter(color: Colors.red, fontSize: 13)),
+          Text(
+            _error!,
+            style: GoogleFonts.inter(
+              color: const Color(0xFFFF6B6B),
+              fontSize: 13,
+            ),
+          ),
         ],
         const SizedBox(height: 20),
         Row(
@@ -346,6 +414,11 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _isLoading ? null : () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.20)),
+                ),
                 child: const Text('Cancelar'),
               ),
             ),
@@ -354,7 +427,7 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
                 ),
                 child: _isLoading
@@ -374,13 +447,14 @@ class _RecoverPasswordSheetState extends ConsumerState<_RecoverPasswordSheet> {
   }
 }
 
-// ── Widget campo de senha ──────────────────────────────────────────────────
+// ── Campo de senha ─────────────────────────────────────────────────────────────
 
 class _PasswordField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
 
-  const _PasswordField({super.key, required this.label, required this.controller});
+  const _PasswordField(
+      {super.key, required this.label, required this.controller});
 
   @override
   State<_PasswordField> createState() => _PasswordFieldState();
@@ -394,11 +468,30 @@ class _PasswordFieldState extends State<_PasswordField> {
     return TextField(
       controller: widget.controller,
       obscureText: _obscure,
+      style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
         labelText: widget.label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        labelStyle:
+            GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.50)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide:
+              BorderSide(color: Colors.white.withValues(alpha: 0.20)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.accent),
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
         suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            size: 20,
+            color: Colors.white.withValues(alpha: 0.45),
+          ),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),
         isDense: true,
@@ -406,4 +499,3 @@ class _PasswordFieldState extends State<_PasswordField> {
     );
   }
 }
-

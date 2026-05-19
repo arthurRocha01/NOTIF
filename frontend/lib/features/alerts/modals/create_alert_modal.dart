@@ -43,10 +43,10 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
   static const _slaOptions = [15, 30, 60, 120, 240];
 
-  Color get _currentThemeColor {
-    if (_level == AlertLevel.critical) return Colors.redAccent;
-    if (_level == AlertLevel.low) return const Color.fromARGB(255, 88, 123, 249);
-    return AppColors.primary;
+  Color get _accentColor {
+    if (_level == AlertLevel.critical) return const Color(0xFFDC2626);
+    if (_level == AlertLevel.low) return AppColors.accent;
+    return _level.color;
   }
 
   @override
@@ -117,8 +117,13 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   }
 
   void _showError(String m) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(m), backgroundColor: Colors.red));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(m, style: GoogleFonts.inter(color: Colors.white)),
+      backgroundColor: const Color(0xFFDC2626),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.all(16),
+    ));
   }
 
   @override
@@ -128,38 +133,74 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     final sectorState = ref.watch(sectorProvider);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
+      height: MediaQuery.of(context).size.height * 0.90,
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: Color(0xFF1A2340),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Handle
           Container(
             margin: const EdgeInsets.only(top: 12, bottom: 8),
             height: 4,
             width: 40,
             decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2)),
+              color: Colors.white.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
+
+          // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl, vertical: 4),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: _currentThemeColor.withValues(alpha: 0.1),
-                  child: Icon(LucideIcons.megaphone, color: _currentThemeColor),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _accentColor.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(LucideIcons.megaphone,
+                      color: _accentColor, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text('Novo Alerta Administrativo',
-                    style: GoogleFonts.inter(
-                        fontSize: 18, fontWeight: FontWeight.w700)),
+                Text(
+                  'Novo Alerta',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(LucideIcons.x,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.60)),
+                  ),
+                ),
               ],
             ),
           ),
-          const Divider(height: 32),
+
+          Divider(
+              height: 20,
+              color: Colors.white.withValues(alpha: 0.10)),
+
+          // Body
           Flexible(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
@@ -174,6 +215,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                       label: 'Título',
                       hint: 'Ex: Manutenção do Servidor',
                       isRequired: true,
+                      dark: true,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Informe o título';
                         if (v.trim().length < 5) return 'Mínimo 5 caracteres';
@@ -187,6 +229,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                       hint: 'Descreva o alerta com detalhes...',
                       maxLines: 3,
                       isRequired: true,
+                      dark: true,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Informe a mensagem';
                         if (v.trim().length < 10) return 'Mínimo 10 caracteres';
@@ -201,6 +244,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                     UrgencySelector(
                       selected: _level,
                       onChanged: _onLevelChanged,
+                      dark: true,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _buildSlaSelector(),
@@ -213,8 +257,10 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                           : 'Enviar Alerta',
                       onPressed: _submit,
                       isLoading: _isLoading,
-                      color: _currentThemeColor,
-                      icon: isCritical ? LucideIcons.alertTriangle : LucideIcons.send,
+                      color: _accentColor,
+                      icon: isCritical
+                          ? LucideIcons.alertTriangle
+                          : LucideIcons.send,
                     ),
                   ],
                 ),
@@ -229,15 +275,29 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   Widget _buildSectorHeader() {
     return Row(
       children: [
-        const Icon(LucideIcons.users, size: 20, color: Color(0xFF94A3B8)),
+        Icon(LucideIcons.users,
+            size: 18, color: Colors.white.withValues(alpha: 0.55)),
         const SizedBox(width: 8),
-        Text('Destinatários',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+        Text(
+          'Destinatários',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: Colors.white.withValues(alpha: 0.65),
+          ),
+        ),
         const Spacer(),
-        Text('Todos',
-            style: GoogleFonts.inter(fontSize: 12, color: Color(0xFF94A3B8))),
+        Text(
+          'Todos',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.50),
+          ),
+        ),
+        const SizedBox(width: 4),
         Switch.adaptive(
-          activeThumbColor: AppColors.primary,
+          activeThumbColor: Colors.white,
+          activeTrackColor: AppColors.accent,
           value: _sendToAll,
           onChanged: (v) => setState(() {
             _sendToAll = v;
@@ -251,23 +311,34 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   Widget _buildSectorSelector(SectorState sectorState) {
     if (_sendToAll) {
       return Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8)),
-        child: const Row(children: [
-          Icon(Icons.all_inclusive, size: 16, color: Colors.blue),
-          SizedBox(width: 8),
-          Text('Enviando para todos os setores'),
+          color: AppColors.accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: AppColors.accent.withValues(alpha: 0.25)),
+        ),
+        child: Row(children: [
+          Icon(Icons.all_inclusive,
+              size: 16, color: AppColors.accentLight),
+          const SizedBox(width: 8),
+          Text(
+            'Enviando para todos os setores',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.80),
+            ),
+          ),
         ]),
       );
     }
 
     if (sectorState.isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
-          child: CircularProgressIndicator(strokeWidth: 2),
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: CircularProgressIndicator(
+              color: AppColors.accent, strokeWidth: 2),
         ),
       );
     }
@@ -275,20 +346,48 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     if (sectorState.sectors.isEmpty) {
       return Text(
         sectorState.errorMessage ?? 'Nenhum setor disponível.',
-        style: const TextStyle(color: Colors.grey, fontSize: 13),
+        style: GoogleFonts.inter(
+          color: Colors.white.withValues(alpha: 0.45),
+          fontSize: 13,
+        ),
       );
     }
 
     return Wrap(
       spacing: 8,
-      runSpacing: 4,
+      runSpacing: 6,
       children: sectorState.sectors.map((sector) {
         final selected = _selectedSector?.id == sector.id;
-        return FilterChip(
-          selected: selected,
-          label: Text(sector.name),
-          onSelected: (v) =>
-              setState(() => _selectedSector = v ? sector : null),
+        return GestureDetector(
+          onTap: () => setState(
+              () => _selectedSector = selected ? null : sector),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.accent.withValues(alpha: 0.20)
+                  : Colors.white.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: selected
+                    ? AppColors.accent.withValues(alpha: 0.55)
+                    : Colors.white.withValues(alpha: 0.16),
+              ),
+            ),
+            child: Text(
+              sector.name,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight:
+                    selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected
+                    ? AppColors.accentLight
+                    : Colors.white.withValues(alpha: 0.70),
+              ),
+            ),
+          ),
         );
       }).toList(),
     );
@@ -298,33 +397,56 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(LucideIcons.timer, size: 20, color: Color(0xFF94A3B8)),
-            const SizedBox(width: 8),
-            Text('Prazo (SLA)',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          ],
-        ),
-        const SizedBox(height: 8),
+        Row(children: [
+          Icon(LucideIcons.timer,
+              size: 18, color: Colors.white.withValues(alpha: 0.55)),
+          const SizedBox(width: 8),
+          Text(
+            'Prazo (SLA)',
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.65),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
         Wrap(
           spacing: 8,
-          runSpacing: 4,
+          runSpacing: 6,
           children: _slaOptions.map((minutes) {
             final selected = _slaMinutes == minutes;
-            final label = minutes < 60
-                ? '${minutes}min'
-                : '${minutes ~/ 60}h';
-            return ChoiceChip(
-              label: Text(label),
-              selected: selected,
-              onSelected: (_) => setState(() => _slaMinutes = minutes),
-              selectedColor:
-                  _currentThemeColor.withValues(alpha: 0.15),
-              labelStyle: TextStyle(
-                color: selected ? _currentThemeColor : Colors.grey.shade700,
-                fontWeight:
-                    selected ? FontWeight.bold : FontWeight.normal,
+            final label =
+                minutes < 60 ? '${minutes}min' : '${minutes ~/ 60}h';
+            return GestureDetector(
+              onTap: () => setState(() => _slaMinutes = minutes),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? _accentColor.withValues(alpha: 0.20)
+                      : Colors.white.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: selected
+                        ? _accentColor.withValues(alpha: 0.55)
+                        : Colors.white.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: selected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: selected
+                        ? _accentColor
+                        : Colors.white.withValues(alpha: 0.60),
+                  ),
+                ),
               ),
             );
           }).toList(),
@@ -335,26 +457,39 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
   Widget _buildExtraConfigs(bool isCritical) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: isCritical
-            ? Colors.red.withValues(alpha: 0.05)
-            : Colors.grey.withValues(alpha: 0.05),
+            ? const Color(0xFFDC2626).withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: isCritical
-                ? Colors.red.withValues(alpha: 0.2)
-                : Colors.transparent),
+          color: isCritical
+              ? const Color(0xFFDC2626).withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.10),
+        ),
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text('Exigir confirmação de ciência',
-            style: GoogleFonts.inter(fontSize: 14)),
+        title: Text(
+          'Exigir confirmação de ciência',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+        ),
         subtitle: isCritical
-            ? Text('Obrigatório para alertas críticos',
-                style: GoogleFonts.inter(fontSize: 11, color: Colors.red))
+            ? Text(
+                'Obrigatório para alertas críticos',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFFFF6B6B),
+                ),
+              )
             : null,
         value: isCritical ? true : _requiresAcknowledgment,
+        activeThumbColor: Colors.white,
+        activeTrackColor: AppColors.accent,
         onChanged: isCritical
             ? null
             : (v) => setState(() => _requiresAcknowledgment = v),

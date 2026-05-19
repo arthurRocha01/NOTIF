@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 
 class ProfileSectionHeader extends StatelessWidget {
   final String label;
@@ -8,14 +11,27 @@ class ProfileSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.2,
-        color: Colors.black45,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withValues(alpha: 0.40),
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -26,15 +42,19 @@ class ProfileInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          child: Column(children: children),
+        ),
       ),
-      child: Column(children: children),
     );
   }
 }
@@ -60,17 +80,26 @@ class ProfileInfoRow extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          title: Text(label,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-          subtitle: Text(value,
-              style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1E293B))),
+          leading: Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.45)),
+          title: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.45),
+            ),
+          ),
+          subtitle: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
           trailing: trailing,
         ),
-        if (!isLast) const Divider(height: 1, indent: 56),
+        if (!isLast)
+          Divider(height: 1, indent: 56, color: Colors.white.withValues(alpha: 0.08)),
       ],
     );
   }
@@ -97,17 +126,28 @@ class ProfileActionRow extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          title: Text(label,
-              style: GoogleFonts.inter(
-                  fontSize: 15, fontWeight: FontWeight.w500)),
-          subtitle: Text(subtitle,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-          trailing: const Icon(LucideIcons.chevronRight,
-              size: 18, color: Colors.grey),
+          leading: Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.45)),
+          title: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.45),
+            ),
+          ),
+          trailing: Icon(LucideIcons.chevronRight,
+              size: 18, color: Colors.white.withValues(alpha: 0.35)),
           onTap: onTap,
         ),
-        if (!isLast) const Divider(height: 1, indent: 56),
+        if (!isLast)
+          Divider(height: 1, indent: 56, color: Colors.white.withValues(alpha: 0.08)),
       ],
     );
   }

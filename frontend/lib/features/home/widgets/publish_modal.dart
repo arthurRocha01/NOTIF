@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
+import 'package:notif_app/core/constants/app_spacing.dart';
 
 class PublishModal extends StatefulWidget {
   final Function(String title, String content) onPublish;
@@ -24,15 +27,42 @@ class _PublishModalState extends State<PublishModal> {
     super.dispose();
   }
 
+  InputDecoration _inputDecoration({String? hint}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+          color: Colors.white.withValues(alpha: 0.35), fontSize: 14),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.07),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide:
+            BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide:
+            BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.xl + bottomInset),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: Color(0xFF1A2340),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -41,95 +71,105 @@ class _PublishModalState extends State<PublishModal> {
           // Handle
           Center(
             child: Container(
-              width: 36,
+              width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: Colors.white.withValues(alpha: 0.20),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const Text(
-            'Nova discussão',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
+
+          // Header
+          Row(children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(LucideIcons.messageSquarePlus,
+                  color: AppColors.accentLight, size: 20),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              'Nova discussão',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(LucideIcons.x,
+                    size: 16,
+                    color: Colors.white.withValues(alpha: 0.60)),
+              ),
+            ),
+          ]),
+
+          Divider(height: 28, color: Colors.white.withValues(alpha: 0.10)),
+
+          // Título label
+          Text(
+            'Título *',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
-          const SizedBox(height: 16),
-          // Título
+          const SizedBox(height: 6),
           TextField(
             controller: _titleController,
             autofocus: true,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF0F172A),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
             ),
-            decoration: InputDecoration(
-              hintText: 'Título da discussão',
-              hintStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFCBD5E1)),
-              isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF4A6CF7)),
-              ),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+            decoration: _inputDecoration(hint: 'Título da discussão'),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Conteúdo label
+          Text(
+            'Descrição *',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
-          const SizedBox(height: 10),
-          // Conteúdo
+          const SizedBox(height: 6),
           TextField(
             controller: _contentController,
             maxLines: 4,
             minLines: 2,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
-            decoration: InputDecoration(
-              hintText: 'Descreva o assunto...',
-              hintStyle: const TextStyle(
-                  fontSize: 14, color: Color(0xFFCBD5E1)),
-              isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF4A6CF7)),
-              ),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-            ),
+            style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
+            decoration: _inputDecoration(hint: 'Descreva o assunto...'),
           ),
-          const SizedBox(height: 14),
+
+          const SizedBox(height: AppSpacing.xl),
+
           Align(
             alignment: Alignment.centerRight,
             child: AnimatedOpacity(
-              opacity: _canPublish ? 1.0 : 0.4,
+              opacity: _canPublish ? 1.0 : 0.35,
               duration: const Duration(milliseconds: 150),
               child: GestureDetector(
                 onTap: _canPublish
@@ -140,18 +180,26 @@ class _PublishModalState extends State<PublishModal> {
                     : null,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 9),
+                      horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Text(
-                    'Publicar',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(LucideIcons.send,
+                          size: 14, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Publicar',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

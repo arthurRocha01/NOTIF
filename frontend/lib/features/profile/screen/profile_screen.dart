@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
-import 'package:notif_app/features/home/controllers/feed_controller.dart';
-import 'package:notif_app/features/home/widgets/post_card.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
@@ -47,54 +45,59 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final profile = ref.watch(profileProvider);
-    final feed = ref.watch(feedProvider);
-    final myPosts = feed.posts.where((p) => p.isOwn).toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFF0D1421),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A2340),
+        backgroundColor: const Color(0xFF0D1421),
+        elevation: 0,
         title: Text(
           'Meu Perfil',
-          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Cabeçalho ────────────────────────────────────────────────
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1A2340), Color(0xFF4A3F8F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 36),
+            // ── Cabeçalho ─────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               child: Column(
                 children: [
                   _Avatar(bytes: profile.avatarBytes, name: user?.name ?? ''),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Text(
-                    profile.displayName.isNotEmpty ? profile.displayName : (user?.name ?? ''),
+                    profile.displayName.isNotEmpty
+                        ? profile.displayName
+                        : (user?.name ?? ''),
                     style: GoogleFonts.inter(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   if (user != null)
-                    Text(
-                      '${user.roleLabel} · ${user.sector}',
-                      style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      child: Text(
+                        '${user.roleLabel} · ${user.sector}',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -102,12 +105,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             // ── Informações ───────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ProfileSectionHeader(label: 'INFORMAÇÕES'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
                   ProfileInfoCard(children: [
                     ProfileInfoRow(
@@ -134,13 +137,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               child: TextField(
                                 controller: _nameController,
                                 autofocus: true,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
                                 decoration: InputDecoration(
-                                  hintText: 'Nome exibido no feed',
+                                  hintText: 'Nome exibido',
+                                  hintStyle: GoogleFonts.inter(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                  ),
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8)),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 10),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.20)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                        color: AppColors.accent),
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      Colors.white.withValues(alpha: 0.06),
                                 ),
                               ),
                             ),
@@ -148,7 +171,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ElevatedButton(
                               onPressed: _saveDisplayName,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
+                                backgroundColor: AppColors.accent,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 10),
@@ -171,29 +194,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileInfoRow(
                       icon: LucideIcons.building2,
                       label: 'Setor',
-                      value: user?.sector.isNotEmpty == true ? user!.sector : '—',
+                      value: user?.sector.isNotEmpty == true
+                          ? user!.sector
+                          : '—',
                       isLast: true,
                     ),
                   ]),
-
-                  // ── Publicações ─────────────────────────────────────────
-                  if (myPosts.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    ProfileSectionHeader(label: 'PUBLICAÇÕES'),
-                    const SizedBox(height: 8),
-                  ],
                 ],
               ),
             ),
-
-            // Posts fora do Padding para ocupar largura total
-            ...myPosts.map((post) => PostCard(
-                  key: ValueKey('profile_post_${post.id}'),
-                  post: post,
-                  onLike: () => ref.read(feedProvider.notifier).toggleLike(post),
-                  onDelete: () => ref.read(feedProvider.notifier).delete(post),
-                )),
-            if (myPosts.isNotEmpty) const SizedBox(height: 24),
           ],
         ),
       ),
@@ -201,7 +210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-// ── Avatar ────────────────────────────────────────────────────────────────
+// ── Avatar ────────────────────────────────────────────────────────────────────
 
 class _Avatar extends StatelessWidget {
   final Uint8List? bytes;
@@ -213,16 +222,18 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: 48,
-      backgroundColor: Colors.white24,
+      backgroundColor: Colors.white.withValues(alpha: 0.12),
       backgroundImage: bytes != null ? MemoryImage(bytes!) : null,
       child: bytes == null
           ? Text(
               name.isNotEmpty ? name[0].toUpperCase() : '?',
               style: const TextStyle(
-                  color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
             )
           : null,
     );
   }
 }
-

@@ -158,7 +158,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!isSupervisor) {
       return Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: const Color(0xFF0D1421),
         appBar: HomeAppBar(
           onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
@@ -170,7 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Supervisor: 3 abas com navbar
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0D1421),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),

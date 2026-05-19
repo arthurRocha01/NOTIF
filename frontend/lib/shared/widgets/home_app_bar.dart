@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/screen/profile_screen.dart';
@@ -21,11 +22,19 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
         : (user?.name ?? '');
 
     return AppBar(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF0D1421),
       elevation: 0,
       centerTitle: true,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          height: 1,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      ),
       leading: IconButton(
-        icon: const Icon(LucideIcons.menu, color: Colors.white),
+        icon: Icon(LucideIcons.menu,
+            color: Colors.white.withValues(alpha: 0.85)),
         onPressed: onMenuPressed,
       ),
       title: _buildLogo(),
@@ -42,7 +51,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: Colors.white12,
+                  backgroundColor: Colors.white.withValues(alpha: 0.12),
                   backgroundImage: profile.avatarBytes != null
                       ? MemoryImage(profile.avatarBytes!)
                       : null,
@@ -76,7 +85,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                       Text(
                         user.roleLabel,
                         style: GoogleFonts.inter(
-                          color: Colors.white54,
+                          color: Colors.white.withValues(alpha: 0.45),
                           fontSize: 11,
                         ),
                       ),
@@ -101,7 +110,8 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 fontWeight: FontWeight.w900, color: Colors.white, fontSize: 22)),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Icon(LucideIcons.bellRing, color: Colors.white, size: 20),
+          child: Icon(LucideIcons.bellRing,
+              color: AppColors.accentLight, size: 20),
         ),
         Text('TIF',
             style: GoogleFonts.montserrat(
@@ -111,5 +121,5 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 1);
 }

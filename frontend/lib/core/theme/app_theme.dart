@@ -13,7 +13,7 @@ abstract class AppTheme {
           secondary: AppColors.accent,
           surface: AppColors.surface,
         ),
-        scaffoldBackgroundColor: AppColors.background,
+        scaffoldBackgroundColor: const Color(0xFF0D1421),
         fontFamily: 'Inter',
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.primary,

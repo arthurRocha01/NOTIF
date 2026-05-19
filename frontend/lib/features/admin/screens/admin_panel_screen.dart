@@ -65,7 +65,7 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0D1421),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
@@ -85,26 +85,29 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _pageIndex,
         onDestinationSelected: _onNavTap,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFF4A6CF7).withValues(alpha: 0.12),
+        backgroundColor: const Color(0xFF0D1421),
+        indicatorColor: const Color(0xFF4A6CF7).withValues(alpha: 0.20),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(LucideIcons.layoutDashboard),
-            selectedIcon: Icon(LucideIcons.layoutDashboard,
+            icon: Icon(LucideIcons.layoutDashboard,
+                color: Colors.white.withValues(alpha: 0.45)),
+            selectedIcon: const Icon(LucideIcons.layoutDashboard,
                 color: Color(0xFF4A6CF7)),
             label: 'Dashboard',
           ),
           NavigationDestination(
-            icon: Icon(LucideIcons.users),
+            icon: Icon(LucideIcons.users,
+                color: Colors.white.withValues(alpha: 0.45)),
             selectedIcon:
-                Icon(LucideIcons.users, color: Color(0xFF4A6CF7)),
+                const Icon(LucideIcons.users, color: Color(0xFF4A6CF7)),
             label: 'Usuários',
           ),
           NavigationDestination(
-            icon: Icon(LucideIcons.building2),
+            icon: Icon(LucideIcons.building2,
+                color: Colors.white.withValues(alpha: 0.45)),
             selectedIcon:
-                Icon(LucideIcons.building2, color: Color(0xFF4A6CF7)),
+                const Icon(LucideIcons.building2, color: Color(0xFF4A6CF7)),
             label: 'Setores',
           ),
         ],

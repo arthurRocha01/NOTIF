@@ -10,6 +10,7 @@ class NotifInput extends StatelessWidget {
   final int maxLines;
   final bool isRequired;
   final String? Function(String?)? validator;
+  final bool dark;
 
   const NotifInput({
     super.key,
@@ -19,6 +20,7 @@ class NotifInput extends StatelessWidget {
     this.maxLines = 1,
     this.isRequired = false,
     this.validator,
+    this.dark = false,
   });
 
   @override
@@ -26,56 +28,77 @@ class NotifInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /// LABEL
         if (label != null) ...[
           Text(
             isRequired ? '$label *' : label!,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.65)
+                  : AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
         ],
-
-        /// INPUT
         TextFormField(
           controller: controller,
           maxLines: maxLines,
           validator: validator,
+          style: dark
+              ? const TextStyle(color: Colors.white, fontSize: 14)
+              : null,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.textSecondary),
-
+            hintStyle: TextStyle(
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.35)
+                  : AppColors.textSecondary,
+            ),
             filled: true,
-            fillColor: AppColors.surfaceVariant,
-
+            fillColor: dark
+                ? Colors.white.withValues(alpha: 0.07)
+                : AppColors.surfaceVariant,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.md,
             ),
-
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: BorderSide.none,
+              borderSide: dark
+                  ? BorderSide(color: Colors.white.withValues(alpha: 0.14))
+                  : BorderSide.none,
             ),
-
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: dark
+                  ? BorderSide(color: Colors.white.withValues(alpha: 0.14))
+                  : BorderSide.none,
+            ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
+              borderSide: BorderSide(
+                color: dark ? AppColors.accent : AppColors.primary,
                 width: 1.5,
               ),
             ),
-
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: const BorderSide(
-                color: Colors.red,
+              borderSide: BorderSide(
+                color: dark ? const Color(0xFFFF6B6B) : Colors.red,
                 width: 1.2,
               ),
             ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderSide: BorderSide(
+                color: dark ? const Color(0xFFFF6B6B) : Colors.red,
+                width: 1.5,
+              ),
+            ),
+            errorStyle: dark
+                ? const TextStyle(color: Color(0xFFFF6B6B))
+                : null,
           ),
         ),
       ],

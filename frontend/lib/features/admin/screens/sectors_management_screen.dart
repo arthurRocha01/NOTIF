@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,24 +41,37 @@ class _SectorsManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2340),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+            const Icon(LucideIcons.trash2, color: Color(0xFFFF6B6B), size: 20),
             const SizedBox(width: 8),
-            const Text('Excluir setor'),
+            Text(
+              'Excluir setor',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
           ],
         ),
         content: Text(
-            'Deseja excluir "$name"?\nEsta ação não pode ser desfeita.'),
+          'Deseja excluir "$name"?\nEsta ação não pode ser desfeita.',
+          style: GoogleFonts.inter(
+            color: Colors.white.withValues(alpha: 0.70),
+          ),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.inter(
+                  color: Colors.white.withValues(alpha: 0.60)),
+            ),
+          ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade50,
-              foregroundColor: Colors.red,
+              backgroundColor: const Color(0xFFFF6B6B).withValues(alpha: 0.15),
+              foregroundColor: const Color(0xFFFF6B6B),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Excluir'),
@@ -89,6 +104,8 @@ class _SectorsManagementScreenState
             : RefreshIndicator(
                 onRefresh: () =>
                     ref.read(adminSectorProvider.notifier).loadSectors(),
+                color: AppColors.accent,
+                backgroundColor: const Color(0xFF1A2340),
                 child: ListView.separated(
                   padding: const EdgeInsets.all(12),
                   itemCount: state.sectors.length,
@@ -100,8 +117,8 @@ class _SectorsManagementScreenState
                       await CreateEditSectorModal.show(context,
                           sector: state.sectors[i]);
                     },
-                    onDelete: () =>
-                        _confirmDelete(state.sectors[i].id, state.sectors[i].name),
+                    onDelete: () => _confirmDelete(
+                        state.sectors[i].id, state.sectors[i].name),
                   ),
                 ),
               );
@@ -125,64 +142,71 @@ class _SectorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadowLight,
-              blurRadius: 6,
-              offset: Offset(0, 2)),
-        ],
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
           decoration: BoxDecoration(
-            color: AppColors.success.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          child: const Icon(LucideIcons.building2,
-              color: AppColors.success, size: 20),
-        ),
-        title: Text(
-          sector.name,
-          style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 3),
-          child: Row(
-            children: [
-              const Icon(LucideIcons.users,
-                  size: 12, color: AppColors.textTertiary),
-              const SizedBox(width: 4),
-              Text(
-                '$userCount ${userCount == 1 ? 'usuário' : 'usuários'}',
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: AppColors.textSecondary),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
+              child: const Icon(LucideIcons.building2,
+                  color: AppColors.success, size: 20),
+            ),
+            title: Text(
+              sector.name,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.users,
+                      size: 12,
+                      color: Colors.white.withValues(alpha: 0.40)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$userCount ${userCount == 1 ? 'usuário' : 'usuários'}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.50),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(LucideIcons.pencil,
+                      size: 17,
+                      color: Colors.white.withValues(alpha: 0.50)),
+                  onPressed: onEdit,
+                ),
+                IconButton(
+                  icon: const Icon(LucideIcons.trash2,
+                      size: 17, color: Color(0xFFFF6B6B)),
+                  onPressed: onDelete,
+                ),
+              ],
+            ),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(LucideIcons.pencil,
-                  size: 17, color: AppColors.textSecondary),
-              onPressed: onEdit,
-            ),
-            IconButton(
-              icon: const Icon(LucideIcons.trash2,
-                  size: 17, color: AppColors.error),
-              onPressed: onDelete,
-            ),
-          ],
         ),
       ),
     );
