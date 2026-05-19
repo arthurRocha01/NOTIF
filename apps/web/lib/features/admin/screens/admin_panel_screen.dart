@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/features/admin/modals/create_edit_sector_modal.dart';
@@ -8,8 +8,6 @@ import 'package:notif_app/features/admin/providers/admin_user_provider.dart';
 import 'package:notif_app/features/admin/screens/admin_dashboard_page.dart';
 import 'package:notif_app/features/admin/screens/sectors_management_screen.dart';
 import 'package:notif_app/features/admin/screens/users_management_screen.dart';
-import 'package:notif_app/features/alerts/providers/alert_provider.dart';
-import 'package:notif_app/features/alerts/screen/critical_block_screen.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
 import 'package:notif_app/shared/widgets/home_app_bar.dart';
 
@@ -27,24 +25,10 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
+    Future.microtask(() {
       ref.read(adminUserProvider.notifier).loadUsers();
       ref.read(adminSectorProvider.notifier).loadSectors();
-      await ref.read(alertProvider.notifier).loadAssignments();
-      _checkAndShowBlockScreen();
     });
-  }
-
-  void _checkAndShowBlockScreen() {
-    if (!mounted) return;
-    if (ref.read(alertProvider).isBlocked) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          fullscreenDialog: true,
-          builder: (_) => const CriticalBlockScreen(),
-        ),
-      );
-    }
   }
 
   void _onNavTap(int index) => setState(() => _pageIndex = index);
@@ -79,18 +63,9 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<bool>(
-      alertProvider.select((s) => s.isBlocked),
-      (wasBlocked, isBlocked) {
-        if (isBlocked && !(wasBlocked ?? false)) {
-          _checkAndShowBlockScreen();
-        }
-      },
-    );
-
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFF0D1421),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
@@ -110,26 +85,29 @@ class _AdminPanelScreenState extends ConsumerState<AdminPanelScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _pageIndex,
         onDestinationSelected: _onNavTap,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFF4A6CF7).withValues(alpha: 0.12),
+        backgroundColor: const Color(0xFF0D1421),
+        indicatorColor: const Color(0xFF4A6CF7).withValues(alpha: 0.20),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(LucideIcons.layoutDashboard),
-            selectedIcon: Icon(LucideIcons.layoutDashboard,
+            icon: Icon(LucideIcons.layoutDashboard,
+                color: Colors.white.withValues(alpha: 0.45)),
+            selectedIcon: const Icon(LucideIcons.layoutDashboard,
                 color: Color(0xFF4A6CF7)),
             label: 'Dashboard',
           ),
           NavigationDestination(
-            icon: Icon(LucideIcons.users),
+            icon: Icon(LucideIcons.users,
+                color: Colors.white.withValues(alpha: 0.45)),
             selectedIcon:
-                Icon(LucideIcons.users, color: Color(0xFF4A6CF7)),
+                const Icon(LucideIcons.users, color: Color(0xFF4A6CF7)),
             label: 'Usuários',
           ),
           NavigationDestination(
-            icon: Icon(LucideIcons.building2),
+            icon: Icon(LucideIcons.building2,
+                color: Colors.white.withValues(alpha: 0.45)),
             selectedIcon:
-                Icon(LucideIcons.building2, color: Color(0xFF4A6CF7)),
+                const Icon(LucideIcons.building2, color: Color(0xFF4A6CF7)),
             label: 'Setores',
           ),
         ],

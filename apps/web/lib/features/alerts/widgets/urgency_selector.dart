@@ -1,21 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/alert_status.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_durations.dart';
 
-/// Seletor de urgência (Normal / Crítico) para criação de alertas.
-///
-/// Renderiza dois cards horizontais com feedback visual animado.
 class UrgencySelector extends StatelessWidget {
   final AlertLevel selected;
   final ValueChanged<AlertLevel> onChanged;
+  final bool dark;
 
   const UrgencySelector({
     super.key,
     required this.selected,
     required this.onChanged,
+    this.dark = false,
   });
 
   @override
@@ -23,12 +22,14 @@ class UrgencySelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Nível de urgência',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: dark
+                ? Colors.white.withValues(alpha: 0.65)
+                : AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -36,15 +37,14 @@ class UrgencySelector extends StatelessWidget {
           children: AlertLevel.values.map((level) {
             final isSelected = selected == level;
             final isLast = level == AlertLevel.values.last;
-
             return Expanded(
               child: Padding(
-                padding:
-                    EdgeInsets.only(right: isLast ? 0 : AppSpacing.sm),
+                padding: EdgeInsets.only(right: isLast ? 0 : AppSpacing.sm),
                 child: _LevelOption(
                   level: level,
                   isSelected: isSelected,
                   onTap: () => onChanged(level),
+                  dark: dark,
                 ),
               ),
             );
@@ -59,11 +59,13 @@ class _LevelOption extends StatelessWidget {
   final AlertLevel level;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool dark;
 
   const _LevelOption({
     required this.level,
     required this.isSelected,
     required this.onTap,
+    this.dark = false,
   });
 
   @override
@@ -78,11 +80,19 @@ class _LevelOption extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? level.backgroundColor
-              : AppColors.surfaceVariant,
+              ? (dark
+                  ? level.color.withValues(alpha: 0.20)
+                  : level.backgroundColor)
+              : (dark
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : AppColors.surfaceVariant),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: isSelected ? level.color : AppColors.border,
+            color: isSelected
+                ? level.color
+                : dark
+                    ? Colors.white.withValues(alpha: 0.18)
+                    : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -97,7 +107,9 @@ class _LevelOption extends StatelessWidget {
                 size: 16,
                 color: isSelected
                     ? level.color
-                    : AppColors.textSecondary,
+                    : dark
+                        ? Colors.white.withValues(alpha: 0.45)
+                        : AppColors.textSecondary,
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -108,7 +120,9 @@ class _LevelOption extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: isSelected
                     ? level.color
-                    : AppColors.textSecondary,
+                    : dark
+                        ? Colors.white.withValues(alpha: 0.65)
+                        : AppColors.textSecondary,
               ),
             ),
           ],

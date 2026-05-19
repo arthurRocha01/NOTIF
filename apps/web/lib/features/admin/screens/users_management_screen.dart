@@ -1,3 +1,5 @@
+﻿import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,7 +23,7 @@ class _UsersManagementScreenState
     extends ConsumerState<UsersManagementScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  UserRole? _roleFilter; // null = Todos
+  UserRole? _roleFilter;
 
   @override
   void initState() {
@@ -42,8 +44,7 @@ class _UsersManagementScreenState
       final matchesSearch = _searchQuery.isEmpty ||
           u.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           u.email.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesRole =
-          _roleFilter == null || u.role == _roleFilter;
+      final matchesRole = _roleFilter == null || u.role == _roleFilter;
       return matchesSearch && matchesRole;
     }).toList();
   }
@@ -52,23 +53,37 @@ class _UsersManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2340),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+            const Icon(LucideIcons.trash2, color: Color(0xFFFF6B6B), size: 20),
             const SizedBox(width: 8),
-            const Text('Excluir usuário'),
+            Text(
+              'Excluir usuário',
+              style: GoogleFonts.inter(color: Colors.white),
+            ),
           ],
         ),
-        content: Text('Deseja excluir "$name"?\nEsta ação não pode ser desfeita.'),
+        content: Text(
+          'Deseja excluir "$name"?\nEsta ação não pode ser desfeita.',
+          style: GoogleFonts.inter(
+            color: Colors.white.withValues(alpha: 0.70),
+          ),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.inter(
+                  color: Colors.white.withValues(alpha: 0.60)),
+            ),
+          ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade50,
-              foregroundColor: Colors.red,
+              backgroundColor: const Color(0xFFFF6B6B).withValues(alpha: 0.15),
+              foregroundColor: const Color(0xFFFF6B6B),
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Excluir'),
@@ -89,7 +104,7 @@ class _UsersManagementScreenState
   Color _roleColor(UserRole role) => switch (role) {
         UserRole.supervisor => AppColors.warning,
         UserRole.admin => AppColors.critical,
-        _ => AppColors.textSecondary,
+        _ => Colors.white.withValues(alpha: 0.50),
       };
 
   String _roleLabel(UserRole role) => switch (role) {
@@ -105,43 +120,62 @@ class _UsersManagementScreenState
 
     return Column(
       children: [
-        // ── Barra de busca + filtros ────────────────────────────────────────
-        Container(
-          color: Colors.white,
+        // ── Barra de busca + filtros ──────────────────────────────────────
+        Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: Column(
             children: [
-              // Search bar
-              TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Buscar por nome ou e-mail…',
-                  hintStyle: GoogleFonts.inter(
-                      fontSize: 14, color: AppColors.textTertiary),
-                  prefixIcon: const Icon(LucideIcons.search,
-                      size: 18, color: AppColors.textSecondary),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(LucideIcons.x,
-                              size: 16, color: AppColors.textSecondary),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nome ou e-mail…',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.35),
+                      ),
+                      prefixIcon: Icon(LucideIcons.search,
+                          size: 18,
+                          color: Colors.white.withValues(alpha: 0.45)),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(LucideIcons.x,
+                                  size: 16,
+                                  color: Colors.white.withValues(alpha: 0.45)),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.07),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: AppColors.accent),
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              // Role filter chips
               SizedBox(
                 height: 32,
                 child: ListView(
@@ -156,8 +190,9 @@ class _UsersManagementScreenState
                     _RoleChip(
                       label: 'Colaborador',
                       selected: _roleFilter == UserRole.employee,
-                      color: AppColors.textSecondary,
-                      onTap: () => setState(() => _roleFilter == UserRole.employee
+                      color: Colors.white.withValues(alpha: 0.50),
+                      onTap: () => setState(() => _roleFilter ==
+                              UserRole.employee
                           ? _roleFilter = null
                           : _roleFilter = UserRole.employee),
                     ),
@@ -166,7 +201,8 @@ class _UsersManagementScreenState
                       label: 'Supervisor',
                       selected: _roleFilter == UserRole.supervisor,
                       color: AppColors.warning,
-                      onTap: () => setState(() => _roleFilter == UserRole.supervisor
+                      onTap: () => setState(() => _roleFilter ==
+                              UserRole.supervisor
                           ? _roleFilter = null
                           : _roleFilter = UserRole.supervisor),
                     ),
@@ -175,9 +211,10 @@ class _UsersManagementScreenState
                       label: 'Admin',
                       selected: _roleFilter == UserRole.admin,
                       color: AppColors.critical,
-                      onTap: () => setState(() => _roleFilter == UserRole.admin
-                          ? _roleFilter = null
-                          : _roleFilter = UserRole.admin),
+                      onTap: () => setState(
+                          () => _roleFilter == UserRole.admin
+                              ? _roleFilter = null
+                              : _roleFilter = UserRole.admin),
                     ),
                   ],
                 ),
@@ -186,7 +223,7 @@ class _UsersManagementScreenState
           ),
         ),
 
-        // ── Lista ────────────────────────────────────────────────────────────
+        // ── Lista ─────────────────────────────────────────────────────────
         Expanded(
           child: state.isLoading
               ? const LoadingIndicator()
@@ -203,13 +240,14 @@ class _UsersManagementScreenState
                   : RefreshIndicator(
                       onRefresh: () =>
                           ref.read(adminUserProvider.notifier).loadUsers(),
+                      color: AppColors.accent,
+                      backgroundColor: const Color(0xFF1A2340),
                       child: ListView.separated(
                         padding: const EdgeInsets.all(12),
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) =>
                             const SizedBox(height: 8),
-                        itemBuilder: (context, i) =>
-                            _UserTile(
+                        itemBuilder: (context, i) => _UserTile(
                           user: filtered[i],
                           roleLabel: _roleLabel(filtered[i].role),
                           roleColor: _roleColor(filtered[i].role),
@@ -223,8 +261,8 @@ class _UsersManagementScreenState
                                   .loadUsers();
                             }
                           },
-                          onDelete: () =>
-                              _confirmDelete(filtered[i].id, filtered[i].name),
+                          onDelete: () => _confirmDelete(
+                              filtered[i].id, filtered[i].name),
                         ),
                       ),
                     ),
@@ -257,10 +295,12 @@ class _RoleChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? color : AppColors.background,
+          color: selected
+              ? color.withValues(alpha: 0.20)
+              : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? color : AppColors.border,
+            color: selected ? color : Colors.white.withValues(alpha: 0.14),
           ),
         ),
         child: Text(
@@ -268,7 +308,7 @@ class _RoleChip extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected ? color : Colors.white.withValues(alpha: 0.55),
           ),
         ),
       ),
@@ -295,94 +335,107 @@ class _UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadowLight, blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        leading: CircleAvatar(
-          radius: 22,
-          backgroundColor: AppColors.accent.withValues(alpha: 0.1),
-          child: Text(
-            user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-            style: GoogleFonts.inter(
-              color: AppColors.accent,
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-        ),
-        title: Text(
-          user.name,
-          style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 2),
-            Text(user.email,
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: AppColors.textSecondary)),
-            if (user.sectorName.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  const Icon(LucideIcons.building2,
-                      size: 11, color: AppColors.textTertiary),
-                  const SizedBox(width: 3),
-                  Text(
-                    user.sectorName,
-                    style: GoogleFonts.inter(
-                        fontSize: 11, color: AppColors.textTertiary),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: roleColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            leading: CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.accent.withValues(alpha: 0.20),
               child: Text(
-                roleLabel,
+                user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                 style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: roleColor,
-                  fontWeight: FontWeight.w600,
+                  color: AppColors.accentLight,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
                 ),
               ),
             ),
-            IconButton(
-              icon: const Icon(LucideIcons.pencil,
-                  size: 17, color: AppColors.textSecondary),
-              onPressed: onEdit,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(8),
+            title: Text(
+              user.name,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.white,
+              ),
             ),
-            IconButton(
-              icon: const Icon(LucideIcons.trash2,
-                  size: 17, color: AppColors.error),
-              onPressed: onDelete,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(8),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 2),
+                Text(
+                  user.email,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.50),
+                  ),
+                ),
+                if (user.sector.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(LucideIcons.building2,
+                          size: 11,
+                          color: Colors.white.withValues(alpha: 0.35)),
+                      const SizedBox(width: 3),
+                      Text(
+                        user.sector,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.40),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
-          ],
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: roleColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    roleLabel,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: roleColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(LucideIcons.pencil,
+                      size: 17,
+                      color: Colors.white.withValues(alpha: 0.50)),
+                  onPressed: onEdit,
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(8),
+                ),
+                IconButton(
+                  icon: const Icon(LucideIcons.trash2,
+                      size: 17, color: Color(0xFFFF6B6B)),
+                  onPressed: onDelete,
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(8),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

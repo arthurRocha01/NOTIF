@@ -14,10 +14,7 @@ import 'package:notif_app/features/alerts/screen/critical_block_screen.dart';
 import 'package:notif_app/features/alerts/widgets/in_app_banner_overlay.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
-import 'package:notif_app/features/home/controllers/feed_controller.dart';
-import 'package:notif_app/features/home/widgets/feed/feed_content.dart';
 import 'package:notif_app/features/home/widgets/home_bottom_nav.dart';
-import 'package:notif_app/features/home/widgets/publish_modal.dart';
 import 'package:notif_app/features/dashboard/screens/dashboard_screen.dart';
 import 'package:notif_app/shared/widgets/home_app_bar.dart';
 import 'package:notif_app/shared/layout/app_drawer.dart';
@@ -34,16 +31,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   OverlayEntry? _bannerEntry;
   Timer? _pollingTimer;
   final _audioPlayer = AudioPlayer();
-  // Elemento criado uma vez e desbloqueado no primeiro gesto — Chrome HTTPS
-  // bloqueia play() em elementos novos sem histórico de interação.
   final html.AudioElement? _webAudio = kIsWeb
       ? (html.AudioElement('assets/assets/sounds/notice.notif.wav')..load())
       : null;
 
+  int _pageIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(feedProvider.notifier).loadPosts());
     _initNotificationHandlers();
     if (kIsWeb) {
       html.window.addEventListener('pointerdown', _unlockWebAudio);
@@ -148,9 +144,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!mounted) return;
     ref.read(alertProvider.notifier).loadAssignments();
     final level = AlertLevel.fromBackend(message.data['level']);
-    if (level == AlertLevel.critical) {
-      // Loop iniciado pelo listener isBlocked após loadAssignments() completar.
-    } else {
+    if (level != AlertLevel.critical) {
       _playAlertSound();
       _showBanner(message);
       NotificationService().showLocalNotification(
@@ -165,10 +159,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _handleNotificationTap(RemoteMessage message) {
     if (!mounted) return;
     ref.read(alertProvider.notifier).loadAssignments();
-    final level = AlertLevel.fromBackend(message.data['level']);
-    if (level != AlertLevel.critical) {
-      ref.read(feedProvider.notifier).changePage(2);
-    }
+    setState(() => _pageIndex = 0);
   }
 
   void _showBanner(RemoteMessage message) {
@@ -188,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () {
               _bannerEntry?.remove();
               _bannerEntry = null;
-              ref.read(feedProvider.notifier).changePage(2);
+              setState(() => _pageIndex = 0);
             },
             onDismiss: () {
               _bannerEntry?.remove();
@@ -218,34 +209,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
   }
 
-  // Mapeia o tap na nav bar → pageIndex (0=Feed, 1=Dashboard, 2=Alerts)
-  void _onNavTap(int navIndex, bool isSupervisor, dynamic user) {
-    final feed = ref.read(feedProvider.notifier);
-    if (isSupervisor) {
-      // Supervisor: [Home=0, Publicar=1, Dashboard=2, Alertas=3]
-      switch (navIndex) {
-        case 0: feed.changePage(0); break;
-        case 1: _handlePublish(user); break;
-        case 2: feed.changePage(1); break;
-        case 3: feed.changePage(2); break;
-      }
-    } else {
-      // Employee: [Home=0, Publicar=1, Alertas=2]
-      switch (navIndex) {
-        case 0: feed.changePage(0); break;
-        case 1: _handlePublish(user); break;
-        case 2:
-          feed.changePage(2);
-          ref.read(alertProvider.notifier).markAllPendingAsViewed();
-          break;
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
-    final feedState = ref.watch(feedProvider);
     final bool isSupervisor = user?.isSupervisor ?? false;
 
     ref.listen<bool>(
@@ -259,58 +225,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
 
-    // Contagem real de assignments não confirmados — alimenta o badge da navbar
     final pendingCount = ref
         .watch(alertProvider)
         .assignments
         .where((a) => a.status != AssignmentStatus.acknowledged)
         .length;
 
+    // Employee: tela única de alertas, sem navbar
+    if (!isSupervisor) {
+      return Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFF0D1421),
+        appBar: HomeAppBar(
+          onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        drawer: const AppDrawer(),
+        body: const AlertUserScreen(),
+      );
+    }
+
+    // Supervisor: 3 abas — Alertas / Dashboard / Painel
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF0D1421),
       appBar: HomeAppBar(
         onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: IndexedStack(
-          index: feedState.pageIndex,
-          children: [
-            const FeedContent(), // 0 = Feed
-            isSupervisor || (user?.isAdmin ?? false)
-                ? const DashboardScreen()
-                : const SizedBox.shrink(), // 1 = Dashboard (somente supervisor/admin)
-            isSupervisor
-                ? const AlertAdminScreen()
-                : const AlertUserScreen(), // 2 = Alertas
-          ],
-        ),
+      body: IndexedStack(
+        index: _pageIndex,
+        children: const [
+          AlertUserScreen(),   // 0 = Alertas
+          DashboardScreen(),   // 1 = Dashboard
+          AlertAdminScreen(),  // 2 = Painel
+        ],
       ),
       bottomNavigationBar: HomeBottomNav(
-        pageIndex: feedState.pageIndex,
-        isSupervisor: isSupervisor,
+        pageIndex: _pageIndex,
+        isSupervisor: true,
         notificationCount: pendingCount,
-        onItemTapped: (navIndex) => _onNavTap(navIndex, isSupervisor, user),
-      ),
-    );
-  }
-
-  void _handlePublish(dynamic user) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PublishModal(
-        onPublish: (title, content) async {
-          final nav = Navigator.of(context);
-          await ref.read(feedProvider.notifier).publish(
-            title: title,
-            content: content,
-            currentUser: user,
-          );
-          nav.pop();
-        },
+        onItemTapped: (i) => setState(() => _pageIndex = i),
       ),
     );
   }

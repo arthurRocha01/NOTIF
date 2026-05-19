@@ -1,7 +1,11 @@
+﻿import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:notif_app/core/constants/app_colors.dart';
+import 'package:notif_app/features/alerts/providers/alert_provider.dart';
 import 'package:notif_app/features/dashboard/providers/dashboard_filter_provider.dart';
 import 'package:notif_app/features/dashboard/providers/dashboard_provider.dart';
 import 'package:notif_app/features/dashboard/widgets/attention_sector_card.dart';
@@ -22,183 +26,300 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(sectorProvider.notifier).loadSectors();
-    });
   }
 
   Future<void> _refresh() async {
-    ref.invalidate(dashboardProvider);
-    await ref.read(sectorProvider.notifier).loadSectors();
+    ref.read(alertProvider.notifier).loadNotifications();
+    ref.read(alertProvider.notifier).loadAssignments();
+    ref.read(sectorProvider.notifier).loadSectors();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final dashboardAsync = ref.watch(dashboardProvider);
-    final filter         = ref.watch(dashboardFilterProvider);
-    final sectors        = ref.watch(sectorProvider).sectors;
-
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      color: const Color(0xFF4A6CF7),
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          // ── Título da página ──────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 12, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Painel de Gestão',
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Métricas em tempo real',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      LucideIcons.refreshCw,
-                      color: Color(0xFF4A6CF7),
-                      size: 20,
-                    ),
-                    tooltip: 'Atualizar',
-                    onPressed: _refresh,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Filtro de período ─────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: _PeriodFilter(current: filter.period),
-            ),
-          ),
-
-          // ── Conteúdo principal ────────────────────────────────────────────
-          ...dashboardAsync.when(
-            loading: () => [
-              const SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4A6CF7)),
-                ),
-              ),
-            ],
-            error: (_, __) => [
-              SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(LucideIcons.alertCircle,
-                          color: Color(0xFF94A3B8), size: 32),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Não foi possível carregar o painel.',
+  Widget _buildHeader(int activeAlerts, int totalSectors) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      child: Text(
+                        'DASHBOARD',
                         style: GoogleFonts.inter(
-                            fontSize: 14, color: const Color(0xFF64748B)),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.70),
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: _refresh,
-                        child: const Text('Tentar novamente'),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Painel de Gestão',
+                      style: GoogleFonts.inter(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Métricas em tempo real',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: _refresh,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.14)),
                   ),
+                  child: Icon(LucideIcons.refreshCw,
+                      color: Colors.white.withValues(alpha: 0.70),
+                      size: 20),
                 ),
               ),
             ],
-            data: (stats) => [
-              // ── KPI cards (grid 2×2) ────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: DashboardKpiRow(
-                    totalNotifications: stats.totalNotifications,
-                    totalAcknowledged: stats.totalAcknowledged,
-                    totalPending: stats.totalPending,
-                    totalCritical: stats.totalCritical,
-                  ),
-                ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _StatChip(
+                icon: LucideIcons.bell,
+                label:
+                    '$activeAlerts alerta${activeAlerts != 1 ? 's' : ''} ativo${activeAlerts != 1 ? 's' : ''}',
               ),
-
-              // ── Setor mais atento ────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: HighlightCard(
-                    sector: stats.topSector,
-                    rate: stats.topSectorRate,
-                  ),
-                ),
-              ),
-
-              // ── Taxa por setor ───────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: _SectionCard(
-                    title: 'Taxa de Adesão por Setor',
-                    subtitle: filter.selectedSectorId != null
-                        ? 'Detalhes do setor selecionado'
-                        : 'Todos os setores · ${filter.periodLabel}',
-                    trailing: sectors.isNotEmpty
-                        ? _SectorDropdown(
-                            sectors: sectors
-                                .map((s) => (id: s.id, name: s.name))
-                                .toList(),
-                            selectedId: filter.selectedSectorId,
-                            onChanged: (id) => ref
-                                .read(dashboardFilterProvider.notifier)
-                                .setSector(id),
-                          )
-                        : null,
-                    child: filter.selectedSectorId != null &&
-                            stats.selectedSectorBreakdown != null
-                        ? DashboardDonutChart(
-                            breakdown: stats.selectedSectorBreakdown!,
-                            sectorName: sectors
-                                    .where((s) => s.id == filter.selectedSectorId)
-                                    .firstOrNull
-                                    ?.name ??
-                                filter.selectedSectorId!,
-                          )
-                        : DashboardBarChart(sectorRates: stats.sectorRates),
-                  ),
-                ),
-              ),
-
-              // ── Atenção necessária ───────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  child: AttentionCard(sectors: stats.attentionSectors),
-                ),
+              const SizedBox(width: 8),
+              _StatChip(
+                icon: LucideIcons.building2,
+                label:
+                    '$totalSectors setor${totalSectors != 1 ? 'es' : ''}',
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final alertState = ref.watch(alertProvider);
+    final stats = ref.watch(dashboardProvider);
+    final filter = ref.watch(dashboardFilterProvider);
+    final sectors = ref.watch(sectorProvider).sectors;
+
+    final isLoading = alertState.isLoadingNotifications ||
+        alertState.isLoadingAssignments;
+    final activeAlerts = alertState.notifications.length;
+
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      color: AppColors.accent,
+      backgroundColor: const Color(0xFF1A2340),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: _buildHeader(activeAlerts, sectors.length),
+          ),
+
+          // ── Filtro de período ──────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: _PeriodFilter(current: filter.period),
+            ),
+          ),
+
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(
+                    color: AppColors.accent, strokeWidth: 2.5),
+              ),
+            )
+          else ...[
+            // ── Label métricas ─────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+                child: _SectionLabel(label: 'MÉTRICAS DO PERÍODO'),
+              ),
+            ),
+
+            // ── KPI row ───────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DashboardKpiRow(
+                  totalAssignments: stats.totalAssignments,
+                  totalAcknowledged: stats.totalAcknowledged,
+                  totalPending: stats.totalPending,
+                  totalCritical: stats.totalCritical,
+                ),
+              ),
+            ),
+
+            // ── Destaque ──────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: HighlightCard(
+                  sector: stats.topSector,
+                  rate: stats.topSectorRate,
+                ),
+              ),
+            ),
+
+            // ── Label análise ──────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+                child: _SectionLabel(label: 'ANÁLISE POR SETOR'),
+              ),
+            ),
+
+            // ── Gráfico ────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _ChartCard(
+                  title: 'Taxa de Adesão',
+                  subtitle: filter.selectedSectorId != null
+                      ? 'Detalhes do setor'
+                      : 'Todos os setores · ${filter.periodLabel}',
+                  trailing: sectors.isNotEmpty
+                      ? _SectorDropdown(
+                          sectors: sectors
+                              .map((s) => (id: s.id, name: s.name))
+                              .toList(),
+                          selectedId: filter.selectedSectorId,
+                          onChanged: (id) => ref
+                              .read(dashboardFilterProvider.notifier)
+                              .setSector(id),
+                        )
+                      : null,
+                  child: filter.selectedSectorId != null &&
+                          stats.selectedSectorBreakdown != null
+                      ? DashboardDonutChart(
+                          breakdown: stats.selectedSectorBreakdown!,
+                          sectorName: sectors
+                                  .where((s) =>
+                                      s.id == filter.selectedSectorId)
+                                  .firstOrNull
+                                  ?.name ??
+                              filter.selectedSectorId!,
+                        )
+                      : DashboardBarChart(
+                          sectorRates: stats.sectorRates),
+                ),
+              ),
+            ),
+
+            // ── Atenção ────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: AttentionCard(sectors: stats.attentionSectors),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat chip ─────────────────────────────────────────────────────────────────
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _StatChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              size: 12, color: Colors.white.withValues(alpha: 0.65)),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.80),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withValues(alpha: 0.40),
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -217,48 +338,52 @@ class _PeriodFilter extends ConsumerWidget {
       (period: DashboardPeriod.all, label: 'Todos'),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12)),
           ),
-        ],
-      ),
-      child: Row(
-        children: options.map((o) {
-          final selected = o.period == current;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () =>
-                  ref.read(dashboardFilterProvider.notifier).setPeriod(o.period),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 9),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? const Color(0xFF4A6CF7)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(26),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  o.label,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? Colors.white : const Color(0xFF64748B),
+          child: Row(
+            children: options.map((o) {
+              final selected = o.period == current;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => ref
+                      .read(dashboardFilterProvider.notifier)
+                      .setPeriod(o.period),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      o.label,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.40),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
@@ -282,26 +407,31 @@ class _SectorDropdown extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
           value: selectedId,
           isDense: true,
-          icon: const Icon(LucideIcons.chevronDown,
-              size: 14, color: Color(0xFF64748B)),
-          style:
-              GoogleFonts.inter(fontSize: 12, color: const Color(0xFF0F172A)),
+          dropdownColor: const Color(0xFF1A2340),
+          icon: Icon(LucideIcons.chevronDown,
+              size: 14, color: Colors.white.withValues(alpha: 0.60)),
+          style: GoogleFonts.inter(
+              fontSize: 12, color: Colors.white),
           items: [
             DropdownMenuItem<String?>(
               value: null,
-              child: Text('Todos', style: GoogleFonts.inter(fontSize: 12)),
+              child: Text('Todos',
+                  style: GoogleFonts.inter(
+                      fontSize: 12, color: Colors.white)),
             ),
             ...sectors.map((s) => DropdownMenuItem<String?>(
                   value: s.id,
-                  child: Text(s.name, style: GoogleFonts.inter(fontSize: 12)),
+                  child: Text(s.name,
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: Colors.white)),
                 )),
           ],
           onChanged: onChanged,
@@ -311,15 +441,15 @@ class _SectorDropdown extends StatelessWidget {
   }
 }
 
-// ── Section card ──────────────────────────────────────────────────────────────
+// ── Chart card ────────────────────────────────────────────────────────────────
 
-class _SectionCard extends StatelessWidget {
+class _ChartCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget child;
   final Widget? trailing;
 
-  const _SectionCard({
+  const _ChartCard({
     required this.title,
     required this.subtitle,
     required this.child,
@@ -328,57 +458,68 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: const Color(0xFF0F172A),
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: const Color(0xFF94A3B8),
-                      ),
+                    child: const Icon(LucideIcons.barChart2,
+                        size: 18, color: AppColors.accentLight),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.40),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 8),
+                    trailing!,
                   ],
-                ),
+                ],
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
-              ],
+              const SizedBox(height: 20),
+              child,
             ],
           ),
-          const SizedBox(height: 20),
-          child,
-        ],
+        ),
       ),
     );
   }

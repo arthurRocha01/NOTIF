@@ -1,83 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
-import 'package:notif_app/shared/widgets/notif_logo.dart';
 
-class AuthHeader extends StatelessWidget {
-  const AuthHeader({super.key});
+// ── Input field glass ─────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    final double headerHeight = MediaQuery.of(context).size.height * 0.22;
-
-    return Container(
-      width: double.infinity,
-      height: headerHeight,
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -30,
-            right: -30,
-            child: Container(
-              width: 130,
-              height: 130,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -20,
-            left: -20,
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const NotifLogo(size: 30),
-                const SizedBox(height: 6),
-                Container(
-                  width: 32,
-                  height: 2,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class CustomInputField extends StatefulWidget {
+class GlassInputField extends StatefulWidget {
   final IconData icon;
   final String hint;
   final bool isPassword;
   final TextEditingController controller;
   final TextInputType keyboardType;
 
-  const CustomInputField({
+  const GlassInputField({
     super.key,
     required this.icon,
     required this.hint,
@@ -87,10 +22,10 @@ class CustomInputField extends StatefulWidget {
   });
 
   @override
-  State<CustomInputField> createState() => _CustomInputFieldState();
+  State<GlassInputField> createState() => _GlassInputFieldState();
 }
 
-class _CustomInputFieldState extends State<CustomInputField> {
+class _GlassInputFieldState extends State<GlassInputField> {
   bool _obscure = true;
   final FocusNode _focusNode = FocusNode();
 
@@ -113,27 +48,16 @@ class _CustomInputFieldState extends State<CustomInputField> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: _isFocused
+            ? Colors.white.withValues(alpha: 0.12)
+            : Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _isFocused ? AppColors.accent : AppColors.border,
-          width: _isFocused ? 1.5 : 1,
+          color: _isFocused
+              ? AppColors.accent.withValues(alpha: 0.70)
+              : Colors.white.withValues(alpha: 0.18),
+          width: 1.2,
         ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.10),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
       ),
       child: TextField(
         controller: widget.controller,
@@ -142,20 +66,22 @@ class _CustomInputFieldState extends State<CustomInputField> {
         keyboardType: widget.keyboardType,
         style: GoogleFonts.inter(
           fontSize: 15,
-          color: AppColors.textPrimary,
+          color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: widget.hint,
           hintStyle: GoogleFonts.inter(
-            color: AppColors.textTertiary,
+            color: Colors.white.withValues(alpha: 0.38),
             fontSize: 14,
           ),
           prefixIcon: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Icon(
               widget.icon,
-              color: _isFocused ? AppColors.accent : AppColors.textTertiary,
+              color: _isFocused
+                  ? AppColors.accentLight
+                  : Colors.white.withValues(alpha: 0.45),
               size: 19,
             ),
           ),
@@ -164,7 +90,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
               ? IconButton(
                   icon: Icon(
                     _obscure ? LucideIcons.eyeOff : LucideIcons.eye,
-                    color: AppColors.textTertiary,
+                    color: Colors.white.withValues(alpha: 0.45),
                     size: 19,
                   ),
                   onPressed: () => setState(() => _obscure = !_obscure),
@@ -179,11 +105,13 @@ class _CustomInputFieldState extends State<CustomInputField> {
   }
 }
 
-class PrimaryButton extends StatelessWidget {
+// ── Botão gradiente ───────────────────────────────────────────────────────────
+
+class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const PrimaryButton({
+  const GradientButton({
     super.key,
     required this.text,
     required this.onPressed,
@@ -194,24 +122,41 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 54,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.accent, Color(0xFF6B4BF7)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accent.withValues(alpha: 0.40),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: 0.3,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       ),
