@@ -70,26 +70,34 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 ),
                 if (user != null) ...[
                   const SizedBox(width: 8),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName.split(' ').first,
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                  // O Flexible impede que a Column estoure o tamanho limite da AppBar
+                  Flexible(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          displayName.split(' ').first,
+                          overflow: TextOverflow.ellipsis, // Adiciona '...' se faltar espaço
+                          maxLines: 1,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      Text(
-                        user.roleLabel,
-                        style: GoogleFonts.inter(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 11,
+                        Text(
+                          user.roleLabel,
+                          overflow: TextOverflow.ellipsis, // Adiciona '...' se faltar espaço
+                          maxLines: 1,
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.45),
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 4),
                 ],
