@@ -216,8 +216,9 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: _CriticalCard(
                       assignment: criticalBlocking,
-                      onAcknowledge: () =>
-                          widget.onAcknowledge?.call(criticalBlocking.id),
+                      onAcknowledge: criticalBlocking.status != AssignmentStatus.overdue
+                          ? () => widget.onAcknowledge?.call(criticalBlocking.id)
+                          : null,
                     ),
                   ),
                 ),
@@ -316,7 +317,8 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                               ),
                             );
                           },
-                          onAcknowledge: a.canAcknowledge
+                          onAcknowledge: (a.canAcknowledge &&
+                                  a.status != AssignmentStatus.overdue)
                               ? () => widget.onAcknowledge?.call(a.id)
                               : null,
                         );
@@ -615,7 +617,7 @@ class _BlockingBanner extends StatelessWidget {
 
 class _CriticalCard extends StatelessWidget {
   final MyAssignmentModel assignment;
-  final VoidCallback onAcknowledge;
+  final VoidCallback? onAcknowledge;
 
   const _CriticalCard({required this.assignment, required this.onAcknowledge});
 
@@ -694,15 +696,24 @@ class _CriticalCard extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: onAcknowledge,
-                  icon: const Icon(LucideIcons.check, size: 16),
+                  icon: Icon(
+                    onAcknowledge != null ? LucideIcons.check : LucideIcons.clock,
+                    size: 16,
+                  ),
                   label: Text(
-                    'Estou ciente',
+                    onAcknowledge != null ? 'Estou ciente' : 'Prazo expirado',
                     style: GoogleFonts.inter(
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDC2626),
-                    foregroundColor: Colors.white,
+                    backgroundColor: onAcknowledge != null
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF374151),
+                    foregroundColor: onAcknowledge != null
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.45),
+                    disabledBackgroundColor: const Color(0xFF374151),
+                    disabledForegroundColor: Colors.white.withValues(alpha: 0.35),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
