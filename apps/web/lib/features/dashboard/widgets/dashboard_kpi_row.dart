@@ -16,37 +16,32 @@ class DashboardKpiRow extends StatelessWidget {
     required this.totalCritical,
   });
 
+  Widget _groupLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        color: Colors.white.withValues(alpha: 0.40),
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _groupLabel('ALERTAS'),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: _KpiCard(
-                label: 'Total',
+                label: 'Emitidos',
                 value: '$totalNotifications',
                 accentColor: AppColors.accent,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _KpiCard(
-                label: 'Confirmados',
-                value: '$totalAcknowledged',
-                accentColor: AppColors.success,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _KpiCard(
-                label: 'Pendentes',
-                value: '$totalPending',
-                accentColor: AppColors.warning,
               ),
             ),
             const SizedBox(width: 10),
@@ -55,6 +50,28 @@ class DashboardKpiRow extends StatelessWidget {
                 label: 'Críticos',
                 value: '$totalCritical',
                 accentColor: AppColors.critical,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _groupLabel('RESPOSTAS'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _KpiCard(
+                label: 'Confirmados',
+                value: '$totalAcknowledged',
+                accentColor: AppColors.success,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _KpiCard(
+                label: 'Pendentes',
+                value: '$totalPending',
+                accentColor: AppColors.warning,
               ),
             ),
           ],
