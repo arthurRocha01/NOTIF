@@ -13,6 +13,7 @@ import 'package:notif_app/features/dashboard/widgets/dashboard_bar_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_donut_chart.dart';
 import 'package:notif_app/features/dashboard/widgets/dashboard_kpi_row.dart';
 import 'package:notif_app/features/dashboard/widgets/highlight_card.dart';
+import 'package:notif_app/features/sectors/models/sector_model.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  Map<String, double> _mergedSectorRates(
+    Map<String, double> apiRates,
+    List<SectorModel> allSectors,
+  ) {
+    final merged = Map<String, double>.from(apiRates);
+    for (final s in allSectors) {
+      if (s.name.toLowerCase() != 'global') {
+        merged.putIfAbsent(s.name, () => 0.0);
+      }
+    }
+    return merged;
   }
 
   Future<void> _refresh() async {
@@ -238,7 +252,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               filter.selectedSectorId!,
                         )
                       : DashboardBarChart(
-                          sectorRates: stats.sectorRates),
+                          sectorRates: _mergedSectorRates(
+                            stats.sectorRates,
+                            sectors,
+                          )),
                 ),
               ),
             ),
