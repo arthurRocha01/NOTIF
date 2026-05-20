@@ -35,7 +35,7 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFF0D1421),
       body: AssignmentsBody(
         assignments: state.assignments,
         isLoading: state.isLoadingAssignments,

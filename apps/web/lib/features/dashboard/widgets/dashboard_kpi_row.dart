@@ -77,41 +77,76 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(
-          left: BorderSide(color: accentColor, width: 2),
-          top: const BorderSide(color: AppColors.border, width: 0.5),
-          right: const BorderSide(color: AppColors.border, width: 0.5),
-          bottom: const BorderSide(color: AppColors.border, width: 0.5),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F1B2D),
+          // Criamos uma borda uniforme fina em toda a volta (o Flutter aceita isso com borderRadius)
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 0.5,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 30,
-              fontWeight: FontWeight.w300,
-              color: AppColors.textPrimary,
-              height: 1,
-              letterSpacing: -1,
-            ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Substituímos a borda esquerda por um Container físico que faz o papel do traço colorido
+              Container(
+                width: 3,
+                color: accentColor,
+              ),
+              Expanded(
+                child: Padding(
+                  // Ajustado o padding esquerdo para compensar a barra lateral
+                  padding: const EdgeInsets.fromLTRB(13, 18, 16, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value,
+                        style: GoogleFonts.inter(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              label.toUpperCase(),
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.45),
+                                letterSpacing: 1.2,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            label.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textTertiary,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

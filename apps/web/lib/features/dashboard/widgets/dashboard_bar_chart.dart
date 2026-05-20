@@ -43,7 +43,7 @@ class DashboardBarChart extends StatelessWidget {
             backDrawRodData: BackgroundBarChartRodData(
               show: true,
               toY: 100,
-              color: const Color(0xFFF1F5F9),
+              color: Colors.white.withValues(alpha: 0.06),
             ),
           ),
         ],
@@ -65,8 +65,8 @@ class DashboardBarChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: 25,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: const Color(0xFFE2E8F0),
-              strokeWidth: 1,
+              color: Colors.white.withValues(alpha: 0.08),
+              strokeWidth: 0.5,
             ),
           ),
           borderData: FlBorderData(show: false),
@@ -78,7 +78,10 @@ class DashboardBarChart extends StatelessWidget {
                 reservedSize: 32,
                 getTitlesWidget: (v, _) => Text(
                   '${v.toInt()}%',
-                  style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF94A3B8)),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: Colors.white.withValues(alpha: 0.35),
+                  ),
                 ),
               ),
             ),
@@ -100,7 +103,7 @@ class DashboardBarChart extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF475569),
+                        color: Colors.white.withValues(alpha: 0.45),
                       ),
                     ),
                   );
