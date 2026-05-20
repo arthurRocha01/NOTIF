@@ -30,7 +30,7 @@ class EmptyState extends StatelessWidget {
             child: Icon(
               icon,
               size: 40,
-              color: Colors.white.withValues(alpha: 0.30),
+              color: Colors.white.withValues(alpha: 0.50),
             ),
           ),
           const SizedBox(height: 16),
@@ -47,7 +47,7 @@ class EmptyState extends StatelessWidget {
             message,
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.40),
+              color: Colors.white.withValues(alpha: 0.65),
             ),
           ),
           if (subtitle != null) ...[
@@ -56,7 +56,7 @@ class EmptyState extends StatelessWidget {
               subtitle!,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.35),
+                color: Colors.white.withValues(alpha: 0.60),
               ),
             ),
           ],

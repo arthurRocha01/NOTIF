@@ -48,7 +48,7 @@ class AttentionCard extends StatelessWidget {
                       'Setores com baixa adesão (< 60%)',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.40),
+                        color: Colors.white.withValues(alpha: 0.65),
                       ),
                     ),
                   ],
@@ -191,7 +191,7 @@ class _AttentionItem extends StatelessWidget {
                                 '${sector.pendingCount} pendente${sector.pendingCount != 1 ? 's' : ''}',
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.45),
+                                  color: Colors.white.withValues(alpha: 0.70),
                                 ),
                               ),
                             ],

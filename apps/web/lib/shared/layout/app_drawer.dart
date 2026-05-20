@@ -107,9 +107,9 @@ class AppDrawer extends ConsumerWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${user.roleLabel}${user.sector.isNotEmpty ? " · ${user.sector}" : ""}',
+                                '${user.roleLabel}${user.sectorName.isNotEmpty ? " · ${user.sectorName}" : ""}',
                                 style: GoogleFonts.inter(
-                                    color: Colors.white.withValues(alpha: 0.45),
+                                    color: Colors.white.withValues(alpha: 0.65),
                                     fontSize: 13),
                               ),
                             ],
@@ -216,7 +216,7 @@ class AppDrawer extends ConsumerWidget {
       child: Text(
         title,
         style: GoogleFonts.inter(
-          color: Colors.white.withValues(alpha: 0.30),
+          color: Colors.white.withValues(alpha: 0.55),
           fontSize: 11,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.4,

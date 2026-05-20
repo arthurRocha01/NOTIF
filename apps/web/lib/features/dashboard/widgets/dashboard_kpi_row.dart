@@ -132,7 +132,7 @@ class _KpiCard extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.45),
+                                color: Colors.white.withValues(alpha: 0.70),
                                 letterSpacing: 1.2,
                               ),
                               overflow: TextOverflow.ellipsis,

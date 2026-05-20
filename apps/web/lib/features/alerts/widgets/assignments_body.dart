@@ -251,7 +251,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white.withValues(alpha: 0.40),
+                          color: Colors.white.withValues(alpha: 0.65),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -262,7 +262,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                           width: 10,
                           height: 10,
                           child: CircularProgressIndicator(
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: Colors.white.withValues(alpha: 0.55),
                             strokeWidth: 1.5,
                           ),
                         )
@@ -271,7 +271,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                           '${filtered.length} mensagem${filtered.length != 1 ? 's' : ''}',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: Colors.white.withValues(alpha: 0.65),
                           ),
                         ),
                     ],
@@ -469,7 +469,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
               ? (isCritical ? const Color(0xFFFF6B6B) : Colors.white)
               : (isCritical && criticalCount > 0
                   ? const Color(0xFFFF6B6B).withValues(alpha: 0.70)
-                  : Colors.white.withValues(alpha: 0.45));
+                  : Colors.white.withValues(alpha: 0.65));
 
           return Padding(
             padding: EdgeInsets.only(right: i < filters.length - 1 ? 8 : 0),
@@ -527,7 +527,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                     ? LucideIcons.shieldCheck
                     : LucideIcons.bellOff,
             size: 48,
-            color: Colors.white.withValues(alpha: 0.25),
+            color: Colors.white.withValues(alpha: 0.45),
           ),
           const SizedBox(height: 12),
           Text(
@@ -545,7 +545,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                 : 'Puxe para baixo para atualizar',
             style: GoogleFonts.inter(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.35),
+              color: Colors.white.withValues(alpha: 0.60),
             ),
           ),
         ],
@@ -875,7 +875,7 @@ class _AssignmentCard extends StatelessWidget {
                                   timeStr,
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
-                                    color: Colors.white.withValues(alpha: 0.40),
+                                    color: Colors.white.withValues(alpha: 0.65),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),

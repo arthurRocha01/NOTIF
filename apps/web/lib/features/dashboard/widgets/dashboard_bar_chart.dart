@@ -80,7 +80,7 @@ class DashboardBarChart extends StatelessWidget {
                   '${v.toInt()}%',
                   style: GoogleFonts.inter(
                     fontSize: 10,
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: Colors.white.withValues(alpha: 0.65),
                   ),
                 ),
               ),
@@ -103,7 +103,7 @@ class DashboardBarChart extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: Colors.white.withValues(alpha: 0.75),
                       ),
                     ),
                   );

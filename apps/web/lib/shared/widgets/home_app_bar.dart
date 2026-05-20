@@ -92,7 +92,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                           overflow: TextOverflow.ellipsis, // Adiciona '...' se faltar espaço
                           maxLines: 1,
                           style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.45),
+                            color: Colors.white.withValues(alpha: 0.65),
                             fontSize: 11,
                           ),
                         ),
