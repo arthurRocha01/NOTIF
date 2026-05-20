@@ -128,11 +128,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final alertState = ref.watch(alertProvider);
-    final stats = ref.watch(dashboardProvider);
+    final statsAsync = ref.watch(dashboardProvider);
+    final stats = statsAsync.valueOrNull;
     final filter = ref.watch(dashboardFilterProvider);
     final sectors = ref.watch(sectorProvider).sectors;
 
-    final isLoading = alertState.isLoadingNotifications ||
+    final isLoading = statsAsync.isLoading ||
+        alertState.isLoadingNotifications ||
         alertState.isLoadingAssignments;
     final activeAlerts = alertState.notifications.length;
 
@@ -162,7 +164,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     color: AppColors.accent, strokeWidth: 2.5),
               ),
             )
-          else ...[
+          else if (stats != null) ...[
             // ── Label métricas ─────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
@@ -176,7 +178,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DashboardKpiRow(
-                  totalAssignments: stats.totalAssignments,
+                  totalNotifications: stats.totalNotifications,
                   totalAcknowledged: stats.totalAcknowledged,
                   totalPending: stats.totalPending,
                   totalCritical: stats.totalCritical,
@@ -215,6 +217,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   trailing: sectors.isNotEmpty
                       ? _SectorDropdown(
                           sectors: sectors
+                              .where((s) => s.name.toLowerCase() != 'global')
                               .map((s) => (id: s.id, name: s.name))
                               .toList(),
                           selectedId: filter.selectedSectorId,

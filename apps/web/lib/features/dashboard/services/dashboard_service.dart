@@ -67,19 +67,36 @@ class DashboardData {
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
+    bool isGlobal(String name) => name.toLowerCase() == 'global';
+
+    // "Global" é broadcast para todos os setores, não um setor real — excluir das métricas
+    final sectorRates = (json['sectorRates'] as Map<String, dynamic>)
+        .map((k, v) => MapEntry(k, (v as num).toDouble()))
+          ..removeWhere((k, _) => isGlobal(k));
+
+    final attentionSectors = (json['attentionSectors'] as List<dynamic>)
+        .map((e) => AttentionSector.fromJson(e as Map<String, dynamic>))
+        .where((s) => !isGlobal(s.name))
+        .toList();
+
+    // Se o backend apontou "Global" como top setor, recalcula pelo maior real
+    String topSector = json['topSector'] as String;
+    double topSectorRate = (json['topSectorRate'] as num).toDouble();
+    if (isGlobal(topSector) && sectorRates.isNotEmpty) {
+      final top = sectorRates.entries.reduce((a, b) => a.value >= b.value ? a : b);
+      topSector = top.key;
+      topSectorRate = top.value;
+    }
+
     return DashboardData(
       totalNotifications: json['totalNotifications'] as int,
       totalAcknowledged: json['totalAcknowledged'] as int,
       totalPending: json['totalPending'] as int,
       totalCritical: json['totalCritical'] as int,
-      topSector: json['topSector'] as String,
-      topSectorRate: (json['topSectorRate'] as num).toDouble(),
-      sectorRates: (json['sectorRates'] as Map<String, dynamic>).map(
-        (k, v) => MapEntry(k, (v as num).toDouble()),
-      ),
-      attentionSectors: (json['attentionSectors'] as List<dynamic>)
-          .map((e) => AttentionSector.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      topSector: topSector,
+      topSectorRate: topSectorRate,
+      sectorRates: sectorRates,
+      attentionSectors: attentionSectors,
       selectedSectorBreakdown: json['selectedSectorBreakdown'] != null
           ? SectorStatusBreakdown.fromJson(
               json['selectedSectorBreakdown'] as Map<String, dynamic>,
