@@ -60,7 +60,7 @@ class _CreateEditSectorModalState
           name: _nameCtrl.text.trim(),
         );
       } else {
-        await notifier.createSector(name: _nameCtrl.text.trim());
+        await notifier.createSector(_nameCtrl.text.trim());
       }
 
       final error = ref.read(adminSectorProvider).errorMessage;
@@ -138,18 +138,23 @@ class _CreateEditSectorModalState
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
+                Semantics(
+                  button: true,
+                  label: 'Fechar',
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(LucideIcons.x,
+                          size: 16,
+                          semanticLabel: 'Fechar',
+                          color: Colors.white.withValues(alpha: 0.60)),
                     ),
-                    child: Icon(LucideIcons.x,
-                        size: 16,
-                        color: Colors.white.withValues(alpha: 0.60)),
                   ),
                 ),
               ]),

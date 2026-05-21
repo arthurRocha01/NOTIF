@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/utils/date_formatter.dart';
 import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
+import 'package:notif_app/features/alerts/screen/alert_supervisor_detail_screen.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_model.dart';
@@ -241,7 +242,11 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
             style: GoogleFonts.inter(
                 fontSize: 14, color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Buscar alertas...',
+              labelText: 'Buscar alertas',
+              labelStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.55)),
+              hintText: 'Título ou mensagem…',
               hintStyle: GoogleFonts.inter(
                   fontSize: 14,
                   color: Colors.white.withValues(alpha: 0.35)),
@@ -352,20 +357,26 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => CreateAlertModal.show(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
+            Semantics(
+              button: true,
+              label: 'Criar novo alerta',
+              child: GestureDetector(
+                onTap: () => CreateAlertModal.show(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ExcludeSemantics(
+                    child: Text('+ Criar',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: const Color(0xFF1A2340))),
+                  ),
                 ),
-                child: Text('+ Criar',
-                    style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: const Color(0xFF1A2340))),
               ),
             ),
           ]),
@@ -426,7 +437,17 @@ class _AlertCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: ClipRRect(
+      child: Semantics(
+        button: true,
+        label: 'Alerta: ${alert.title}',
+        child: GestureDetector(
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => AlertSupervisorDetailScreen(
+            alert: alert,
+            sectorName: sectorName,
+          ),
+        )),
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -519,7 +540,9 @@ class _AlertCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+    ),
+  );
   }
 }
 
@@ -541,32 +564,39 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selectedColor ?? AppColors.accent;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.20)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
             color: isSelected
-                ? color.withValues(alpha: 0.50)
-                : Colors.white.withValues(alpha: 0.14),
+                ? color.withValues(alpha: 0.20)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? color.withValues(alpha: 0.50)
+                  : Colors.white.withValues(alpha: 0.14),
+            ),
+          ),
+          child: ExcludeSemantics(
+            child: Text(label,
+                style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                    color: isSelected
+                        ? color
+                        : Colors.white.withValues(alpha: 0.50))),
           ),
         ),
-        child: Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: isSelected
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: isSelected
-                    ? color
-                    : Colors.white.withValues(alpha: 0.50))),
       ),
     );
   }

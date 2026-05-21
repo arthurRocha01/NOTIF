@@ -92,7 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: Colors.white.withValues(alpha: 0.12)),
                       ),
                       child: Text(
-                        '${user.roleLabel} · ${user.sector}',
+                        '${user.roleLabel} · ${user.sectorName}',
                         style: GoogleFonts.inter(
                           color: Colors.white.withValues(alpha: 0.65),
                           fontSize: 13,
@@ -120,6 +120,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ? profile.displayName
                           : (user?.name ?? '—'),
                       trailing: IconButton(
+                        tooltip: _editing ? 'Cancelar edição' : 'Editar nome de exibição',
                         icon: Icon(
                           _editing ? LucideIcons.x : LucideIcons.pencil,
                           size: 18,
@@ -194,8 +195,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileInfoRow(
                       icon: LucideIcons.building2,
                       label: 'Setor',
-                      value: user?.sector.isNotEmpty == true
-                          ? user!.sector
+                      value: user?.sectorName.isNotEmpty == true
+                          ? user!.sectorName
                           : '—',
                       isLast: true,
                     ),

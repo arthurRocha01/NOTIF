@@ -473,37 +473,44 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
 
           return Padding(
             padding: EdgeInsets.only(right: i < filters.length - 1 ? 8 : 0),
-            child: GestureDetector(
-              onTap: () => setState(() => _filter = key),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: chipBg,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isCritical) ...[
-                      Icon(
-                        LucideIcons.alertOctagon,
-                        size: 12,
-                        color: textColor,
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                    Text(
-                      label,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              label: label,
+              child: GestureDetector(
+                onTap: () => setState(() => _filter = key),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: chipBg,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: ExcludeSemantics(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isCritical) ...[
+                          Icon(
+                            LucideIcons.alertOctagon,
+                            size: 12,
+                            color: textColor,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          label,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -797,7 +804,10 @@ class _AssignmentCard extends StatelessWidget {
             width: 0.5,
           ),
         ),
-        child: ClipRRect(
+        child: Semantics(
+          button: true,
+          label: 'Alerta: ${assignment.notificationTitle ?? 'Notificação'}',
+          child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Material(
             color: Colors.transparent,
@@ -941,46 +951,58 @@ class _AssignmentCard extends StatelessWidget {
                                 // Ações inline (H7 – eficiência de uso)
                                 Row(
                                   children: [
-                                    GestureDetector(
-                                      onTap: onTap,
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Ler mais',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF6B8BFF),
-                                            ),
+                                    Semantics(
+                                      button: true,
+                                      label: 'Ler mais',
+                                      child: GestureDetector(
+                                        onTap: onTap,
+                                        child: ExcludeSemantics(
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                'Ler mais',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(0xFF6B8BFF),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 2),
+                                              const Icon(
+                                                LucideIcons.chevronRight,
+                                                size: 13,
+                                                color: Color(0xFF6B8BFF),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 2),
-                                          const Icon(
-                                            LucideIcons.chevronRight,
-                                            size: 13,
-                                            color: Color(0xFF6B8BFF),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                                     if (onAcknowledge != null) ...[
                                       const Spacer(),
-                                      GestureDetector(
-                                        onTap: onAcknowledge,
-                                        child: Row(
-                                          children: [
-                                            const Icon(LucideIcons.check,
-                                                size: 13,
-                                                color: Color(0xFF10B981)),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Marcar como lido',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(0xFF10B981),
-                                              ),
+                                      Semantics(
+                                        button: true,
+                                        label: 'Marcar como lido',
+                                        child: GestureDetector(
+                                          onTap: onAcknowledge,
+                                          child: ExcludeSemantics(
+                                            child: Row(
+                                              children: [
+                                                const Icon(LucideIcons.check,
+                                                    size: 13,
+                                                    color: Color(0xFF10B981)),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Marcar como lido',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(0xFF10B981),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -997,6 +1019,7 @@ class _AssignmentCard extends StatelessWidget {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

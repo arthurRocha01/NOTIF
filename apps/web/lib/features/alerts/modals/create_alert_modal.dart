@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
-import '../../login/providers/auth_provider.dart';
 import '../widgets/urgency_selector.dart';
 import '../../../shared/widgets/notif_input.dart';
 import '../../../shared/widgets/notif_button.dart';
@@ -81,11 +80,9 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
 
     setState(() => _isLoading = true);
 
-    final user = ref.read(authProvider);
     final title = _titleCtrl.text.trim();
     final message = _messageCtrl.text.trim();
     final requiresAck = _level == AlertLevel.critical ? true : _requiresAcknowledgment;
-    final authorId = user?.id ?? '';
 
     final bool ok;
     if (_sendToAll) {
@@ -96,7 +93,6 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
             level: _level,
             slaMinutes: _slaMinutes,
             requiresAcknowledgment: requiresAck,
-            authorId: authorId,
             sectorIds: sectorIds,
           );
     } else {
@@ -106,7 +102,6 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
             level: _level,
             slaMinutes: _slaMinutes,
             requiresAcknowledgment: requiresAck,
-            authorId: authorId,
             sectorId: _selectedSector!.id,
           );
     }
@@ -178,18 +173,23 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
+                Semantics(
+                  button: true,
+                  label: 'Fechar',
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(LucideIcons.x,
+                          size: 16,
+                          semanticLabel: 'Fechar',
+                          color: Colors.white.withValues(alpha: 0.60)),
                     ),
-                    child: Icon(LucideIcons.x,
-                        size: 16,
-                        color: Colors.white.withValues(alpha: 0.60)),
                   ),
                 ),
               ],
@@ -358,33 +358,40 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
       runSpacing: 6,
       children: sectorState.sectors.map((sector) {
         final selected = _selectedSector?.id == sector.id;
-        return GestureDetector(
-          onTap: () => setState(
-              () => _selectedSector = selected ? null : sector),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: selected
-                  ? AppColors.accent.withValues(alpha: 0.20)
-                  : Colors.white.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: sector.name,
+          child: GestureDetector(
+            onTap: () => setState(
+                () => _selectedSector = selected ? null : sector),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
                 color: selected
-                    ? AppColors.accent.withValues(alpha: 0.55)
-                    : Colors.white.withValues(alpha: 0.16),
+                    ? AppColors.accent.withValues(alpha: 0.20)
+                    : Colors.white.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: selected
+                      ? AppColors.accent.withValues(alpha: 0.55)
+                      : Colors.white.withValues(alpha: 0.16),
+                ),
               ),
-            ),
-            child: Text(
-              sector.name,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected
-                    ? AppColors.accentLight
-                    : Colors.white.withValues(alpha: 0.70),
+              child: ExcludeSemantics(
+                child: Text(
+                  sector.name,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight:
+                        selected ? FontWeight.w600 : FontWeight.w500,
+                    color: selected
+                        ? AppColors.accentLight
+                        : Colors.white.withValues(alpha: 0.70),
+                  ),
+                ),
               ),
             ),
           ),
@@ -418,33 +425,40 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
             final selected = _slaMinutes == minutes;
             final label =
                 minutes < 60 ? '${minutes}min' : '${minutes ~/ 60}h';
-            return GestureDetector(
-              onTap: () => setState(() => _slaMinutes = minutes),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? _accentColor.withValues(alpha: 0.20)
-                      : Colors.white.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
+            return Semantics(
+              button: true,
+              selected: selected,
+              label: 'SLA: $label',
+              child: GestureDetector(
+                onTap: () => setState(() => _slaMinutes = minutes),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
                     color: selected
-                        ? _accentColor.withValues(alpha: 0.55)
-                        : Colors.white.withValues(alpha: 0.16),
+                        ? _accentColor.withValues(alpha: 0.20)
+                        : Colors.white.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected
+                          ? _accentColor.withValues(alpha: 0.55)
+                          : Colors.white.withValues(alpha: 0.16),
+                    ),
                   ),
-                ),
-                child: Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: selected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    color: selected
-                        ? _accentColor
-                        : Colors.white.withValues(alpha: 0.60),
+                  child: ExcludeSemantics(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: selected
+                            ? _accentColor
+                            : Colors.white.withValues(alpha: 0.60),
+                      ),
+                    ),
                   ),
                 ),
               ),

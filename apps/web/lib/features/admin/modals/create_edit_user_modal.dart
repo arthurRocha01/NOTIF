@@ -50,8 +50,8 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.user?.name ?? '');
     _emailCtrl = TextEditingController(text: widget.user?.email ?? '');
-    _sectorId = widget.user?.sector.isNotEmpty == true
-        ? widget.user!.sector
+    _sectorId = widget.user?.sectorId.isNotEmpty == true
+        ? widget.user!.sectorId
         : null;
     if (_isEditing) {
       _role = switch (widget.user!.role) {
@@ -91,7 +91,7 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
         await notifier.updateUser(
           userId: widget.user!.id,
           name: _nameCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
+          email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
           role: _role,
           sectorId: _sectorId,
         );
@@ -184,18 +184,23 @@ class _CreateEditUserModalState extends ConsumerState<CreateEditUserModal> {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
+                  Semantics(
+                    button: true,
+                    label: 'Fechar',
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(LucideIcons.x,
+                            size: 16,
+                            semanticLabel: 'Fechar',
+                            color: Colors.white.withValues(alpha: 0.60)),
                       ),
-                      child: Icon(LucideIcons.x,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.60)),
                     ),
                   ),
                 ]),
@@ -295,7 +300,7 @@ InputDecoration _darkInputDecoration({String? hint}) {
   return InputDecoration(
     hintText: hint,
     hintStyle: TextStyle(
-        color: Colors.white.withValues(alpha: 0.35), fontSize: 14),
+        color: Colors.white.withValues(alpha: 0.55), fontSize: 14),
     filled: true,
     fillColor: Colors.white.withValues(alpha: 0.07),
     contentPadding:

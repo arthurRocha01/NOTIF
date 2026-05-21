@@ -6,7 +6,6 @@ import '../providers/alert_provider.dart';
 import '../models/alert_status.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../login/providers/auth_provider.dart';
 import '../../sectors/providers/sector_provider.dart';
 import '../../../shared/widgets/notif_input.dart';
 import '../../../shared/widgets/notif_button.dart';
@@ -48,7 +47,6 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
 
     setState(() => _isLoading = true);
 
-    final user = ref.read(authProvider);
     final sectorIds =
         ref.read(sectorProvider).sectors.map((s) => s.id).toList();
     final ok = await ref
@@ -59,7 +57,6 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
           level: AlertLevel.low,
           slaMinutes: 60,
           requiresAcknowledgment: false,
-          authorId: user?.id ?? '',
           sectorIds: sectorIds,
         );
 
@@ -126,18 +123,23 @@ class _CreateMessageModalState extends ConsumerState<CreateMessageModal> {
                 ),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
+              Semantics(
+                button: true,
+                label: 'Fechar',
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(LucideIcons.x,
+                        size: 16,
+                        semanticLabel: 'Fechar',
+                        color: Colors.white.withValues(alpha: 0.60)),
                   ),
-                  child: Icon(LucideIcons.x,
-                      size: 16,
-                      color: Colors.white.withValues(alpha: 0.60)),
                 ),
               ),
             ]),

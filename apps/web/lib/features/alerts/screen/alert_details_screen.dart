@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../models/alert_model.dart';
 import '../models/alert_status.dart';
+import '../models/my_assignment_model.dart';
 import '../providers/alert_provider.dart';
 
 class AlertDetailsScreen extends ConsumerWidget {
-  final AssignmentModel assignment;
+  final MyAssignmentModel assignment;
 
   const AlertDetailsScreen({super.key, required this.assignment});
 
@@ -24,12 +24,8 @@ class AlertDetailsScreen extends ConsumerWidget {
     final message = assignment.notificationMessage ?? notification?.message;
     final level = assignment.notificationLevel;
     final status = assignment.status;
-    final isDone = status == AssignmentStatus.acknowledged;
     final isOverdue = status == AssignmentStatus.overdue;
-    final requiresAck = assignment.requiresAcknowledgment
-        ?? notification?.requiresAcknowledgment
-        ?? false;
-    final canAcknowledge = !isDone && (assignment.isCritical || requiresAck);
+    final canAcknowledge = assignment.canAcknowledge;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1421),
@@ -41,7 +37,9 @@ class AlertDetailsScreen extends ConsumerWidget {
             pinned: true,
             backgroundColor: level.color,
             leading: IconButton(
-              icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
+              tooltip: 'Voltar',
+              icon: const Icon(LucideIcons.arrowLeft,
+                  color: Colors.white, semanticLabel: 'Voltar'),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
@@ -182,6 +180,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                       children: [
                         _TimelineStep(
                           icon: LucideIcons.bell,
+                          iconLabel: 'Recebido',
                           label: 'Notificação recebida',
                           time: _formatDate(assignment.createdAt),
                           done: true,
@@ -189,6 +188,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         ),
                         _TimelineStep(
                           icon: LucideIcons.eye,
+                          iconLabel: 'Visualizado',
                           label: 'Visualizado',
                           time: assignment.viewedAt != null
                               ? _formatDate(assignment.viewedAt!)
@@ -197,6 +197,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         ),
                         _TimelineStep(
                           icon: LucideIcons.checkCircle2,
+                          iconLabel: 'Confirmado',
                           label: 'Ciência confirmada',
                           time: assignment.acknowledgedAt != null
                               ? _formatDate(assignment.acknowledgedAt!)
@@ -217,7 +218,7 @@ class AlertDetailsScreen extends ConsumerWidget {
                         onPressed: () async {
                           await ref
                               .read(alertProvider.notifier)
-                              .acknowledge(assignmentId: assignment.id);
+                              .acknowledge(assignment.id);
                           if (context.mounted) Navigator.of(context).pop();
                         },
                         icon: const Icon(LucideIcons.checkCircle2, size: 18),
@@ -405,6 +406,7 @@ class _RowDivider extends StatelessWidget {
 
 class _TimelineStep extends StatelessWidget {
   final IconData icon;
+  final String? iconLabel;
   final String label;
   final String? time;
   final bool done;
@@ -415,6 +417,7 @@ class _TimelineStep extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.done,
+    this.iconLabel,
     this.time,
     this.isFirst = false,
     this.isLast = false,
@@ -447,7 +450,8 @@ class _TimelineStep extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: dotColor, width: 1.5),
                 ),
-                child: Icon(icon, size: 13, color: dotColor),
+                child: Icon(icon, size: 13, color: dotColor,
+                    semanticLabel: iconLabel),
               ),
               if (!isLast)
                 Container(width: 2, height: 10, color: lineColor),
