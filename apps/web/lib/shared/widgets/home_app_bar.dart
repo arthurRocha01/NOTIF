@@ -33,75 +33,79 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ),
       ),
       leading: IconButton(
+        tooltip: 'Abrir menu',
         icon: Icon(LucideIcons.menu,
             color: Colors.white.withValues(alpha: 0.85)),
         onPressed: onMenuPressed,
       ),
       title: _buildLogo(),
       actions: [
-        GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.white.withValues(alpha: 0.12),
-                  backgroundImage: profile.avatarBytes != null
-                      ? MemoryImage(profile.avatarBytes!)
-                      : null,
-                  child: profile.avatarBytes == null
-                      ? Text(
-                          displayName.isNotEmpty
-                              ? displayName[0].toUpperCase()
-                              : '?',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        )
-                      : null,
-                ),
-                if (user != null) ...[
-                  const SizedBox(width: 8),
-                  // O Flexible impede que a Column estoure o tamanho limite da AppBar
-                  Flexible(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          displayName.split(' ').first,
-                          overflow: TextOverflow.ellipsis, // Adiciona '...' se faltar espaço
-                          maxLines: 1,
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          user.roleLabel,
-                          overflow: TextOverflow.ellipsis, // Adiciona '...' se faltar espaço
-                          maxLines: 1,
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.65),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
+        Semantics(
+          button: true,
+          label: 'Abrir perfil',
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white.withValues(alpha: 0.12),
+                    backgroundImage: profile.avatarBytes != null
+                        ? MemoryImage(profile.avatarBytes!)
+                        : null,
+                    child: profile.avatarBytes == null
+                        ? Text(
+                            displayName.isNotEmpty
+                                ? displayName[0].toUpperCase()
+                                : '?',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
                   ),
-                  const SizedBox(width: 4),
+                  if (user != null) ...[
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayName.split(' ').first,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            user.roleLabel,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: GoogleFonts.inter(
+                              color: Colors.white.withValues(alpha: 0.65),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

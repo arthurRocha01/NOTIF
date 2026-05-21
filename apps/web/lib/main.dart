@@ -8,11 +8,20 @@ import 'package:notif_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializa o Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  // Inicializa o serviço de notificações
   await NotificationService().initialize();
+  
+  // CORREÇÃO: Inicializa a formatação de datas para o padrão brasileiro
+  await initializeDateFormatting('pt_BR', null);
+
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -42,6 +51,8 @@ class MyApp extends ConsumerWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F172A)),
       useMaterial3: true,
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      focusColor: const Color(0xFF3B63E8).withValues(alpha: 0.30),
+      hoverColor: const Color(0xFF3B63E8).withValues(alpha: 0.08),
     );
 
     return MaterialApp(

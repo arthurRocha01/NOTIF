@@ -134,7 +134,8 @@ class _UsersManagementScreenState
                     onChanged: (v) => setState(() => _searchQuery = v),
                     style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Buscar por nome ou e-mail…',
+                      labelText: 'Buscar usuários',
+                      hintText: 'Nome ou e-mail…',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.35),
@@ -289,26 +290,33 @@ class _RoleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected
-              ? color.withValues(alpha: 0.20)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? color : Colors.white.withValues(alpha: 0.14),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.withValues(alpha: 0.20)
+                : Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? color : Colors.white.withValues(alpha: 0.14),
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? color : Colors.white.withValues(alpha: 0.55),
+          child: ExcludeSemantics(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? color : Colors.white.withValues(alpha: 0.55),
+              ),
+            ),
           ),
         ),
       ),
@@ -379,7 +387,7 @@ class _UserTile extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.50),
                   ),
                 ),
-                if (user.sector.isNotEmpty) ...[
+                if (user.sectorName.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Row(
                     children: [
@@ -388,7 +396,7 @@ class _UserTile extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.35)),
                       const SizedBox(width: 3),
                       Text(
-                        user.sector,
+                        user.sectorName,
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.40),
@@ -419,6 +427,7 @@ class _UserTile extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Editar usuário',
                   icon: Icon(LucideIcons.pencil,
                       size: 17,
                       color: Colors.white.withValues(alpha: 0.50)),
@@ -427,6 +436,7 @@ class _UserTile extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                 ),
                 IconButton(
+                  tooltip: 'Excluir usuário',
                   icon: const Icon(LucideIcons.trash2,
                       size: 17, color: Color(0xFFFF6B6B)),
                   onPressed: onDelete,

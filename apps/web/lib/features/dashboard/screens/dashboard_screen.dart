@@ -100,20 +100,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: _refresh,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.14)),
+              Semantics(
+                button: true,
+                label: 'Atualizar dashboard',
+                child: GestureDetector(
+                  onTap: _refresh,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.14)),
+                    ),
+                    child: Icon(LucideIcons.refreshCw,
+                        color: Colors.white.withValues(alpha: 0.70),
+                        size: 20,
+                        semanticLabel: 'Atualizar'),
                   ),
-                  child: Icon(LucideIcons.refreshCw,
-                      color: Colors.white.withValues(alpha: 0.70),
-                      size: 20),
                 ),
               ),
             ],
@@ -294,8 +299,10 @@ class _StatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon,
-              size: 12, color: Colors.white.withValues(alpha: 0.65)),
+          ExcludeSemantics(
+            child: Icon(icon,
+                size: 12, color: Colors.white.withValues(alpha: 0.65)),
+          ),
           const SizedBox(width: 5),
           Text(
             label,
@@ -374,28 +381,35 @@ class _PeriodFilter extends ConsumerWidget {
             children: options.map((o) {
               final selected = o.period == current;
               return Expanded(
-                child: GestureDetector(
-                  onTap: () => ref
-                      .read(dashboardFilterProvider.notifier)
-                      .setPeriod(o.period),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? Colors.white.withValues(alpha: 0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      o.label,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  label: 'Período: ${o.label}',
+                  child: GestureDetector(
+                    onTap: () => ref
+                        .read(dashboardFilterProvider.notifier)
+                        .setPeriod(o.period),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
                         color: selected
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.40),
+                            ? Colors.white.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(26),
+                      ),
+                      alignment: Alignment.center,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          o.label,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.40),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -424,37 +438,39 @@ class _SectorDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String?>(
-          value: selectedId,
-          isDense: true,
-          dropdownColor: const Color(0xFF1A2340),
-          icon: Icon(LucideIcons.chevronDown,
-              size: 14, color: Colors.white.withValues(alpha: 0.60)),
-          style: GoogleFonts.inter(
-              fontSize: 12, color: Colors.white),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text('Todos',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: Colors.white)),
-            ),
-            ...sectors.map((s) => DropdownMenuItem<String?>(
-                  value: s.id,
-                  child: Text(s.name,
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: Colors.white)),
-                )),
-          ],
-          onChanged: onChanged,
+    return Semantics(
+      label: 'Filtrar por setor',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String?>(
+            value: selectedId,
+            isDense: true,
+            dropdownColor: const Color(0xFF1A2340),
+            icon: Icon(LucideIcons.chevronDown,
+                size: 14, color: Colors.white.withValues(alpha: 0.60)),
+            style: GoogleFonts.inter(fontSize: 12, color: Colors.white),
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text('Todos',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: Colors.white)),
+              ),
+              ...sectors.map((s) => DropdownMenuItem<String?>(
+                    value: s.id,
+                    child: Text(s.name,
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: Colors.white)),
+                  )),
+            ],
+            onChanged: onChanged,
+          ),
         ),
       ),
     );

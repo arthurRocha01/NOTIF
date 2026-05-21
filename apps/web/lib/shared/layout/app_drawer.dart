@@ -74,25 +74,28 @@ class AppDrawer extends ConsumerWidget {
                               const CircularProgressIndicator(
                                   color: AppColors.accent, strokeWidth: 2)
                             else ...[
-                              CircleAvatar(
-                                radius: 26,
-                                backgroundColor:
-                                    Colors.white.withValues(alpha: 0.10),
-                                backgroundImage: profile.avatarBytes != null
-                                    ? MemoryImage(profile.avatarBytes!)
-                                    : null,
-                                child: profile.avatarBytes == null
-                                    ? Text(
-                                        user.name.isNotEmpty
-                                            ? user.name[0].toUpperCase()
-                                            : '?',
-                                        style: GoogleFonts.inter(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
+                              Semantics(
+                                label: 'Foto de perfil de ${user.name}',
+                                child: CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.10),
+                                  backgroundImage: profile.avatarBytes != null
+                                      ? MemoryImage(profile.avatarBytes!)
+                                      : null,
+                                  child: profile.avatarBytes == null
+                                      ? Text(
+                                          user.name.isNotEmpty
+                                              ? user.name[0].toUpperCase()
+                                              : '?',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -199,7 +202,8 @@ class AppDrawer extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 2),
           child: Icon(LucideIcons.bellRing,
-              color: AppColors.accentLight, size: 22),
+              color: AppColors.accentLight, size: 22,
+              semanticLabel: 'Notif'),
         ),
         Text('TIF',
             style: GoogleFonts.montserrat(
@@ -237,7 +241,8 @@ class AppDrawer extends ConsumerWidget {
           color: color == Colors.white
               ? Colors.white.withValues(alpha: 0.65)
               : color,
-          size: 20),
+          size: 20,
+          semanticLabel: label),
       title: Text(
         label,
         style: GoogleFonts.inter(

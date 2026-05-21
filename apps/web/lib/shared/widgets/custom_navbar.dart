@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
-import 'package:notif_app/core/constants/app_radius.dart';
 
 // ---------------------------------------------------------------------------
 // NavItemData — dados de configuração de cada item da navbar
@@ -40,10 +39,14 @@ class CustomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.navSurface,
-        border: Border(
-          top: BorderSide(color: Color(0x1AFFFFFF), width: 0.5),
-        ),
+        color: Color(0xFF0D1B2A),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -103,85 +106,95 @@ class NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isSelected ? _active : _inactive;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: isSelected ? 1.06 : 1.0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeInOut,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Indicador superior ────────────────────────────────────────
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOut,
-              height: 3,
-              width: isSelected ? 28.0 : 0.0,
-              margin: const EdgeInsets.only(bottom: 5),
-              decoration: BoxDecoration(
-                color: _indicator,
-                borderRadius: BorderRadius.circular(AppRadius.full),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedScale(
+          scale: isSelected ? 1.06 : 1.0,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeInOut,
+                height: 3,
+                width: isSelected ? 28.0 : 0.0,
+                margin: const EdgeInsets.only(bottom: 5),
+                decoration: BoxDecoration(
+                  color: _indicator,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
-            ),
-
-            // ── Pill + ícone ──────────────────────────────────────────────
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOut,
-              padding: EdgeInsets.symmetric(
-                horizontal: isSelected ? 16.0 : 10.0,
-                vertical: 7,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected ? _pill : Colors.transparent,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Ícone
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    transitionBuilder: (child, anim) => ScaleTransition(
-                      scale: anim,
-                      child: child,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSelected ? 16.0 : 10.0,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? _pill : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: isSelected
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x334A6CF7),
+                            blurRadius: 10,
+                            offset: Offset(0, 3),
+                          ),
+                        ]
+                      : const [],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      transitionBuilder: (child, anim) => ScaleTransition(
+                        scale: anim,
+                        child: child,
+                      ),
+                      child: ExcludeSemantics(
+                        child: Icon(
+                          isSelected ? activeIcon : icon,
+                          key: ValueKey(isSelected),
+                          color: color,
+                          size: 22,
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      isSelected ? activeIcon : icon,
-                      key: ValueKey(isSelected),
-                      color: color,
-                      size: 22,
-                    ),
-                  ),
-
-                  // Badge de contagem
-                  if (badgeCount > 0)
-                    Positioned(
-                      top: -5,
-                      right: -9,
-                      child: _Badge(count: badgeCount),
-                    ),
-                ],
+                    if (badgeCount > 0)
+                      Positioned(
+                        top: -5,
+                        right: -9,
+                        child: Semantics(
+                          label: '$badgeCount notificações não lidas',
+                          child: _Badge(count: badgeCount),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-
-            const SizedBox(height: 4),
-
-            // ── Label ─────────────────────────────────────────────────────
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 220),
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                letterSpacing: isSelected ? 0.4 : 0.0,
+              const SizedBox(height: 4),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  letterSpacing: isSelected ? 0.4 : 0.0,
+                ),
+                child: ExcludeSemantics(child: Text(label)),
               ),
-              child: Text(label),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

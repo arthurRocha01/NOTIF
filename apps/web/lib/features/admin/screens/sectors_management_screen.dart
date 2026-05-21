@@ -33,7 +33,7 @@ class _SectorsManagementScreenState
     return ref
         .watch(adminUserProvider)
         .users
-        .where((u) => u.sector == sectorId)
+        .where((u) => u.sectorId == sectorId)
         .length;
   }
 
@@ -162,7 +162,8 @@ class _SectorTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(LucideIcons.building2,
-                  color: AppColors.success, size: 20),
+                  color: AppColors.success, size: 20,
+                  semanticLabel: 'Setor'),
             ),
             title: Text(
               sector.name,
@@ -194,12 +195,14 @@ class _SectorTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
+                  tooltip: 'Editar setor',
                   icon: Icon(LucideIcons.pencil,
                       size: 17,
                       color: Colors.white.withValues(alpha: 0.50)),
                   onPressed: onEdit,
                 ),
                 IconButton(
+                  tooltip: 'Excluir setor',
                   icon: const Icon(LucideIcons.trash2,
                       size: 17, color: Color(0xFFFF6B6B)),
                   onPressed: onDelete,
