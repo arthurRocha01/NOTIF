@@ -186,7 +186,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final isLoading = statsAsync.isLoading ||
         alertState.isLoadingNotifications ||
         alertState.isLoadingAssignments;
-    final activeAlerts = alertState.notifications.length;
+
+    final now = DateTime.now().toUtc();
+    final cutoff = switch (filter.period) {
+      DashboardPeriod.week => now.subtract(const Duration(days: 7)),
+      DashboardPeriod.month => now.subtract(const Duration(days: 30)),
+      DashboardPeriod.all => null,
+    };
+    final activeAlerts = cutoff == null
+        ? alertState.notifications.length
+        : alertState.notifications
+            .where((n) => n.createdAt.isAfter(cutoff))
+            .length;
 
     return RefreshIndicator(
       onRefresh: _refresh,

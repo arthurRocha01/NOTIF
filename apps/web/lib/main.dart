@@ -8,6 +8,7 @@ import 'package:notif_app/features/admin/screens/admin_panel_screen.dart';
 import 'package:notif_app/features/home/screen/home_screen.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/login/screen/login_screen.dart';
+import 'package:notif_app/features/splash/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
@@ -60,9 +61,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: theme,
       home: init.when(
-        loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        loading: () => const SplashScreen(),
         error: (_, __) => _resolveHome(user),
         data: (_) => _resolveHome(user),
       ),

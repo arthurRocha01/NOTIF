@@ -127,6 +127,49 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
     return '?';
   }
 
+  // ── Feedback visual ───────────────────────────────────────────────────────
+  void _handleAcknowledge(String id) {
+    widget.onAcknowledge?.call(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          const Icon(LucideIcons.checkCircle2, color: Colors.white, size: 16),
+          const SizedBox(width: 10),
+          Text('Alerta confirmado',
+              style: GoogleFonts.inter(
+                  color: Colors.white, fontWeight: FontWeight.w600)),
+        ]),
+        backgroundColor: const Color(0xFF16A34A),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _handleDeny(String id) {
+    widget.onDeny?.call(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(children: [
+          const Icon(LucideIcons.xCircle, color: Colors.white, size: 16),
+          const SizedBox(width: 10),
+          Text('Alerta recusado',
+              style: GoogleFonts.inter(
+                  color: Colors.white, fontWeight: FontWeight.w600)),
+        ]),
+        backgroundColor: const Color(0xFF6B7280),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   // ── Contagens ─────────────────────────────────────────────────────────────
   int _unreadCount(List<MyAssignmentModel> all) =>
       all.where((a) => a.status == AssignmentStatus.pending).length;
@@ -221,7 +264,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                     child: _CriticalCard(
                       assignment: criticalBlocking,
                       onAcknowledge: criticalBlocking.status != AssignmentStatus.overdue
-                          ? () => widget.onAcknowledge?.call(criticalBlocking.id)
+                          ? () => _handleAcknowledge(criticalBlocking.id)
                           : null,
                     ),
                   ),
@@ -322,10 +365,10 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                             );
                           },
                           onAcknowledge: a.canAcknowledge
-                              ? () => widget.onAcknowledge?.call(a.id)
+                              ? () => _handleAcknowledge(a.id)
                               : null,
                           onDeny: a.canDeny
-                              ? () => widget.onDeny?.call(a.id)
+                              ? () => _handleDeny(a.id)
                               : null,
                         );
                       },
