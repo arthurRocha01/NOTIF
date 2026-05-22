@@ -25,6 +25,7 @@ export class NotificationAssignmentMapper {
       raw.deliveredAt,
       raw.viewedAt,
       raw.acknowledgedAt,
+      raw.deniedAt,
     );
   }
 
@@ -38,6 +39,8 @@ export class NotificationAssignmentMapper {
         return AssignmentStatus.ACKNOWLEDGED;
       case 'OVERDUE':
         return AssignmentStatus.OVERDUE;
+      case 'DENIED':
+        return AssignmentStatus.DENIED;
       default:
         throw new Error('Invalid status');
     }
@@ -73,6 +76,7 @@ export class NotificationAssignmentMapper {
       deliveredAt: entity.getDeliveredAt(),
       viewedAt: entity.getViewedAt(),
       acknowledgedAt: entity.getAcknowledgedAt(),
+      deniedAt: entity.getDeniedAt(),
     };
   }
 
@@ -88,6 +92,8 @@ export class NotificationAssignmentMapper {
         return 'ACKNOWLEDGED';
       case AssignmentStatus.OVERDUE:
         return 'OVERDUE';
+      case AssignmentStatus.DENIED:
+        return 'DENIED';
     }
   }
 }

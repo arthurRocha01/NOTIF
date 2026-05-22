@@ -12,5 +12,6 @@ export class DashboardSummaryDto {
     viewed: number;
     acknowledged: number;
     overdue: number;
+    denied: number;
   };
 }

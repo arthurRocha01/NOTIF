@@ -60,7 +60,8 @@ enum AssignmentStatus {
   pending,
   viewed,
   acknowledged,
-  overdue;
+  overdue,
+  denied;
 
   String get label {
     switch (this) {
@@ -68,6 +69,7 @@ enum AssignmentStatus {
       case AssignmentStatus.viewed:       return 'Visualizado';
       case AssignmentStatus.acknowledged: return 'Confirmado';
       case AssignmentStatus.overdue:      return 'Atrasado';
+      case AssignmentStatus.denied:       return 'Negado';
     }
   }
 
@@ -79,6 +81,7 @@ enum AssignmentStatus {
       case AssignmentStatus.viewed:       return const Color(0xFF3B82F6);
       case AssignmentStatus.acknowledged: return const Color(0xFF10B981);
       case AssignmentStatus.overdue:      return const Color(0xFFDC2626);
+      case AssignmentStatus.denied:       return const Color(0xFF6B7280);
     }
   }
 
@@ -87,6 +90,7 @@ enum AssignmentStatus {
       case 'VIEWED':       return AssignmentStatus.viewed;
       case 'ACKNOWLEDGED': return AssignmentStatus.acknowledged;
       case 'OVERDUE':      return AssignmentStatus.overdue;
+      case 'DENIED':       return AssignmentStatus.denied;
       default:             return AssignmentStatus.pending;
     }
   }

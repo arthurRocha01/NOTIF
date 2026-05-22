@@ -15,6 +15,7 @@ export class NotificationAssignment {
     private deliveredAt: Date | null,
     private viewedAt: Date | null,
     private acknowledgedAt: Date | null,
+    private deniedAt: Date | null,
   ) {}
 
   public static create(
@@ -39,6 +40,7 @@ export class NotificationAssignment {
       null,
       null,
       null,
+      null,
     );
   }
 
@@ -54,6 +56,7 @@ export class NotificationAssignment {
     deliveredAt: Date | null,
     viewedAt: Date | null,
     acknowledgedAt: Date | null,
+    deniedAt: Date | null,
   ) {
     return new NotificationAssignment(
       id,
@@ -67,6 +70,7 @@ export class NotificationAssignment {
       deliveredAt,
       viewedAt,
       acknowledgedAt,
+      deniedAt,
     );
   }
 
@@ -86,6 +90,9 @@ export class NotificationAssignment {
   public markAsViewed(): void {
     if (this.status === AssignmentStatus.ACKNOWLEDGED) {
       throw new Error('Notificação já foi confirmada');
+    }
+    if (this.status === AssignmentStatus.DENIED) {
+      throw new Error('Notificação já foi negada');
     }
     if (this.status === AssignmentStatus.VIEWED) {
       throw new Error('Notificação já foi visualizada');
@@ -109,12 +116,16 @@ export class NotificationAssignment {
     if (this.status === AssignmentStatus.ACKNOWLEDGED) {
       throw new Error('Notificação já foi confirmada');
     }
+    if (this.status === AssignmentStatus.DENIED) {
+      throw new Error('Notificação já foi negada');
+    }
     if (this.status === AssignmentStatus.OVERDUE) {
       throw new Error('Notificação vencida não pode ser alterada');
     }
 
     const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
-    if (this.status === AssignmentStatus.PENDING && !isCritical) {
+    // Quests (requiresAcknowledgment) permitem confirmação direta sem visualização prévia
+    if (this.status === AssignmentStatus.PENDING && !isCritical && !this.notificationRequiresAcknowledgment) {
       throw new Error(
         'Notificação precisa ser visualizada antes de confirmar ciência',
       );
@@ -124,13 +135,32 @@ export class NotificationAssignment {
     this.status = AssignmentStatus.ACKNOWLEDGED;
   }
 
+  // Negação
+  public markAsDenied(): void {
+    if (this.status === AssignmentStatus.ACKNOWLEDGED) {
+      throw new Error('Notificação já foi confirmada');
+    }
+    if (this.status === AssignmentStatus.DENIED) {
+      throw new Error('Notificação já foi negada');
+    }
+    if (this.status === AssignmentStatus.OVERDUE) {
+      throw new Error('Notificação vencida não pode ser alterada');
+    }
+
+    this.deniedAt = new Date();
+    this.status = AssignmentStatus.DENIED;
+  }
+
   // Atualização de atraso
   public checkOverdue(now: Date = new Date()): void {
     if (!this.dueAt) {
       return;
     }
 
-    if (this.status === AssignmentStatus.ACKNOWLEDGED) {
+    if (
+      this.status === AssignmentStatus.ACKNOWLEDGED ||
+      this.status === AssignmentStatus.DENIED
+    ) {
       return;
     }
 
@@ -142,10 +172,12 @@ export class NotificationAssignment {
   // Regra de bloqueio
   public isBlocking(): boolean {
     const isCritical = this.notificationLevel === NotificationLevel.CRITICAL;
-    const notAcknowledged = this.status !== AssignmentStatus.ACKNOWLEDGED;
-    const notOverdue = this.status !== AssignmentStatus.OVERDUE;
+    const notResolved =
+      this.status !== AssignmentStatus.ACKNOWLEDGED &&
+      this.status !== AssignmentStatus.OVERDUE &&
+      this.status !== AssignmentStatus.DENIED;
 
-    return isCritical && notAcknowledged && notOverdue;
+    return isCritical && notResolved;
   }
 
   public isOverdue(): boolean {
@@ -153,12 +185,26 @@ export class NotificationAssignment {
   }
 
   public canAcknowledge(): boolean {
-    const notOverdue = this.status != AssignmentStatus.OVERDUE;
+    const notTerminal =
+      this.status !== AssignmentStatus.OVERDUE &&
+      this.status !== AssignmentStatus.DENIED &&
+      this.status !== AssignmentStatus.ACKNOWLEDGED;
     const isCritical = this.notificationLevel == NotificationLevel.CRITICAL;
 
     return (
-      notOverdue && (isCritical || this.notificationRequiresAcknowledgment)
+      notTerminal && (isCritical || this.notificationRequiresAcknowledgment)
     );
+  }
+
+  public canDeny(): boolean {
+    const notTerminal =
+      this.status !== AssignmentStatus.OVERDUE &&
+      this.status !== AssignmentStatus.DENIED &&
+      this.status !== AssignmentStatus.ACKNOWLEDGED;
+    const isCritical = this.notificationLevel == NotificationLevel.CRITICAL;
+
+    // Alertas críticos bloqueiam a tela e exigem confirmação — não podem ser negados
+    return notTerminal && !isCritical && this.notificationRequiresAcknowledgment;
   }
 
   public getResponseTimeInMs(): number | null {
@@ -208,5 +254,9 @@ export class NotificationAssignment {
 
   public getAcknowledgedAt() {
     return this.acknowledgedAt;
+  }
+
+  public getDeniedAt() {
+    return this.deniedAt;
   }
 }

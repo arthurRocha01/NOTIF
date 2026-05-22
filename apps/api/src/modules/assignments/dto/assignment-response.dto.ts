@@ -14,6 +14,7 @@ export class AssignmentResponseDto {
   deliveredAt: Date | null;
   viewedAt: Date | null;
   acknowledgedAt: Date | null;
+  deniedAt: Date | null;
 
   constructor(props: {
     id: string;
@@ -27,6 +28,7 @@ export class AssignmentResponseDto {
     deliveredAt: Date | null;
     viewedAt: Date | null;
     acknowledgedAt: Date | null;
+    deniedAt: Date | null;
   }) {
     this.id = props.id;
     this.userId = props.userId;
@@ -40,6 +42,7 @@ export class AssignmentResponseDto {
     this.deliveredAt = props.deliveredAt;
     this.viewedAt = props.viewedAt;
     this.acknowledgedAt = props.acknowledgedAt;
+    this.deniedAt = props.deniedAt;
   }
 
   public static fromDomain(assignment: NotificationAssignment) {
@@ -56,6 +59,7 @@ export class AssignmentResponseDto {
       deliveredAt: assignment.getDeliveredAt(),
       viewedAt: assignment.getViewedAt(),
       acknowledgedAt: assignment.getAcknowledgedAt(),
+      deniedAt: assignment.getDeniedAt(),
     });
 
     return {
@@ -63,6 +67,7 @@ export class AssignmentResponseDto {
       isBlocking: assignment.isBlocking(),
       isOverdue: assignment.isOverdue(),
       canAcknowledge: assignment.canAcknowledge(),
+      canDeny: assignment.canDeny(),
     };
   }
 }

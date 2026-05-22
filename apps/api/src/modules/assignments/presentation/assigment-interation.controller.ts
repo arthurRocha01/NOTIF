@@ -49,4 +49,16 @@ export class AssignmentInteractionController {
 
     return { message: 'Ciência confirmada com sucesso' };
   }
+
+  @Post(':assignmentId/deny')
+  @BypassBlock()
+  async deny(
+    @Param('assignmentId') assignmentId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.userId;
+    await this.service.deny(userId, assignmentId);
+
+    return { message: 'Alerta negado com sucesso' };
+  }
 }

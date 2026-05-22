@@ -24,11 +24,12 @@ class _DashboardDonutChartState extends State<DashboardDonutChart> {
   static const _viewed       = Color(0xFF4A6CF7);
   static const _acknowledged = Color(0xFF16A34A);
   static const _overdue      = Color(0xFFE53935);
+  static const _denied       = Color(0xFF6B7280);
 
   @override
   Widget build(BuildContext context) {
     final bd    = widget.breakdown;
-    final total = bd.pending + bd.viewed + bd.acknowledged + bd.overdue;
+    final total = bd.pending + bd.viewed + bd.acknowledged + bd.overdue + bd.denied;
 
     if (total == 0) {
       return Center(
@@ -44,6 +45,7 @@ class _DashboardDonutChartState extends State<DashboardDonutChart> {
       _Section('Visualizado', bd.viewed,       _viewed),
       _Section('Confirmado',  bd.acknowledged, _acknowledged),
       _Section('Atrasado',    bd.overdue,      _overdue),
+      _Section('Recusado',    bd.denied,       _denied),
     ].where((s) => s.count > 0).toList();
 
     return Row(

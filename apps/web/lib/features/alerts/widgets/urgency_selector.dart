@@ -9,16 +9,19 @@ class UrgencySelector extends StatelessWidget {
   final AlertLevel selected;
   final ValueChanged<AlertLevel> onChanged;
   final bool dark;
+  final List<AlertLevel>? levels;
 
   const UrgencySelector({
     super.key,
     required this.selected,
     required this.onChanged,
     this.dark = false,
+    this.levels,
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayLevels = levels ?? AlertLevel.values;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,9 +37,9 @@ class UrgencySelector extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
-          children: AlertLevel.values.map((level) {
+          children: displayLevels.map((level) {
             final isSelected = selected == level;
-            final isLast = level == AlertLevel.values.last;
+            final isLast = level == displayLevels.last;
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: isLast ? 0 : AppSpacing.sm),

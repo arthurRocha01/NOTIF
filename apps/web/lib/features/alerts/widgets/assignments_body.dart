@@ -23,6 +23,7 @@ class AssignmentsBody extends ConsumerStatefulWidget {
   final bool isSupervisor;
   final Future<void> Function() onRefresh;
   final void Function(String assignmentId)? onAcknowledge;
+  final void Function(String assignmentId)? onDeny;
 
   const AssignmentsBody({
     super.key,
@@ -32,6 +33,7 @@ class AssignmentsBody extends ConsumerStatefulWidget {
     required this.onRefresh,
     this.isSupervisor = false,
     this.onAcknowledge,
+    this.onDeny,
   });
 
   @override
@@ -93,6 +95,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
       AssignmentStatus.pending => 1,
       AssignmentStatus.viewed => 2,
       AssignmentStatus.acknowledged => 3,
+      AssignmentStatus.denied => 4,
     };
     final dl = lvl(a.notificationLevel).compareTo(lvl(b.notificationLevel));
     if (dl != 0) return dl;
@@ -318,9 +321,11 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                               ),
                             );
                           },
-                          onAcknowledge: (a.canAcknowledge &&
-                                  a.status != AssignmentStatus.overdue)
+                          onAcknowledge: a.canAcknowledge
                               ? () => widget.onAcknowledge?.call(a.id)
+                              : null,
+                          onDeny: a.canDeny
+                              ? () => widget.onDeny?.call(a.id)
                               : null,
                         );
                       },
@@ -772,13 +777,19 @@ class _AssignmentCard extends StatelessWidget {
   final MyAssignmentModel assignment;
   final VoidCallback onTap;
   final VoidCallback? onAcknowledge;
+  final VoidCallback? onDeny;
 
   const _AssignmentCard({
     super.key,
     required this.assignment,
     required this.onTap,
     this.onAcknowledge,
+    this.onDeny,
   });
+
+  bool get _isQuest =>
+      assignment.notificationRequiresAcknowledgment &&
+      assignment.notificationLevel != AlertLevel.critical;
 
   IconData _contextualIcon() {
     final t = (assignment.notificationTitle ?? '').toLowerCase();
@@ -803,6 +814,37 @@ class _AssignmentCard extends StatelessWidget {
     return assignment.notificationLevel.icon;
   }
 
+  Widget _buildQuestHeader(AssignmentStatus status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B4BF7).withValues(alpha: 0.12),
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFF6B4BF7).withValues(alpha: 0.25),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.clipboardCheck, size: 12, color: Color(0xFFB9A8FF)),
+          const SizedBox(width: 6),
+          Text(
+            'ALERTA COM RESPOSTA',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFFB9A8FF),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const Spacer(),
+          _StatusBadge(status: status),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final level = assignment.notificationLevel;
@@ -810,8 +852,9 @@ class _AssignmentCard extends StatelessWidget {
     final isDone = status == AssignmentStatus.acknowledged;
     final isUnread = status == AssignmentStatus.pending;
 
-    final Color accentColor = level.color;
-    final Color avatarBg = level.color.withValues(alpha: 0.25);
+    final Color accentColor =
+        _isQuest ? const Color(0xFF6B4BF7) : level.color;
+    final Color avatarBg = accentColor.withValues(alpha: 0.25);
 
     final timeStr = DateFormatter.relative(assignment.createdAt);
 
@@ -819,18 +862,23 @@ class _AssignmentCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         decoration: BoxDecoration(
-          color: isDone ? const Color(0xFF0A1628) : const Color(0xFF0F1B2D),
+          color: _isQuest
+              ? (isDone ? const Color(0xFF0A1022) : const Color(0xFF0D1128))
+              : (isDone ? const Color(0xFF0A1628) : const Color(0xFF0F1B2D)),
           borderRadius: BorderRadius.circular(16),
-          // CORREÇÃO: Criamos uma borda 100% uniforme para o Flutter aceitar o borderRadius.
-          // A linha de destaque (accentColor) agora fica protegida dentro do ClipRRect.
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
-            width: 0.5,
+            color: _isQuest
+                ? const Color(0xFF6B4BF7).withValues(alpha: 0.30)
+                : Colors.white.withValues(alpha: 0.08),
+            width: _isQuest ? 1.0 : 0.5,
           ),
         ),
         child: Semantics(
           button: true,
-          label: 'Alerta: ${assignment.notificationTitle ?? 'Notificação'}',
+          label: _isQuest
+              ? 'Alerta com resposta: ${assignment.notificationTitle ?? 'Notificação'}.'
+                  '${(onAcknowledge != null || onDeny != null) ? ' Aguardando sua resposta.' : ''}'
+              : 'Alerta: ${assignment.notificationTitle ?? 'Notificação'}',
           child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Material(
@@ -840,19 +888,20 @@ class _AssignmentCard extends StatelessWidget {
               onTap: onTap,
               borderRadius: BorderRadius.circular(16),
               splashColor: Colors.white.withValues(alpha: 0.05),
-              child: Row(
+              child: Stack(
                 children: [
-                  // CORREÇÃO: A bordinha colorida agora é um widget real na esquerda.
-                  // Ela se adapta à altura total do card sem quebrar nada!
-                  Container(
-                    width: 3,
-                    color: accentColor,
-                    height: 150, // Uma altura base que o Row vai esticar automaticamente se necessário
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 3, color: accentColor),
                   ),
-                  // Envolvemos o restante do seu conteúdo em um Expanded para não estourar a tela
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_isQuest) _buildQuestHeader(status),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(17, 14, 14, 14),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -871,7 +920,9 @@ class _AssignmentCard extends StatelessWidget {
                                 ),
                                 child: Center(
                                   child: Icon(
-                                    _contextualIcon(),
+                                    _isQuest
+                                        ? LucideIcons.clipboardCheck
+                                        : _contextualIcon(),
                                     size: 20,
                                     color: accentColor,
                                   ),
@@ -975,100 +1026,107 @@ class _AssignmentCard extends StatelessWidget {
                                   ),
                                 ],
 
-                                const SizedBox(height: 10),
-
-                                // Nível (cor fixa) + status dedicado + prazo
-                                Wrap(
-                                  spacing: 6,
-                                  runSpacing: 6,
-                                  children: [
-                                    _LevelKeyword(
-                                      icon: level.icon,
-                                      label: level.label.toUpperCase(),
-                                      color: accentColor,
-                                      bg: accentColor.withValues(alpha: 0.15),
-                                      borderColor: accentColor.withValues(alpha: 0.35),
-                                    ),
-                                    _StatusBadge(status: status),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 10),
-
-                                // Ações inline (H7 – eficiência de uso)
-                                Row(
-                                  children: [
-                                    Semantics(
-                                      button: true,
-                                      label: 'Ler mais',
-                                      child: GestureDetector(
-                                        onTap: onTap,
-                                        child: ExcludeSemantics(
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                'Ler mais',
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(0xFF6B8BFF),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 2),
-                                              const Icon(
-                                                LucideIcons.chevronRight,
-                                                size: 13,
-                                                color: Color(0xFF6B8BFF),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                if (!_isQuest) ...[
+                                  const SizedBox(height: 10),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: [
+                                      _LevelKeyword(
+                                        icon: level.icon,
+                                        label: level.label.toUpperCase(),
+                                        color: accentColor,
+                                        bg: accentColor.withValues(alpha: 0.15),
+                                        borderColor: accentColor.withValues(alpha: 0.35),
                                       ),
-                                    ),
-                                    if (onAcknowledge != null) ...[
-                                      const Spacer(),
+                                      _StatusBadge(status: status),
+                                    ],
+                                  ),
+                                ],
+
+                                const SizedBox(height: 10),
+
+                                // Ações inline
+                                if (_isQuest && (onAcknowledge != null || onDeny != null))
+                                  _QuestActions(
+                                    onConfirm: onAcknowledge,
+                                    onDeny: onDeny,
+                                  )
+                                else
+                                  Row(
+                                    children: [
                                       Semantics(
                                         button: true,
-                                        label: 'Marcar como lido',
+                                        label: 'Ler mais',
                                         child: GestureDetector(
-                                          onTap: onAcknowledge,
+                                          onTap: onTap,
                                           child: ExcludeSemantics(
                                             child: Row(
                                               children: [
-                                                const Icon(LucideIcons.check,
-                                                    size: 13,
-                                                    color: Color(0xFF10B981)),
-                                                const SizedBox(width: 4),
                                                 Text(
-                                                  'Marcar como lido',
+                                                  'Ler mais',
                                                   style: GoogleFonts.inter(
-                                                    fontSize: 12,
+                                                    fontSize: 13,
                                                     fontWeight: FontWeight.w600,
-                                                    color: const Color(0xFF10B981),
+                                                    color: const Color(0xFF6B8BFF),
                                                   ),
+                                                ),
+                                                const SizedBox(width: 2),
+                                                const Icon(
+                                                  LucideIcons.chevronRight,
+                                                  size: 13,
+                                                  color: Color(0xFF6B8BFF),
                                                 ),
                                               ],
                                             ),
                                           ),
                                         ),
                                       ),
+                                      if (onAcknowledge != null) ...[
+                                        const Spacer(),
+                                        Semantics(
+                                          button: true,
+                                          label: 'Marcar como lido',
+                                          child: GestureDetector(
+                                            onTap: onAcknowledge,
+                                            child: ExcludeSemantics(
+                                              child: Row(
+                                                children: [
+                                                  const Icon(LucideIcons.check,
+                                                      size: 13,
+                                                      color: Color(0xFF10B981)),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Marcar como lido',
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: const Color(0xFF10B981),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
+                                  ),
                               ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
         ),
       ),
+    ),
     );
   }
 }
@@ -1166,6 +1224,11 @@ class _StatusBadge extends StatelessWidget {
         LucideIcons.alertCircle,
         'ATRASADO',
       ),
+      AssignmentStatus.denied => (
+        const Color(0xFF6B7280),
+        LucideIcons.xCircle,
+        'NEGADO',
+      ),
     };
 
     return Container(
@@ -1191,6 +1254,191 @@ class _StatusBadge extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ações do alerta com resposta — separador + dois botões full-width
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _QuestActions extends StatelessWidget {
+  final VoidCallback? onConfirm;
+  final VoidCallback? onDeny;
+
+  const _QuestActions({
+    required this.onConfirm,
+    required this.onDeny,
+  });
+
+  static const _purple = Color(0xFF6B4BF7);
+  static const _purpleLight = Color(0xFFB9A8FF);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // H1: Visibilidade de estado — deixa claro que aguarda resposta
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: _purple,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Aguardando sua resposta',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: _purpleLight.withValues(alpha: 0.80),
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Divider(
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Botões de ação (H5: prevenção de erros — ações claramente distintas)
+        Row(
+          children: [
+            // Recusar — ação secundária / destrutiva
+            if (onDeny != null)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  label: 'Recusar este alerta',
+                  child: Tooltip(
+                    message: 'Indicar que não está ciente ou não concorda',
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        onTap: onDeny,
+                        borderRadius: BorderRadius.circular(10),
+                        splashColor: Colors.white.withValues(alpha: 0.06),
+                        highlightColor: Colors.white.withValues(alpha: 0.04),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.x,
+                                size: 14,
+                                color: Colors.white.withValues(alpha: 0.55),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Recusar',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            if (onDeny != null && onConfirm != null) const SizedBox(width: 8),
+
+            // Confirmar — ação primária / positiva
+            if (onConfirm != null)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  label: 'Confirmar ciência deste alerta',
+                  child: Tooltip(
+                    message: 'Confirmar que está ciente',
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        onTap: onConfirm,
+                        borderRadius: BorderRadius.circular(10),
+                        splashColor: _purpleLight.withValues(alpha: 0.15),
+                        highlightColor: _purpleLight.withValues(alpha: 0.08),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_purple, Color(0xFF8B5CF6)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  LucideIcons.check,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Confirmar',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+
+      ],
     );
   }
 }

@@ -3,4 +3,5 @@ export enum AssignmentStatus {
   VIEWED = 'VIEWED',
   ACKNOWLEDGED = 'ACKNOWLEDGED',
   OVERDUE = 'OVERDUE',
+  DENIED = 'DENIED',
 }

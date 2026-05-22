@@ -103,7 +103,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
         this.prisma.notificationAssignment.count({
           where: {
             userId,
-            status: { notIn: ['ACKNOWLEDGED', 'OVERDUE'] },
+            status: { notIn: ['ACKNOWLEDGED', 'OVERDUE', 'DENIED'] },
             notification: { level: NotificationLevel.CRITICAL },
           },
         }),
@@ -129,7 +129,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
   ): Promise<
     {
       assignment: NotificationAssignment;
-      notification: { title: string; message: string };
+      notification: { title: string; message: string; authorName: string | null };
     }[]
   > {
     const where: any = { userId };
@@ -140,7 +140,11 @@ export class NotificationAssignmentRepository implements INotificationAssignment
 
     const rows = await this.prisma.notificationAssignment.findMany({
       where,
-      include: { notification: true },
+      include: {
+        notification: {
+          include: { author: { select: { name: true } } },
+        },
+      },
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     });
 
@@ -149,6 +153,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
       notification: {
         title: row.notification.title,
         message: row.notification.message,
+        authorName: row.notification.author?.name ?? null,
       },
     }));
   }
@@ -160,7 +165,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
       where: {
         userId,
         status: {
-          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE],
+          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE, AssignmentStatus.DENIED],
         },
         notification: { level: NotificationLevel.CRITICAL },
       },
@@ -177,7 +182,7 @@ export class NotificationAssignmentRepository implements INotificationAssignment
       where: {
         dueAt: { lt: now },
         status: {
-          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE],
+          notIn: [AssignmentStatus.ACKNOWLEDGED, AssignmentStatus.OVERDUE, AssignmentStatus.DENIED],
         },
       },
       include: { notification: true },

@@ -43,6 +43,7 @@ class _AlertUserScreenState extends ConsumerState<AlertUserScreen> {
         onRefresh: () => ref.read(alertProvider.notifier).loadAssignments(),
         onAcknowledge: (id) =>
             ref.read(alertProvider.notifier).acknowledge(id),
+        onDeny: (id) => ref.read(alertProvider.notifier).deny(id),
       ),
     );
   }

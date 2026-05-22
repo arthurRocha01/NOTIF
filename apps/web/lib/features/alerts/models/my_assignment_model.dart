@@ -16,11 +16,13 @@ class MyAssignmentModel {
   final DateTime? deliveredAt;
   final DateTime? viewedAt;
   final DateTime? acknowledgedAt;
+  final DateTime? deniedAt;
   final String? authorName;
   final bool notificationRequiresAcknowledgment;
   final bool isBlocking;
   final bool isOverdue;
   final bool canAcknowledge;
+  final bool canDeny;
 
   MyAssignmentModel({
     required this.id,
@@ -35,11 +37,13 @@ class MyAssignmentModel {
     this.deliveredAt,
     this.viewedAt,
     this.acknowledgedAt,
+    this.deniedAt,
     this.authorName,
     required this.notificationRequiresAcknowledgment,
     required this.isBlocking,
     required this.isOverdue,
     required this.canAcknowledge,
+    required this.canDeny,
   });
 
   MyAssignmentModel copyWith({
@@ -55,11 +59,13 @@ class MyAssignmentModel {
     DateTime? deliveredAt,
     DateTime? viewedAt,
     DateTime? acknowledgedAt,
+    DateTime? deniedAt,
     String? authorName,
     bool? notificationRequiresAcknowledgment,
     bool? isBlocking,
     bool? isOverdue,
     bool? canAcknowledge,
+    bool? canDeny,
   }) {
     return MyAssignmentModel(
       id: id ?? this.id,
@@ -74,12 +80,14 @@ class MyAssignmentModel {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       viewedAt: viewedAt ?? this.viewedAt,
       acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
+      deniedAt: deniedAt ?? this.deniedAt,
       authorName: authorName ?? this.authorName,
       notificationRequiresAcknowledgment:
           notificationRequiresAcknowledgment ?? this.notificationRequiresAcknowledgment,
       isBlocking: isBlocking ?? this.isBlocking,
       isOverdue: isOverdue ?? this.isOverdue,
       canAcknowledge: canAcknowledge ?? this.canAcknowledge,
+      canDeny: canDeny ?? this.canDeny,
     );
   }
 
@@ -106,11 +114,15 @@ class MyAssignmentModel {
       acknowledgedAt: json['acknowledgedAt'] != null
           ? DateTime.parse(json['acknowledgedAt'])
           : null,
+      deniedAt: json['deniedAt'] != null
+          ? DateTime.parse(json['deniedAt'])
+          : null,
       notificationRequiresAcknowledgment:
           json['notificationRequiresAcknowledgment'] as bool? ?? false,
       isBlocking: json['isBlocking'] as bool? ?? false,
       isOverdue: json['isOverdue'] as bool? ?? false,
       canAcknowledge: json['canAcknowledge'] as bool? ?? false,
+      canDeny: json['canDeny'] as bool? ?? false,
     );
   }
 }

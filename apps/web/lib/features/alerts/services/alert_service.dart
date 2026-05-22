@@ -69,6 +69,10 @@ class AlertService {
     await ApiClient.post('/assignments/$assignmentId/acknowledge', {});
   }
 
+  Future<void> deny(String assignmentId) async {
+    await ApiClient.post('/assignments/$assignmentId/deny', {});
+  }
+
   Future<AlertModel> updateNotification(
     String id, {
     required String title,

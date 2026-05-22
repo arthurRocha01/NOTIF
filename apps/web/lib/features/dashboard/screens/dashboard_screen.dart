@@ -38,9 +38,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   ) {
     final merged = Map<String, double>.from(apiRates);
     for (final s in allSectors) {
-      if (s.name.toLowerCase() != 'global') {
-        merged.putIfAbsent(s.name, () => 0.0);
-      }
+      merged.putIfAbsent(s.name, () => 0.0);
     }
     return merged;
   }
@@ -52,11 +50,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.read(sectorProvider.notifier).loadSectors();
   }
 
-  String _avgResponseLabel() {
+  String _avgResponseLabel(DashboardPeriod period) {
+    final now = DateTime.now().toUtc();
+    final cutoff = switch (period) {
+      DashboardPeriod.week => now.subtract(const Duration(days: 7)),
+      DashboardPeriod.month => now.subtract(const Duration(days: 30)),
+      DashboardPeriod.all => null,
+    };
+
     final responded = ref
         .read(alertProvider)
         .allAssignments
-        .where((a) => a.deliveredAt != null && a.acknowledgedAt != null)
+        .where((a) =>
+            a.deliveredAt != null &&
+            a.acknowledgedAt != null &&
+            (cutoff == null || a.deliveredAt!.isAfter(cutoff)))
         .toList();
     if (responded.isEmpty) return '—';
     final totalMs = responded.fold<int>(
@@ -224,7 +232,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   totalAcknowledged: stats.totalAcknowledged,
                   totalPending: stats.totalPending,
                   totalCritical: stats.totalCritical,
-                  avgResponseLabel: _avgResponseLabel(),
+                  avgResponseLabel: _avgResponseLabel(filter.period),
                 ),
               ),
             ),
@@ -260,7 +268,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   trailing: sectors.isNotEmpty
                       ? _SectorDropdown(
                           sectors: sectors
-                              .where((s) => s.name.toLowerCase() != 'global')
                               .map((s) => (id: s.id, name: s.name))
                               .toList(),
                           selectedId: filter.selectedSectorId,

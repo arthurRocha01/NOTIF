@@ -42,6 +42,7 @@ class _AlertConfirmationsScreenState
       'viewed' => items.where((a) => a.status == AssignmentStatus.viewed).toList(),
       'confirmed' => items.where((a) => a.status == AssignmentStatus.acknowledged).toList(),
       'overdue' => items.where((a) => a.status == AssignmentStatus.overdue).toList(),
+      'denied' => items.where((a) => a.status == AssignmentStatus.denied).toList(),
       _ => items,
     };
   }
@@ -173,6 +174,8 @@ class _AlertConfirmationsScreenState
             all.where((a) => a.status == AssignmentStatus.acknowledged).length,
           'overdue' =>
             all.where((a) => a.status == AssignmentStatus.overdue).length,
+          'denied' =>
+            all.where((a) => a.status == AssignmentStatus.denied).length,
           _ => all.length,
         };
 
@@ -182,6 +185,7 @@ class _AlertConfirmationsScreenState
       ('viewed', 'Visualizado', const Color(0xFF3B82F6)),
       ('confirmed', 'Confirmado', const Color(0xFF10B981)),
       ('overdue', 'Vencido', const Color(0xFFDC2626)),
+      ('denied', 'Negado', const Color(0xFF6B7280)),
     ];
 
     return SingleChildScrollView(
@@ -506,6 +510,11 @@ class _UserCard extends StatelessWidget {
           const Color(0xFFDC2626),
           LucideIcons.alertCircle,
           'Vencido',
+        ),
+        AssignmentStatus.denied => (
+          const Color(0xFF6B7280),
+          LucideIcons.xCircle,
+          'Negado',
         ),
       };
 

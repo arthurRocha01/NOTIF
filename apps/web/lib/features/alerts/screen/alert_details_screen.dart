@@ -25,6 +25,10 @@ class AlertDetailsScreen extends ConsumerWidget {
     final message = assignment.notificationMessage ?? notification?.message;
     final level = assignment.notificationLevel;
     final status = assignment.status;
+    final isQuest = assignment.notificationRequiresAcknowledgment &&
+        level != AlertLevel.critical;
+    final headerColor =
+        isQuest ? const Color(0xFF6B4BF7) : level.color;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1421),
@@ -34,7 +38,7 @@ class AlertDetailsScreen extends ConsumerWidget {
           SliverAppBar(
             expandedHeight: 160,
             pinned: true,
-            backgroundColor: level.color,
+            backgroundColor: headerColor,
             leading: IconButton(
               tooltip: 'Voltar',
               icon: const Icon(LucideIcons.arrowLeft,
@@ -53,7 +57,7 @@ class AlertDetailsScreen extends ConsumerWidget {
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [level.color, level.color.withValues(alpha: 0.75)],
+                    colors: [headerColor, headerColor.withValues(alpha: 0.75)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -65,29 +69,55 @@ class AlertDetailsScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.22),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(level.icon, size: 12, color: Colors.white),
-                              const SizedBox(width: 4),
-                              Text(
-                                level.label,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                        if (isQuest)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.22),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(LucideIcons.clipboardCheck,
+                                    size: 12, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'COM RESPOSTA',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.22),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(level.icon, size: 12, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  level.label,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                         const SizedBox(width: 8),
                         _StatusPill(status: status),
                       ],
@@ -213,23 +243,35 @@ class AlertDetailsScreen extends ConsumerWidget {
                               : null,
                           done: assignment.viewedAt != null,
                         ),
-                        _TimelineStep(
-                          icon: LucideIcons.checkCircle2,
-                          iconLabel: 'Confirmado',
-                          label: 'Ciência confirmada',
-                          time: assignment.acknowledgedAt != null
-                              ? _formatDate(assignment.acknowledgedAt!)
-                              : null,
-                          done: assignment.acknowledgedAt != null,
-                          isLast: true,
-                        ),
+                        if (assignment.status == AssignmentStatus.denied)
+                          _TimelineStep(
+                            icon: LucideIcons.xCircle,
+                            iconLabel: 'Recusado',
+                            label: isQuest ? 'Alerta recusado' : 'Alerta negado',
+                            time: assignment.deniedAt != null
+                                ? _formatDate(assignment.deniedAt!)
+                                : null,
+                            done: true,
+                            isLast: true,
+                          )
+                        else
+                          _TimelineStep(
+                            icon: LucideIcons.checkCircle2,
+                            iconLabel: 'Confirmado',
+                            label: 'Ciência confirmada',
+                            time: assignment.acknowledgedAt != null
+                                ? _formatDate(assignment.acknowledgedAt!)
+                                : null,
+                            done: assignment.acknowledgedAt != null,
+                            isLast: true,
+                          ),
                       ],
                     ),
                   ),
 
                   // ── Status / Ação ─────────────────────────────────────────
                   const SizedBox(height: 16),
-                  _buildStatusSection(context, ref, assignment, level),
+                  _buildStatusSection(context, ref, assignment, level, isQuest),
 
                   const SizedBox(height: 24),
                 ],
@@ -258,6 +300,7 @@ class AlertDetailsScreen extends ConsumerWidget {
     WidgetRef ref,
     MyAssignmentModel assignment,
     AlertLevel level,
+    bool isQuest,
   ) {
     final status = assignment.status;
 
@@ -272,56 +315,111 @@ class AlertDetailsScreen extends ConsumerWidget {
       );
     }
 
+    if (status == AssignmentStatus.denied) {
+      return _StatusBanner(
+        icon: LucideIcons.xCircle,
+        label: isQuest ? 'Alerta recusado' : 'Alerta negado',
+        subtitle: assignment.deniedAt != null
+            ? 'em ${_formatDate(assignment.deniedAt!)}'
+            : null,
+        color: const Color(0xFF6B7280),
+      );
+    }
+
+    final actionColor =
+        isQuest ? const Color(0xFF6B4BF7) : level.color;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (status == AssignmentStatus.viewed)
           _StatusBanner(
             icon: LucideIcons.eye,
-            label: 'Alerta visualizado',
-            color: const Color(0xFF3B82F6),
+            label: isQuest ? 'Visualizado — responda abaixo' : 'Alerta visualizado',
+            color: isQuest ? const Color(0xFF6B4BF7) : const Color(0xFF3B82F6),
           ),
         if (status == AssignmentStatus.overdue)
           _StatusBanner(
             icon: LucideIcons.alertCircle,
-            label: 'Atrasado',
+            label: 'Prazo expirado',
             color: const Color(0xFFDC2626),
           ),
         if (status == AssignmentStatus.pending)
           _StatusBanner(
             icon: LucideIcons.clock,
-            label: 'Pendente',
-            color: const Color(0xFF94A3B8),
+            label: isQuest ? 'Aguardando sua resposta' : 'Pendente',
+            color: isQuest ? const Color(0xFF6B4BF7) : const Color(0xFF94A3B8),
           ),
-        if (assignment.canAcknowledge) ...[
+        if (assignment.canAcknowledge || assignment.canDeny) ...[
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                await ref
-                    .read(alertProvider.notifier)
-                    .acknowledge(assignment.id);
-                if (context.mounted) Navigator.of(context).pop();
-              },
-              icon: const Icon(LucideIcons.checkCircle2, size: 18),
-              label: Text(
-                'Confirmar ciência',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              if (assignment.canDeny)
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: 'Recusar este alerta',
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref
+                            .read(alertProvider.notifier)
+                            .deny(assignment.id);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      icon: const Icon(LucideIcons.x, size: 16),
+                      label: Text(
+                        'Recusar',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF6B7280),
+                        side: const BorderSide(color: Color(0xFF4B5563)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: level.color,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              if (assignment.canDeny && assignment.canAcknowledge)
+                const SizedBox(width: 10),
+              if (assignment.canAcknowledge)
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: 'Confirmar ciência deste alerta',
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await ref
+                            .read(alertProvider.notifier)
+                            .acknowledge(assignment.id);
+                        if (context.mounted) Navigator.of(context).pop();
+                      },
+                      icon: const Icon(LucideIcons.check, size: 18),
+                      label: Text(
+                        'Confirmar',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: actionColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
         ],
       ],

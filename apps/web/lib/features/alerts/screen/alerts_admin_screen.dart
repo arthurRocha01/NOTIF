@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/utils/date_formatter.dart';
 import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';
+import 'package:notif_app/features/alerts/modals/create_quest_modal.dart';
 import 'package:notif_app/features/alerts/screen/alert_supervisor_detail_screen.dart';
 import 'package:notif_app/features/sectors/providers/sector_provider.dart';
 import '../providers/alert_provider.dart';
@@ -309,79 +310,26 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
   }
 
   Widget _buildCreateCard() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.accent.withValues(alpha: 0.25),
-                const Color(0xFF6B4BF7).withValues(alpha: 0.20),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.35)),
-          ),
-          child: Row(children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(LucideIcons.megaphone,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Novo Aviso',
-                      style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          color: Colors.white)),
-                  Text('Envie um comunicado, alerta ou aviso crítico.',
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.60))),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Semantics(
-              button: true,
-              label: 'Criar novo alerta',
-              child: GestureDetector(
-                onTap: () => CreateAlertModal.show(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ExcludeSemantics(
-                    child: Text('+ Criar',
-                        style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: const Color(0xFF1A2340))),
-                  ),
-                ),
-              ),
-            ),
-          ]),
+    return Column(
+      children: [
+        _CreateActionCard(
+          icon: LucideIcons.megaphone,
+          title: 'Novo Aviso',
+          subtitle: 'Comunicado, alerta ou aviso crítico.',
+          accentColor: AppColors.accent,
+          buttonLabel: '+ Criar',
+          onTap: () => CreateAlertModal.show(context),
         ),
-      ),
+        const SizedBox(height: 10),
+        _CreateActionCard(
+          icon: LucideIcons.clipboardCheck,
+          title: 'Alerta com Resposta',
+          subtitle: 'Requer confirmação ou recusa dos destinatários.',
+          accentColor: const Color(0xFF6B4BF7),
+          buttonLabel: '+ Criar',
+          onTap: () => CreateQuestModal.show(context),
+        ),
+      ],
     );
   }
 
@@ -670,6 +618,101 @@ class _Chip extends StatelessWidget {
                         ? color
                         : Colors.white.withValues(alpha: 0.50))),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CreateActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final String buttonLabel;
+  final VoidCallback onTap;
+
+  const _CreateActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.buttonLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                accentColor.withValues(alpha: 0.22),
+                accentColor.withValues(alpha: 0.10),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border:
+                Border.all(color: accentColor.withValues(alpha: 0.35)),
+          ),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Colors.white)),
+                  Text(subtitle,
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.60))),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Semantics(
+              button: true,
+              label: title,
+              child: GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ExcludeSemantics(
+                    child: Text(buttonLabel,
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: const Color(0xFF1A2340))),
+                  ),
+                ),
+              ),
+            ),
+          ]),
         ),
       ),
     );

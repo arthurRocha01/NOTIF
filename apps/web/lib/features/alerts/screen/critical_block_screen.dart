@@ -588,6 +588,10 @@ class _StatusChip extends StatelessWidget {
       case AssignmentStatus.pending:
         icon = LucideIcons.clock;
         label = 'Pendente';
+        break;
+      case AssignmentStatus.denied:
+        icon = LucideIcons.xCircle;
+        label = 'Negado';
     }
 
     return Container(

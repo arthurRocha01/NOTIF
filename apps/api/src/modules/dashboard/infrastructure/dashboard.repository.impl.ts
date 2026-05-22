@@ -5,7 +5,10 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 
 type AssignmentWithNotification = Prisma.NotificationAssignmentGetPayload<{
-  include: { notification: { include: { sector: true } } };
+  include: {
+    notification: { include: { sector: true } };
+    user: { include: { sector: true } };
+  };
 }>;
 
 interface Kpis {
@@ -34,9 +37,12 @@ export class DashboardRepository implements IDashboardRepository {
     const { sectorId, cutoff, selectedSectorId } = params;
 
     const notifFilter = this.buildNotifFilter(sectorId, cutoff);
-    const assignments = await this.fetchAssignments(notifFilter);
+    const [assignments, totalNotifications] = await Promise.all([
+      this.fetchAssignments(notifFilter),
+      this.fetchNotificationCount(notifFilter),
+    ]);
 
-    const kpis = this.computeKpis(assignments);
+    const kpis = this.computeKpis(assignments, totalNotifications);
     const stats = this.computeSectorStats(assignments);
     const selectedSectorBreakdown = selectedSectorId
       ? this.computeBreakdown(assignments, selectedSectorId)
@@ -72,17 +78,22 @@ export class DashboardRepository implements IDashboardRepository {
     return this.prisma.notificationAssignment.findMany({
       where: { notification: notifFilter },
       include: {
-        notification: {
-          include: { sector: true },
-        },
+        notification: { include: { sector: true } },
+        user: { include: { sector: true } },
       },
     });
   }
 
-  private computeKpis(assignments: AssignmentWithNotification[]): Kpis {
-    const totalNotifications = new Set(assignments.map((a) => a.notificationId))
-      .size;
+  private async fetchNotificationCount(
+    notifFilter: Record<string, any>,
+  ): Promise<number> {
+    return this.prisma.notification.count({ where: notifFilter });
+  }
 
+  private computeKpis(
+    assignments: AssignmentWithNotification[],
+    totalNotifications: number,
+  ): Kpis {
     const totalAcknowledged = assignments.filter(
       (a) => a.status === AssignmentStatus.ACKNOWLEDGED,
     ).length;
@@ -93,9 +104,12 @@ export class DashboardRepository implements IDashboardRepository {
         a.status === AssignmentStatus.VIEWED,
     ).length;
 
-    const totalCritical = assignments.filter(
-      (a) => a.notification.level === NotificationLevel.CRITICAL,
-    ).length;
+    // Conta alertas críticos únicos (não atribuições)
+    const totalCritical = new Set(
+      assignments
+        .filter((a) => a.notification.level === NotificationLevel.CRITICAL)
+        .map((a) => a.notificationId),
+    ).size;
 
     return {
       totalNotifications,
@@ -114,7 +128,10 @@ export class DashboardRepository implements IDashboardRepository {
     >();
 
     for (const a of assignments) {
-      const name = a.notification.sector?.name ?? 'Global';
+      // DENIED não representa falta de resposta — excluir do denominador
+      if (a.status === AssignmentStatus.DENIED) continue;
+      // Global = broadcast; atribuir ao setor do destinatário, não criar setor fictício
+      const name = a.notification.sector?.name ?? a.user.sector.name;
       const entry = sectorMap.get(name) ?? { total: 0, ack: 0, pending: 0 };
       entry.total++;
       if (a.status === AssignmentStatus.ACKNOWLEDGED) entry.ack++;
@@ -163,6 +180,7 @@ export class DashboardRepository implements IDashboardRepository {
       viewed: filtered.filter((a) => a.status === 'VIEWED').length,
       acknowledged: filtered.filter((a) => a.status === 'ACKNOWLEDGED').length,
       overdue: filtered.filter((a) => a.status === 'OVERDUE').length,
+      denied: filtered.filter((a) => a.status === 'DENIED').length,
     };
   }
 }

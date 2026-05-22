@@ -33,6 +33,7 @@ enum AssignmentStatus {
   VIEWED // Usuário abriu o detalhe
   ACKNOWLEDGED // Usuário clicou em "Estou ciente"
   OVERDUE // Prazo (dueAt) vencido sem confirmação
+  DENIED // Usuário clicou em "Negar / Não se aplica"
 }
 
 // --------------------------------------
@@ -123,6 +124,7 @@ model NotificationAssignment {
   deliveredAt    DateTime? // Sync com App
   viewedAt       DateTime? // Abertura
   acknowledgedAt DateTime? // Confirmação
+  deniedAt       DateTime? // Negação
 
   // Restrição de Unicidade: Um usuário não recebe a mesma notificação duas vezes
   @@unique([userId, notificationId])

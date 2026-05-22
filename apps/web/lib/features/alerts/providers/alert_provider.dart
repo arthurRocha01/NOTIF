@@ -201,6 +201,33 @@ class AlertNotifier extends StateNotifier<AlertState> {
                   acknowledgedAt: now,
                   isBlocking: false,
                   canAcknowledge: false,
+                  canDeny: false,
+                )
+              : a)
+          .toList(),
+    );
+  }
+
+  Future<void> deny(String assignmentId) async {
+    try {
+      await _service.deny(assignmentId);
+    } on ApiException catch (e) {
+      if (e.statusCode == 409) return;
+      state = state.copyWith(errorMessage: e.message);
+      return;
+    } catch (_) {
+      return;
+    }
+    final now = DateTime.now();
+    state = state.copyWith(
+      assignments: state.assignments
+          .map((a) => a.id == assignmentId
+              ? a.copyWith(
+                  status: AssignmentStatus.denied,
+                  deniedAt: now,
+                  isBlocking: false,
+                  canAcknowledge: false,
+                  canDeny: false,
                 )
               : a)
           .toList(),

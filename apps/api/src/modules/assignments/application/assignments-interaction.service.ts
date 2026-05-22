@@ -62,6 +62,16 @@ export class AssignmentsInteractionService {
     await this.assignmentRepo.update(assignment);
   }
 
+  async deny(userId: string, assignmentId: string): Promise<void> {
+    const assignment = await this.getLinkedAssignment(userId, assignmentId);
+    try {
+      assignment.markAsDenied();
+    } catch (e: unknown) {
+      throw new ConflictException((e as Error).message);
+    }
+    await this.assignmentRepo.update(assignment);
+  }
+
   private async getLinkedAssignment(userId: string, assignmentId: string) {
     const assignment = await this.assignmentRepo.findById(assignmentId);
 
