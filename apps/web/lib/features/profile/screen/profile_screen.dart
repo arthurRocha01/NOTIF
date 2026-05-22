@@ -4,45 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/features/login/providers/auth_provider.dart';
 import 'package:notif_app/features/profile/providers/profile_provider.dart';
 import 'package:notif_app/features/profile/widgets/profile_widgets.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late TextEditingController _nameController;
-  bool _editing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final user = ref.read(authProvider);
-    _nameController = TextEditingController(text: user?.name ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _saveDisplayName() {
-    final name = _nameController.text.trim();
-    if (name.isNotEmpty) {
-      ref.read(profileProvider.notifier).setDisplayName(name);
-    }
-    setState(() => _editing = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider);
     final profile = ref.watch(profileProvider);
 
@@ -71,9 +41,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _Avatar(bytes: profile.avatarBytes, name: user?.name ?? ''),
                   const SizedBox(height: 14),
                   Text(
-                    profile.displayName.isNotEmpty
-                        ? profile.displayName
-                        : (user?.name ?? ''),
+                    user?.name ?? '',
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 22,
@@ -111,77 +79,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   ProfileSectionHeader(label: 'INFORMAÇÕES'),
                   const SizedBox(height: 10),
-
                   ProfileInfoCard(children: [
                     ProfileInfoRow(
                       icon: LucideIcons.user,
-                      label: 'Nome exibido',
-                      value: profile.displayName.isNotEmpty
-                          ? profile.displayName
-                          : (user?.name ?? '—'),
-                      trailing: IconButton(
-                        tooltip: _editing ? 'Cancelar edição' : 'Editar nome de exibição',
-                        icon: Icon(
-                          _editing ? LucideIcons.x : LucideIcons.pencil,
-                          size: 18,
-                          color: AppColors.accent,
-                        ),
-                        onPressed: () => setState(() => _editing = !_editing),
-                      ),
+                      label: 'Nome',
+                      value: user?.name ?? '—',
                     ),
-                    if (_editing)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _nameController,
-                                autofocus: true,
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Nome exibido',
-                                  hintStyle: GoogleFonts.inter(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                  ),
-                                  isDense: true,
-                                  contentPadding:
-                                      const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.20)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(
-                                        color: AppColors.accent),
-                                  ),
-                                  filled: true,
-                                  fillColor:
-                                      Colors.white.withValues(alpha: 0.06),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed: _saveDisplayName,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.accent,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
-                              ),
-                              child: const Text('Salvar'),
-                            ),
-                          ],
-                        ),
-                      ),
                     ProfileInfoRow(
                       icon: LucideIcons.mail,
                       label: 'Email',

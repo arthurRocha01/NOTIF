@@ -3,18 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileState {
   final Uint8List? avatarBytes;
-  final String displayName;
 
-  const ProfileState({this.avatarBytes, this.displayName = ''});
+  const ProfileState({this.avatarBytes});
 
-  ProfileState copyWith({
-    Uint8List? avatarBytes,
-    bool clearAvatar = false,
-    String? displayName,
-  }) {
+  ProfileState copyWith({Uint8List? avatarBytes, bool clearAvatar = false}) {
     return ProfileState(
       avatarBytes: clearAvatar ? null : (avatarBytes ?? this.avatarBytes),
-      displayName: displayName ?? this.displayName,
     );
   }
 }
@@ -28,10 +22,6 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } else {
       state = state.copyWith(avatarBytes: bytes);
     }
-  }
-
-  void setDisplayName(String name) {
-    state = state.copyWith(displayName: name);
   }
 }
 
