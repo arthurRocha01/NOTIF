@@ -16,6 +16,7 @@ class MyAssignmentModel {
   final DateTime? deliveredAt;
   final DateTime? viewedAt;
   final DateTime? acknowledgedAt;
+  final String? authorName;
   final bool notificationRequiresAcknowledgment;
   final bool isBlocking;
   final bool isOverdue;
@@ -34,6 +35,7 @@ class MyAssignmentModel {
     this.deliveredAt,
     this.viewedAt,
     this.acknowledgedAt,
+    this.authorName,
     required this.notificationRequiresAcknowledgment,
     required this.isBlocking,
     required this.isOverdue,
@@ -53,6 +55,7 @@ class MyAssignmentModel {
     DateTime? deliveredAt,
     DateTime? viewedAt,
     DateTime? acknowledgedAt,
+    String? authorName,
     bool? notificationRequiresAcknowledgment,
     bool? isBlocking,
     bool? isOverdue,
@@ -71,6 +74,7 @@ class MyAssignmentModel {
       deliveredAt: deliveredAt ?? this.deliveredAt,
       viewedAt: viewedAt ?? this.viewedAt,
       acknowledgedAt: acknowledgedAt ?? this.acknowledgedAt,
+      authorName: authorName ?? this.authorName,
       notificationRequiresAcknowledgment:
           notificationRequiresAcknowledgment ?? this.notificationRequiresAcknowledgment,
       isBlocking: isBlocking ?? this.isBlocking,
@@ -86,6 +90,7 @@ class MyAssignmentModel {
       notificationId: json['notificationId']?.toString() ?? '',
       notificationTitle: json['title'] as String?,
       notificationMessage: json['message'] as String?,
+      authorName: json['authorName'] as String?,
       notificationLevel:
           AlertLevel.fromBackend((json['level'] ?? json['notificationLevel'])?.toString()),
       status: AssignmentStatus.fromBackend(json['status']?.toString()),
@@ -102,7 +107,7 @@ class MyAssignmentModel {
           ? DateTime.parse(json['acknowledgedAt'])
           : null,
       notificationRequiresAcknowledgment:
-          json['canAcknowledge'] as bool? ?? false,
+          json['notificationRequiresAcknowledgment'] as bool? ?? false,
       isBlocking: json['isBlocking'] as bool? ?? false,
       isOverdue: json['isOverdue'] as bool? ?? false,
       canAcknowledge: json['canAcknowledge'] as bool? ?? false,

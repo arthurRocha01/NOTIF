@@ -37,4 +37,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sounds/notice.notif.wav
+    - assets/sounds/notifSound.mp3

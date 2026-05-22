@@ -59,6 +59,24 @@ class AlertNotifier extends StateNotifier<AlertState> {
     }
   }
 
+  Future<bool> createNotificationForAllSectors({
+    required String title,
+    required String message,
+    required AlertLevel level,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+    String? authorId,
+    List<String> sectorIds = const [],
+  }) async {
+    return createNotification(
+      title: title,
+      message: message,
+      level: level,
+      slaMinutes: slaMinutes,
+      requiresAcknowledgment: requiresAcknowledgment,
+    );
+  }
+
   Future<bool> createNotification({
     required String title,
     required String message,
@@ -78,6 +96,69 @@ class AlertNotifier extends StateNotifier<AlertState> {
       );
       state = state.copyWith(
         notifications: [created, ...state.notifications],
+      );
+      return true;
+    } on ApiException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+      return false;
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro inesperado. Tente novamente.');
+      return false;
+    }
+  }
+
+  Future<void> loadAllAssignments() async {
+    if (state.isLoadingAllAssignments) return;
+    state = state.copyWith(isLoadingAllAssignments: true, clearError: true);
+    try {
+      final all = await _service.getAllAssignments();
+      state = state.copyWith(allAssignments: all, isLoadingAllAssignments: false);
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoadingAllAssignments: false, errorMessage: e.message);
+    } catch (_) {
+      state = state.copyWith(
+          isLoadingAllAssignments: false,
+          errorMessage: 'Erro inesperado. Tente novamente.');
+    }
+  }
+
+  Future<bool> editNotification(
+    String id, {
+    required String title,
+    required String message,
+    required AlertLevel level,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+  }) async {
+    try {
+      final updated = await _service.updateNotification(
+        id,
+        title: title,
+        message: message,
+        level: level,
+        slaMinutes: slaMinutes,
+        requiresAcknowledgment: requiresAcknowledgment,
+      );
+      state = state.copyWith(
+        notifications: state.notifications
+            .map((n) => n.id == id ? updated : n)
+            .toList(),
+      );
+      return true;
+    } on ApiException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+      return false;
+    } catch (_) {
+      state = state.copyWith(errorMessage: 'Erro inesperado. Tente novamente.');
+      return false;
+    }
+  }
+
+  Future<bool> deleteNotification(String id) async {
+    try {
+      await _service.deleteNotification(id);
+      state = state.copyWith(
+        notifications: state.notifications.where((n) => n.id != id).toList(),
       );
       return true;
     } on ApiException catch (e) {
@@ -118,6 +199,8 @@ class AlertNotifier extends StateNotifier<AlertState> {
               ? a.copyWith(
                   status: AssignmentStatus.acknowledged,
                   acknowledgedAt: now,
+                  isBlocking: false,
+                  canAcknowledge: false,
                 )
               : a)
           .toList(),

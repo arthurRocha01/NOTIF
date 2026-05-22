@@ -27,6 +27,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(
+      () => ref.read(alertProvider.notifier).loadAllAssignments(),
+    );
   }
 
   Map<String, double> _mergedSectorRates(
@@ -45,7 +48,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _refresh() async {
     ref.read(alertProvider.notifier).loadNotifications();
     ref.read(alertProvider.notifier).loadAssignments();
+    ref.read(alertProvider.notifier).loadAllAssignments();
     ref.read(sectorProvider.notifier).loadSectors();
+  }
+
+  String _avgResponseLabel() {
+    final responded = ref
+        .read(alertProvider)
+        .allAssignments
+        .where((a) => a.deliveredAt != null && a.acknowledgedAt != null)
+        .toList();
+    if (responded.isEmpty) return '—';
+    final totalMs = responded.fold<int>(
+      0,
+      (sum, a) =>
+          sum + a.acknowledgedAt!.difference(a.deliveredAt!).inMilliseconds,
+    );
+    final avgMin = (totalMs ~/ responded.length) ~/ 60000;
+    if (avgMin < 60) return '${avgMin}min';
+    final h = avgMin ~/ 60;
+    final m = avgMin % 60;
+    return m == 0 ? '${h}h' : '${h}h ${m}min';
   }
 
   Widget _buildHeader(int activeAlerts, int totalSectors) {
@@ -201,6 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   totalAcknowledged: stats.totalAcknowledged,
                   totalPending: stats.totalPending,
                   totalCritical: stats.totalCritical,
+                  avgResponseLabel: _avgResponseLabel(),
                 ),
               ),
             ),

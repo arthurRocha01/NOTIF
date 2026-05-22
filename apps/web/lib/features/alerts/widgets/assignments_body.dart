@@ -7,6 +7,7 @@ import '../models/my_assignment_model.dart';
 import '../models/alert_status.dart';
 import '../providers/alert_provider.dart';
 import '../screen/alert_details_screen.dart';
+import '../widgets/sla_countdown.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../features/login/providers/auth_provider.dart';
@@ -681,6 +682,30 @@ class _CriticalCard extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
+                        // Remetente
+                        if (assignment.authorName != null) ...[
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Icon(LucideIcons.user,
+                                  size: 11,
+                                  color: const Color(0xFFFF6B6B).withValues(alpha: 0.80)),
+                              const SizedBox(width: 4),
+                              Text(
+                                assignment.authorName!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: const Color(0xFFFF6B6B).withValues(alpha: 0.80),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        // Prazo
+                        SlaCountdown(
+                          dueAt: assignment.dueAt,
+                          acknowledgedAt: assignment.acknowledgedAt,
+                        ),
                         if (assignment.notificationMessage != null) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -783,7 +808,6 @@ class _AssignmentCard extends StatelessWidget {
     final level = assignment.notificationLevel;
     final status = assignment.status;
     final isDone = status == AssignmentStatus.acknowledged;
-    final isOverdue = status == AssignmentStatus.overdue;
     final isUnread = status == AssignmentStatus.pending;
 
     final Color accentColor = level.color;
@@ -880,14 +904,41 @@ class _AssignmentCard extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Tempo (H1 – visibilidade do estado)
-                                Text(
-                                  timeStr,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    color: Colors.white.withValues(alpha: 0.65),
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                // Tempo + remetente (H1 + H6)
+                                Row(
+                                  children: [
+                                    Text(
+                                      timeStr,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: Colors.white.withValues(alpha: 0.65),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (assignment.authorName != null) ...[
+                                      Text(
+                                        ' · ',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: Colors.white.withValues(alpha: 0.35),
+                                        ),
+                                      ),
+                                      Icon(LucideIcons.user,
+                                          size: 10,
+                                          color: Colors.white.withValues(alpha: 0.45)),
+                                      const SizedBox(width: 3),
+                                      Expanded(
+                                        child: Text(
+                                          assignment.authorName!,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11,
+                                            color: Colors.white.withValues(alpha: 0.55),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
 
@@ -901,6 +952,12 @@ class _AssignmentCard extends StatelessWidget {
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
+                                ),
+
+                                // SLA em tempo real
+                                SlaCountdown(
+                                  dueAt: assignment.dueAt,
+                                  acknowledgedAt: assignment.acknowledgedAt,
                                 ),
 
                                 // Mensagem preview
@@ -933,16 +990,6 @@ class _AssignmentCard extends StatelessWidget {
                                       borderColor: accentColor.withValues(alpha: 0.35),
                                     ),
                                     _StatusBadge(status: status),
-                                    if (assignment.dueAt != null && !isDone)
-                                      _LevelKeyword(
-                                        icon: LucideIcons.calendarClock,
-                                        label: DateFormatter.remaining(assignment.dueAt!),
-                                        color: isOverdue
-                                            ? const Color(0xFFFF6B6B)
-                                            : Colors.white.withValues(alpha: 0.50),
-                                        bg: Colors.white.withValues(alpha: 0.06),
-                                        borderColor: Colors.white.withValues(alpha: 0.12),
-                                      ),
                                   ],
                                 ),
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/alert_model.dart';
+import 'alert_confirmations_screen.dart';
 
 class AlertSupervisorDetailScreen extends StatelessWidget {
   final AlertModel alert;
@@ -141,9 +142,51 @@ class AlertSupervisorDetailScreen extends StatelessWidget {
                               ? const Color(0xFF4ADE80)
                               : Colors.white.withValues(alpha: 0.40),
                         ),
+                        if (alert.authorName != null) ...[
+                          const _RowDivider(),
+                          _InfoRow(
+                            icon: LucideIcons.user,
+                            label: 'Remetente',
+                            value: alert.authorName!,
+                          ),
+                        ],
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // Botão de acompanhamento
+                  if (alert.effectiveRequiresAcknowledgment)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AlertConfirmationsScreen(alert: alert),
+                          ),
+                        ),
+                        icon: Icon(LucideIcons.users,
+                            size: 16, color: level.color),
+                        label: Text(
+                          'Acompanhar confirmações',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: level.color,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(
+                              color: level.color.withValues(alpha: 0.50)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
 
                   const SizedBox(height: 24),
                 ],

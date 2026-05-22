@@ -421,14 +421,51 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
 
 // ── Alert card ────────────────────────────────────────────────────────────────
 
-class _AlertCard extends StatelessWidget {
+class _AlertCard extends ConsumerWidget {
   final AlertModel alert;
   final String? sectorName;
 
   const _AlertCard({super.key, required this.alert, this.sectorName});
 
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2340),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Excluir alerta?',
+          style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+        content: Text(
+          'Todos os destinatários perderão acesso. Esta ação não pode ser desfeita.',
+          style: GoogleFonts.inter(
+              fontSize: 13, color: Colors.white.withValues(alpha: 0.65)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancelar',
+                style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.60))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Excluir',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFFFF6B6B),
+                    fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await ref.read(alertProvider.notifier).deleteNotification(alert.id);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isCritical = alert.level == AlertLevel.critical;
     final chipLabel = alert.level.label.toUpperCase();
     final chipColor = alert.level.color;
@@ -501,6 +538,43 @@ class _AlertCard extends StatelessWidget {
                           fontSize: 12,
                           color: Colors.white.withValues(alpha: 0.40)),
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // Ações: editar e excluir
+                  SizedBox(
+                    height: 28,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Semantics(
+                          button: true,
+                          label: 'Editar alerta',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () => CreateAlertModal.show(context, notification: alert),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: Icon(LucideIcons.pencil,
+                                  size: 15,
+                                  color: Colors.white.withValues(alpha: 0.50)),
+                            ),
+                          ),
+                        ),
+                        Semantics(
+                          button: true,
+                          label: 'Excluir alerta',
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () => _confirmDelete(context, ref),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: Icon(LucideIcons.trash2,
+                                  size: 15,
+                                  color: const Color(0xFFFF6B6B).withValues(alpha: 0.70)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ]),

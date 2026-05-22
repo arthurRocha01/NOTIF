@@ -69,6 +69,29 @@ class AlertService {
     await ApiClient.post('/assignments/$assignmentId/acknowledge', {});
   }
 
+  Future<AlertModel> updateNotification(
+    String id, {
+    required String title,
+    required String message,
+    required AlertLevel level,
+    required int slaMinutes,
+    required bool requiresAcknowledgment,
+  }) async {
+    final payload = <String, dynamic>{
+      'title': title,
+      'message': message,
+      'level': level.backendValue,
+      'slaMinutes': slaMinutes,
+      'requiresAcknowledgment': requiresAcknowledgment,
+    };
+    final data = await ApiClient.patch('/notifications/$id', payload);
+    return AlertModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteNotification(String id) async {
+    await ApiClient.delete('/notifications/$id');
+  }
+
   Future<void> syncDeliveries() async {
     await ApiClient.post('/assignments/sync', {});
   }

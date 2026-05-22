@@ -93,6 +93,7 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
   Future<void> updateUser({
     required String userId,
     String? name,
+    String? email,
     String? role,
     String? sectorId,
   }) async {
@@ -100,6 +101,7 @@ class AdminUserNotifier extends StateNotifier<AdminUserState> {
       final updated = await _service.updateUser(
         userId: userId,
         name: name,
+        email: email,
         role: role,
         sectorId: sectorId,
       );

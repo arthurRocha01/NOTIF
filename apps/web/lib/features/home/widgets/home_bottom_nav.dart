@@ -26,7 +26,7 @@ class HomeBottomNav extends StatelessWidget {
         NavItemData(
           icon: Icons.notifications_outlined,
           activeIcon: Icons.notifications,
-          label: 'Alertas',
+          label: 'Notificações',
           badgeCount: notificationCount,
         ),
         const NavItemData(

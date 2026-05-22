@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 
 class DashboardKpiRow extends StatelessWidget {
@@ -7,6 +8,7 @@ class DashboardKpiRow extends StatelessWidget {
   final int totalAcknowledged;
   final int totalPending;
   final int totalCritical;
+  final String avgResponseLabel;
 
   const DashboardKpiRow({
     super.key,
@@ -14,6 +16,7 @@ class DashboardKpiRow extends StatelessWidget {
     required this.totalAcknowledged,
     required this.totalPending,
     required this.totalCritical,
+    this.avgResponseLabel = '—',
   });
 
   Widget _groupLabel(String text) {
@@ -76,6 +79,23 @@ class DashboardKpiRow extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        _groupLabel('EFICIÊNCIA'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _KpiCard(
+                label: 'Resp. Médio',
+                value: avgResponseLabel,
+                accentColor: const Color(0xFF6B8BFF),
+                icon: LucideIcons.timer,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
       ],
     );
   }
@@ -85,11 +105,13 @@ class _KpiCard extends StatelessWidget {
   final String label;
   final String value;
   final Color accentColor;
+  final IconData? icon;
 
   const _KpiCard({
     required this.label,
     required this.value,
     required this.accentColor,
+    this.icon,
   });
 
   @override
@@ -134,14 +156,17 @@ class _KpiCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              shape: BoxShape.circle,
+                          if (icon != null)
+                            Icon(icon, size: 11, color: accentColor)
+                          else
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: accentColor,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(

@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../models/alert_status.dart';
 import '../models/my_assignment_model.dart';
 import '../providers/alert_provider.dart';
+import '../widgets/sla_countdown.dart';
 
 class AlertDetailsScreen extends ConsumerWidget {
   final MyAssignmentModel assignment;
@@ -24,8 +25,6 @@ class AlertDetailsScreen extends ConsumerWidget {
     final message = assignment.notificationMessage ?? notification?.message;
     final level = assignment.notificationLevel;
     final status = assignment.status;
-    final isOverdue = status == AssignmentStatus.overdue;
-    final canAcknowledge = assignment.canAcknowledge;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1421),
@@ -147,14 +146,33 @@ class AlertDetailsScreen extends ConsumerWidget {
                         ),
                         if (assignment.dueAt != null) ...[
                           _RowDivider(),
+                          Row(
+                            children: [
+                              Icon(LucideIcons.clock,
+                                  size: 14,
+                                  color: Colors.white.withValues(alpha: 0.40)),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Prazo',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.55),
+                                ),
+                              ),
+                              const Spacer(),
+                              SlaCountdown(
+                                dueAt: assignment.dueAt,
+                                acknowledgedAt: assignment.acknowledgedAt,
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (assignment.authorName != null) ...[
+                          _RowDivider(),
                           _InfoRow(
-                            icon: LucideIcons.clock,
-                            label: 'Prazo',
-                            value: _formatDueVerbose(
-                                assignment.dueAt!, isOverdue),
-                            valueColor: isOverdue
-                                ? const Color(0xFFFF6B6B)
-                                : null,
+                            icon: LucideIcons.user,
+                            label: 'Remetente',
+                            value: assignment.authorName!,
                           ),
                         ],
                         if (assignment.acknowledgedAt != null) ...[
@@ -209,38 +227,9 @@ class AlertDetailsScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // ── Botão confirmar ───────────────────────────────────────
-                  if (canAcknowledge) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          await ref
-                              .read(alertProvider.notifier)
-                              .acknowledge(assignment.id);
-                          if (context.mounted) Navigator.of(context).pop();
-                        },
-                        icon: const Icon(LucideIcons.checkCircle2, size: 18),
-                        label: Text(
-                          'Confirmar ciência',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: level.color,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  // ── Status / Ação ─────────────────────────────────────────
+                  const SizedBox(height: 16),
+                  _buildStatusSection(context, ref, assignment, level),
 
                   const SizedBox(height: 24),
                 ],
@@ -264,14 +253,81 @@ class AlertDetailsScreen extends ConsumerWidget {
         '${dt.year}';
   }
 
-  String _formatDueVerbose(DateTime due, bool isOverdue) {
-    if (isOverdue) return 'Vencido';
-    final diff = due.difference(DateTime.now());
-    if (diff.isNegative) return 'Vencido';
-    if (diff.inMinutes < 60) return 'em ${diff.inMinutes}min';
-    if (diff.inHours < 24) return 'em ${diff.inHours}h';
-    return 'em ${diff.inDays}d';
+  Widget _buildStatusSection(
+    BuildContext context,
+    WidgetRef ref,
+    MyAssignmentModel assignment,
+    AlertLevel level,
+  ) {
+    final status = assignment.status;
+
+    if (status == AssignmentStatus.acknowledged) {
+      return _StatusBanner(
+        icon: LucideIcons.checkCircle2,
+        label: 'Ciência confirmada',
+        subtitle: assignment.acknowledgedAt != null
+            ? 'em ${_formatDate(assignment.acknowledgedAt!)}'
+            : null,
+        color: const Color(0xFF10B981),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (status == AssignmentStatus.viewed)
+          _StatusBanner(
+            icon: LucideIcons.eye,
+            label: 'Alerta visualizado',
+            color: const Color(0xFF3B82F6),
+          ),
+        if (status == AssignmentStatus.overdue)
+          _StatusBanner(
+            icon: LucideIcons.alertCircle,
+            label: 'Atrasado',
+            color: const Color(0xFFDC2626),
+          ),
+        if (status == AssignmentStatus.pending)
+          _StatusBanner(
+            icon: LucideIcons.clock,
+            label: 'Pendente',
+            color: const Color(0xFF94A3B8),
+          ),
+        if (assignment.canAcknowledge) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                await ref
+                    .read(alertProvider.notifier)
+                    .acknowledge(assignment.id);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+              icon: const Icon(LucideIcons.checkCircle2, size: 18),
+              label: Text(
+                'Confirmar ciência',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: level.color,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
+
 }
 
 // ── Widgets auxiliares ────────────────────────────────────────────────────────
@@ -489,6 +545,60 @@ class _TimelineStep extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StatusBanner extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final Color color;
+
+  const _StatusBanner({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: color.withValues(alpha: 0.70),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

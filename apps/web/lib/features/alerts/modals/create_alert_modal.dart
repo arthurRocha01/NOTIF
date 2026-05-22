@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../providers/alert_provider.dart';
+import '../models/alert_model.dart';
 import '../models/alert_status.dart';
 import '../widgets/urgency_selector.dart';
 import '../../../shared/widgets/notif_input.dart';
@@ -13,14 +14,16 @@ import '../../sectors/providers/sector_provider.dart';
 import '../../sectors/models/sector_model.dart';
 
 class CreateAlertModal extends ConsumerStatefulWidget {
-  const CreateAlertModal({super.key});
+  final AlertModel? notification;
 
-  static Future<bool?> show(BuildContext context) {
+  const CreateAlertModal({super.key, this.notification});
+
+  static Future<bool?> show(BuildContext context, {AlertModel? notification}) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const CreateAlertModal(),
+      builder: (_) => CreateAlertModal(notification: notification),
     );
   }
 
@@ -39,6 +42,9 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   bool _sendToAll = false;
   SectorModel? _selectedSector;
   int _slaMinutes = 60;
+  String? _pendingSectorId;
+
+  bool get _isEditing => widget.notification != null;
 
   static const _slaOptions = [15, 30, 60, 120, 240];
 
@@ -51,9 +57,30 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(sectorProvider.notifier).loadSectors(),
-    );
+    final n = widget.notification;
+    if (n != null) {
+      _titleCtrl.text = n.title;
+      _messageCtrl.text = n.message;
+      _level = n.level;
+      _slaMinutes = n.slaMinutes;
+      _requiresAcknowledgment = n.requiresAcknowledgment;
+      if (n.isGlobal) {
+        _sendToAll = true;
+      } else {
+        _pendingSectorId = n.targetSectorId;
+      }
+    }
+    Future.microtask(() async {
+      await ref.read(sectorProvider.notifier).loadSectors();
+      if (_pendingSectorId != null && mounted) {
+        final sector = ref
+            .read(sectorProvider)
+            .sectors
+            .where((s) => s.id == _pendingSectorId)
+            .firstOrNull;
+        if (sector != null) setState(() => _selectedSector = sector);
+      }
+    });
   }
 
   @override
@@ -85,7 +112,16 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
     final requiresAck = _level == AlertLevel.critical ? true : _requiresAcknowledgment;
 
     final bool ok;
-    if (_sendToAll) {
+    if (_isEditing) {
+      ok = await ref.read(alertProvider.notifier).editNotification(
+            widget.notification!.id,
+            title: title,
+            message: message,
+            level: _level,
+            slaMinutes: _slaMinutes,
+            requiresAcknowledgment: requiresAck,
+          );
+    } else if (_sendToAll) {
       final sectorIds = ref.read(sectorProvider).sectors.map((s) => s.id).toList();
       ok = await ref.read(alertProvider.notifier).createNotificationForAllSectors(
             title: title,
@@ -165,7 +201,7 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Novo Alerta',
+                  _isEditing ? 'Editar Alerta' : 'Novo Alerta',
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -237,10 +273,12 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                       },
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _buildSectorHeader(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildSectorSelector(sectorState),
-                    const SizedBox(height: AppSpacing.lg),
+                    if (!_isEditing) ...[
+                      _buildSectorHeader(),
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildSectorSelector(sectorState),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                     UrgencySelector(
                       selected: _level,
                       onChanged: _onLevelChanged,
@@ -252,15 +290,19 @@ class _CreateAlertModalState extends ConsumerState<CreateAlertModal> {
                     _buildExtraConfigs(isCritical),
                     const SizedBox(height: AppSpacing.xl),
                     NotifButton(
-                      label: isCritical
-                          ? 'ENVIAR ALERTA CRÍTICO'
-                          : 'Enviar Alerta',
+                      label: _isEditing
+                          ? 'Salvar Alterações'
+                          : isCritical
+                              ? 'ENVIAR ALERTA CRÍTICO'
+                              : 'Enviar Alerta',
                       onPressed: _submit,
                       isLoading: _isLoading,
                       color: _accentColor,
-                      icon: isCritical
-                          ? LucideIcons.alertTriangle
-                          : LucideIcons.send,
+                      icon: _isEditing
+                          ? LucideIcons.save
+                          : isCritical
+                              ? LucideIcons.alertTriangle
+                              : LucideIcons.send,
                     ),
                   ],
                 ),

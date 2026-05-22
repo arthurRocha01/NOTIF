@@ -32,7 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Timer? _pollingTimer;
   final _audioPlayer = AudioPlayer();
   final html.AudioElement? _webAudio = kIsWeb
-      ? (html.AudioElement('assets/assets/sounds/notice.notif.wav')..load())
+      ? (html.AudioElement('assets/assets/sounds/notifSound.mp3')..load())
       : null;
 
   int _pageIndex = 0;
@@ -113,7 +113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       _audioPlayer.setReleaseMode(ReleaseMode.loop);
       _audioPlayer.setVolume(1).then((_) =>
-          _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
+          _audioPlayer.play(AssetSource('sounds/notifSound.mp3')).catchError((_) {}));
     }
   }
 
@@ -206,7 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     _audioPlayer.setReleaseMode(ReleaseMode.release);
     _audioPlayer.setVolume(1).then((_) =>
-        _audioPlayer.play(AssetSource('sounds/notice.notif.wav')).catchError((_) {}));
+        _audioPlayer.play(AssetSource('sounds/notifSound.mp3')).catchError((_) {}));
   }
 
   @override

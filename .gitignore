@@ -35,3 +35,6 @@ apps/web/pubspec.lock
 # ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Documentos internos ───────────────────────────────────────────────────────
+IDEIAS_FUNCIONALIDADES.md
