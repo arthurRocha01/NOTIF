@@ -17,9 +17,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final user = ref.watch(authProvider);
     final profile = ref.watch(profileProvider);
 
-    final displayName = profile.displayName.isNotEmpty
-        ? profile.displayName
-        : (user?.name ?? '');
+    final displayName = user?.name ?? '';
 
     return AppBar(
       backgroundColor: const Color(0xFF0D1421),
