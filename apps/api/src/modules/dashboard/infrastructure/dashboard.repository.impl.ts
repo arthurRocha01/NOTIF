@@ -135,7 +135,10 @@ export class DashboardRepository implements IDashboardRepository {
       const entry = sectorMap.get(name) ?? { total: 0, ack: 0, pending: 0 };
       entry.total++;
       if (a.status === AssignmentStatus.ACKNOWLEDGED) entry.ack++;
-      if (a.status === AssignmentStatus.PENDING) entry.pending++;
+      if (
+        a.status === AssignmentStatus.PENDING ||
+        a.status === AssignmentStatus.VIEWED
+      ) entry.pending++;
       sectorMap.set(name, entry);
     }
 
@@ -169,18 +172,19 @@ export class DashboardRepository implements IDashboardRepository {
     assignments: AssignmentWithNotification[],
     sectorId: string,
   ): NonNullable<DashboardSummaryDto['selectedSectorBreakdown']> {
+    // Global (sectorId === null) atribuída ao setor do destinatário, não a todos
     const filtered = assignments.filter(
       (a) =>
         a.notification.sectorId === sectorId ||
-        a.notification.sectorId === null,
+        (a.notification.sectorId === null && a.user.sectorId === sectorId),
     );
 
     return {
-      pending: filtered.filter((a) => a.status === 'PENDING').length,
-      viewed: filtered.filter((a) => a.status === 'VIEWED').length,
-      acknowledged: filtered.filter((a) => a.status === 'ACKNOWLEDGED').length,
-      overdue: filtered.filter((a) => a.status === 'OVERDUE').length,
-      denied: filtered.filter((a) => a.status === 'DENIED').length,
+      pending:      filtered.filter((a) => a.status === AssignmentStatus.PENDING).length,
+      viewed:       filtered.filter((a) => a.status === AssignmentStatus.VIEWED).length,
+      acknowledged: filtered.filter((a) => a.status === AssignmentStatus.ACKNOWLEDGED).length,
+      overdue:      filtered.filter((a) => a.status === AssignmentStatus.OVERDUE).length,
+      denied:       filtered.filter((a) => (a.status as string) === 'DENIED').length,
     };
   }
 }

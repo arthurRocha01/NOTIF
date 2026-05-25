@@ -18,8 +18,10 @@ describe('AssignmentController', () => {
     getDeliveredAt: () => null,
     getViewedAt: () => null,
     getAcknowledgedAt: () => null,
+    getDeniedAt: () => null,
     isBlocking: () => true,
     canAcknowledge: () => true,
+    canDeny: () => false,
     isOverdue: () => false,
     getResponseTimeInMs: () => null,
   };

@@ -1,6 +1,4 @@
-﻿import 'dart:ui';
-
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -226,11 +224,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
   }
 
   Widget _buildSearchBar() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(14),
@@ -259,9 +253,7 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
               border: InputBorder.none,
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildLevelFilters() {
@@ -432,11 +424,7 @@ class _AlertCard extends ConsumerWidget {
             sectorName: sectorName,
           ),
         )),
-        child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
+        child: Container(
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(16),
@@ -560,9 +548,7 @@ class _AlertCard extends ConsumerWidget {
               ],
             ),
           ),
-        ),
       ),
-    ),
     ),
   );
   }
@@ -643,11 +629,7 @@ class _CreateActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -713,8 +695,6 @@ class _CreateActionCard extends StatelessWidget {
               ),
             ),
           ]),
-        ),
-      ),
-    );
+        );
   }
 }

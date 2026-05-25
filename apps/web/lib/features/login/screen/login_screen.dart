@@ -1,6 +1,4 @@
-﻿import 'dart:ui';
-
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -65,6 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D1421),
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // Gradient background
@@ -141,21 +140,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 44),
 
                   // Card glass
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.07),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: Column(
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.14),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
@@ -236,9 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ],
                         ),
-                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 48),
                 ],

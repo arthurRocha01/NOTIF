@@ -1,6 +1,4 @@
-﻿import 'dart:ui';
-
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -125,11 +123,7 @@ class _UsersManagementScreenState
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: TextField(
+              TextField(
                     controller: _searchController,
                     onChanged: (v) => setState(() => _searchQuery = v),
                     style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -174,8 +168,6 @@ class _UsersManagementScreenState
                       ),
                     ),
                   ),
-                ),
-              ),
               const SizedBox(height: 8),
               SizedBox(
                 height: 32,
@@ -343,11 +335,7 @@ class _UserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(14),
@@ -446,8 +434,6 @@ class _UserTile extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 }

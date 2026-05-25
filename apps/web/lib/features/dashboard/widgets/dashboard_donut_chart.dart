@@ -20,16 +20,15 @@ class DashboardDonutChart extends StatefulWidget {
 class _DashboardDonutChartState extends State<DashboardDonutChart> {
   int _touchedIndex = -1;
 
-  static const _pending      = Color(0xFF94A3B8);
+  static const _pending      = Color(0xFFF97316);
   static const _viewed       = Color(0xFF4A6CF7);
   static const _acknowledged = Color(0xFF16A34A);
   static const _overdue      = Color(0xFFE53935);
-  static const _denied       = Color(0xFF6B7280);
 
   @override
   Widget build(BuildContext context) {
     final bd    = widget.breakdown;
-    final total = bd.pending + bd.viewed + bd.acknowledged + bd.overdue + bd.denied;
+    final total = bd.pending + bd.viewed + bd.acknowledged + bd.overdue;
 
     if (total == 0) {
       return Center(
@@ -45,7 +44,6 @@ class _DashboardDonutChartState extends State<DashboardDonutChart> {
       _Section('Visualizado', bd.viewed,       _viewed),
       _Section('Confirmado',  bd.acknowledged, _acknowledged),
       _Section('Atrasado',    bd.overdue,      _overdue),
-      _Section('Recusado',    bd.denied,       _denied),
     ].where((s) => s.count > 0).toList();
 
     return Row(
@@ -100,7 +98,7 @@ class _DashboardDonutChartState extends State<DashboardDonutChart> {
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
-                  color: const Color(0xFF0F172A),
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 12),
@@ -150,12 +148,12 @@ class _LegendRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(label,
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF475569))),
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.70))),
           ),
           Text('$count ($pct%)',
               style: GoogleFonts.inter(
                   fontSize: 12, fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0F172A))),
+                  color: Colors.white)),
         ],
       ),
     );

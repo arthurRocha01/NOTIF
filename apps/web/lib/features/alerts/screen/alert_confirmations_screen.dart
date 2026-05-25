@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -185,7 +183,8 @@ class _AlertConfirmationsScreenState
       ('viewed', 'Visualizado', const Color(0xFF3B82F6)),
       ('confirmed', 'Confirmado', const Color(0xFF10B981)),
       ('overdue', 'Vencido', const Color(0xFFDC2626)),
-      ('denied', 'Negado', const Color(0xFF6B7280)),
+      if (widget.alert.effectiveRequiresAcknowledgment)
+        ('denied', 'Negado', const Color(0xFF6B7280)),
     ];
 
     return SingleChildScrollView(
@@ -294,11 +293,7 @@ class _ProgressCard extends StatelessWidget {
     final overdue =
         all.where((a) => a.status == AssignmentStatus.overdue).length;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.07),
@@ -415,9 +410,7 @@ class _ProgressCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 
@@ -526,11 +519,7 @@ class _UserCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
+      child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.06),
@@ -642,8 +631,6 @@ class _UserCard extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 }

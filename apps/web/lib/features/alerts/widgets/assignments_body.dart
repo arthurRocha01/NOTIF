@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -436,11 +435,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
             ),
           ),
           // Avatar com iniciais (H6 – reconhecimento, não memorização)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
+          Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
@@ -461,8 +456,6 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
                   ),
                 ),
               ),
-            ),
-          ),
         ],
       ),
     );
@@ -679,11 +672,7 @@ class _CriticalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFFDC2626).withValues(alpha: 0.15),
@@ -804,9 +793,7 @@ class _CriticalCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 

@@ -1,6 +1,4 @@
-﻿import 'dart:ui';
-
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -36,11 +34,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Map<String, double> apiRates,
     List<SectorModel> allSectors,
   ) {
-    final merged = Map<String, double>.from(apiRates);
-    for (final s in allSectors) {
-      merged.putIfAbsent(s.name, () => 0.0);
+    final idToName = {for (final s in allSectors) s.id: s.name};
+
+    // Normaliza chaves para nome de exibição (API pode retornar ID ou nome)
+    final normalized = <String, double>{};
+    for (final entry in apiRates.entries) {
+      final displayName = idToName[entry.key] ?? entry.key;
+      normalized[displayName] = entry.value;
     }
-    return merged;
+
+    // Setores sem dados no período aparecem como 0%
+    for (final s in allSectors) {
+      normalized.putIfAbsent(s.name, () => 0.0);
+    }
+
+    return normalized;
   }
 
   Future<void> _refresh() async {
@@ -64,6 +72,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         .where((a) =>
             a.deliveredAt != null &&
             a.acknowledgedAt != null &&
+            a.acknowledgedAt!.isAfter(a.deliveredAt!) &&
             (cutoff == null || a.deliveredAt!.isAfter(cutoff)))
         .toList();
     if (responded.isEmpty) return '—';
@@ -73,6 +82,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           sum + a.acknowledgedAt!.difference(a.deliveredAt!).inMilliseconds,
     );
     final avgMin = (totalMs ~/ responded.length) ~/ 60000;
+    if (avgMin == 0) return '< 1min';
     if (avgMin < 60) return '${avgMin}min';
     final h = avgMin ~/ 60;
     final m = avgMin % 60;
@@ -407,11 +417,7 @@ class _PeriodFilter extends ConsumerWidget {
       (period: DashboardPeriod.all, label: 'Todos'),
     ];
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.07),
@@ -459,9 +465,7 @@ class _PeriodFilter extends ConsumerWidget {
               );
             }).toList(),
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 
@@ -536,11 +540,7 @@ class _ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
+    return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.07),
@@ -597,8 +597,6 @@ class _ChartCard extends StatelessWidget {
               child,
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }
