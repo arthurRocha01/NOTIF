@@ -183,7 +183,7 @@ class _AlertConfirmationsScreenState
       ('viewed', 'Visualizado', const Color(0xFF3B82F6)),
       ('confirmed', 'Confirmado', const Color(0xFF10B981)),
       ('overdue', 'Vencido', const Color(0xFFDC2626)),
-      if (widget.alert.effectiveRequiresAcknowledgment)
+      if (widget.alert.requiresAcknowledgment && widget.alert.level != AlertLevel.critical)
         ('denied', 'Negado', const Color(0xFF6B7280)),
     ];
 
