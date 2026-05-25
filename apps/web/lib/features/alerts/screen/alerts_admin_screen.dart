@@ -466,7 +466,33 @@ class _AlertCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  if (alert.requiresAcknowledgment && alert.level != AlertLevel.critical)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.45)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.messageSquare,
+                              size: 9, color: Color(0xFFA78BFA)),
+                          const SizedBox(width: 3),
+                          Text('Com resposta',
+                              style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFA78BFA),
+                                  letterSpacing: 0.2)),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       '$sector · $timeStr',
