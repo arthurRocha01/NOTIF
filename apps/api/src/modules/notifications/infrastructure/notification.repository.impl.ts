@@ -11,6 +11,7 @@ export class NotificationRepository implements INotificarionRepository {
   async findAll(
     level?: string,
     sectorId?: string,
+    authorId?: string,
   ): Promise<Notification[]> {
     const where: any = {};
 
@@ -20,6 +21,10 @@ export class NotificationRepository implements INotificarionRepository {
 
     if (sectorId) {
       where.sectorId = sectorId;
+    }
+
+    if (authorId) {
+      where.authorId = authorId;
     }
 
     const notifications = await this.prisma.notification.findMany({

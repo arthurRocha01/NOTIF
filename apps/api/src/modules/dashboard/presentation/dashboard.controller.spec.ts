@@ -53,7 +53,7 @@ describe('DashboardController', () => {
 
     expect(service.getSummary).toHaveBeenCalledWith({
       userRole: 'ADMIN',
-      userSectorId: 'sector-1',
+      userId: 'user-1',
       period: undefined,
       selectedSectorId: undefined,
     });
@@ -61,12 +61,12 @@ describe('DashboardController', () => {
   });
 
   it('should call service with supervisor role', async () => {
-    const req = mockReq({ role: 'SUPERVISOR', sectorId: 'sector-2' });
+    const req = mockReq({ role: 'SUPERVISOR', userId: 'supervisor-1' });
     const result = await controller.getSummary(req as any);
 
     expect(service.getSummary).toHaveBeenCalledWith({
       userRole: 'SUPERVISOR',
-      userSectorId: 'sector-2',
+      userId: 'supervisor-1',
       period: undefined,
       selectedSectorId: undefined,
     });
@@ -79,7 +79,7 @@ describe('DashboardController', () => {
 
     expect(service.getSummary).toHaveBeenCalledWith({
       userRole: 'ADMIN',
-      userSectorId: 'sector-1',
+      userId: 'user-1',
       period: 'week',
       selectedSectorId: 'sector-3',
     });
@@ -96,7 +96,7 @@ describe('DashboardController', () => {
 
     expect(service.getSummary).toHaveBeenCalledWith({
       userRole: 'ADMIN',
-      userSectorId: 'sector-1',
+      userId: 'user-1',
       period: undefined,
       selectedSectorId: undefined,
     });

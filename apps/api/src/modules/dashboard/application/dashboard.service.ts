@@ -8,11 +8,11 @@ export class DashboardService {
 
   async getSummary(params: {
     userRole: string;
-    userSectorId?: string;
+    userId?: string;
     period?: string;
     selectedSectorId?: string;
   }): Promise<DashboardSummaryDto> {
-    const { userRole, userSectorId, period, selectedSectorId } = params;
+    const { userRole, userId, period, selectedSectorId } = params;
 
     let cutoff: Date | undefined;
     if (period === 'week') {
@@ -21,10 +21,11 @@ export class DashboardService {
       cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    const sectorId = userRole === 'SUPERVISOR' ? userSectorId : undefined;
+    // Supervisores veem apenas as métricas dos alertas que criaram
+    const authorId = userRole === 'SUPERVISOR' ? userId : undefined;
 
     return this.dashboardRepo.getSummary({
-      sectorId,
+      authorId,
       cutoff,
       selectedSectorId,
     });

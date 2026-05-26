@@ -293,6 +293,17 @@ class _LogoBrand extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
+        const SizedBox(height: 10),
+        Text(
+          'Mais organização, produtividade e eficiência\npara sua empresa.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: Colors.white.withValues(alpha: 0.60),
+            fontStyle: FontStyle.italic,
+            height: 1.5,
+          ),
+        ),
       ],
     );
   }

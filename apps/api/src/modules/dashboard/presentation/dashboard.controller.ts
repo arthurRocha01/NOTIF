@@ -15,7 +15,7 @@ export class DashboardController {
   ): Promise<DashboardSummaryDto> {
     return this.dashboardService.getSummary({
       userRole: req.user.role,
-      userSectorId: req.user.sectorId,
+      userId: req.user.userId,
       period,
       selectedSectorId: sectorId,
     });

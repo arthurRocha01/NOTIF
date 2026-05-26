@@ -20,8 +20,9 @@ export class NotificationService {
   async listNotifications(
     level?: string,
     sectorId?: string,
+    authorId?: string,
   ): Promise<Notification[]> {
-    return await this.notificationRepo.findAll(level, sectorId);
+    return await this.notificationRepo.findAll(level, sectorId, authorId);
   }
 
   async getNotificationById(id: string): Promise<Notification | null> {

@@ -41,35 +41,36 @@ describe('DashboardService', () => {
   it('should return summary without period filter', async () => {
     const result = await service.getSummary({
       userRole: 'ADMIN',
+      userId: 'admin-id',
     });
 
     expect(repo.getSummary).toHaveBeenCalledWith({
-      sectorId: undefined,
+      authorId: undefined,
       cutoff: undefined,
       selectedSectorId: undefined,
     });
     expect(result).toEqual(mockSummary);
   });
 
-  it('should pass sectorId for supervisor', async () => {
+  it('should pass authorId for supervisor', async () => {
     await service.getSummary({
       userRole: 'SUPERVISOR',
-      userSectorId: 'sector-1',
+      userId: 'supervisor-1',
     });
 
     expect(repo.getSummary).toHaveBeenCalledWith(
-      expect.objectContaining({ sectorId: 'sector-1' }),
+      expect.objectContaining({ authorId: 'supervisor-1' }),
     );
   });
 
-  it('should not pass sectorId for admin', async () => {
+  it('should not pass authorId for admin', async () => {
     await service.getSummary({
       userRole: 'ADMIN',
-      userSectorId: 'sector-1',
+      userId: 'admin-1',
     });
 
     expect(repo.getSummary).toHaveBeenCalledWith(
-      expect.objectContaining({ sectorId: undefined }),
+      expect.objectContaining({ authorId: undefined }),
     );
   });
 
@@ -79,6 +80,7 @@ describe('DashboardService', () => {
 
     await service.getSummary({
       userRole: 'ADMIN',
+      userId: 'admin-id',
       period: 'week',
     });
 
@@ -94,6 +96,7 @@ describe('DashboardService', () => {
 
     await service.getSummary({
       userRole: 'ADMIN',
+      userId: 'admin-id',
       period: 'month',
     });
 
@@ -106,6 +109,7 @@ describe('DashboardService', () => {
   it('should not set cutoff when period is all', async () => {
     await service.getSummary({
       userRole: 'ADMIN',
+      userId: 'admin-id',
       period: 'all',
     });
 
@@ -117,6 +121,7 @@ describe('DashboardService', () => {
   it('should pass selectedSectorId when provided', async () => {
     await service.getSummary({
       userRole: 'ADMIN',
+      userId: 'admin-id',
       selectedSectorId: 'sector-2',
     });
 

@@ -12,12 +12,15 @@ export class NotificationController {
 
   @Get()
   async findAll(
+    @Req() req: AuthenticatedRequest,
     @Query('level') level?: string,
     @Query('sectorId') sectorId?: string,
   ): Promise<NotificationResponseDto[]> {
+    const authorId = req.user.role === 'SUPERVISOR' ? req.user.userId : undefined;
     const notifications = await this.serviceNotification.listNotifications(
       level,
       sectorId,
+      authorId,
     );
 
     return notifications.map((notification) =>

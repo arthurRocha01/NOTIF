@@ -36,6 +36,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       : null;
 
   int _pageIndex = 0;
+  bool _isCriticalLoopActive = false;
+  bool _criticalScreenPushed = false;
 
   @override
   void initState() {
@@ -63,13 +65,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _startPolling() {
     _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (ref.read(alertProvider).isBlocked) return;
       final notifier = ref.read(alertProvider.notifier);
       notifier.syncDeliveries();
       notifier.loadAssignments();
     });
   }
 
-  void _unlockWebAudio(_) {
+  void _unlockWebAudio(dynamic _) {
     html.window.removeEventListener('pointerdown', _unlockWebAudio);
     final audio = _webAudio;
     if (audio == null) return;
@@ -90,19 +93,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _checkAndShowBlockScreen() {
-    if (!mounted) return;
+    if (!mounted || _criticalScreenPushed) return;
     if (ref.read(alertProvider).isBlocked) {
+      _criticalScreenPushed = true;
       _startCriticalLoop();
       Navigator.of(context).push(
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (_) => const CriticalBlockScreen(),
         ),
-      );
+      ).then((_) => _criticalScreenPushed = false);
     }
   }
 
   void _startCriticalLoop() {
+    if (_isCriticalLoopActive) return;
+    _isCriticalLoopActive = true;
     if (kIsWeb) {
       final audio = _webAudio;
       if (audio == null) return;
@@ -118,6 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _stopCriticalLoop() {
+    _isCriticalLoopActive = false;
     if (kIsWeb) {
       final audio = _webAudio;
       if (audio == null) return;

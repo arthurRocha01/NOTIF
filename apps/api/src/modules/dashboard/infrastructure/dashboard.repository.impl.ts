@@ -30,13 +30,13 @@ export class DashboardRepository implements IDashboardRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary(params: {
-    sectorId?: string;
+    authorId?: string;
     cutoff?: Date;
     selectedSectorId?: string;
   }): Promise<DashboardSummaryDto> {
-    const { sectorId, cutoff, selectedSectorId } = params;
+    const { authorId, cutoff, selectedSectorId } = params;
 
-    const notifFilter = this.buildNotifFilter(sectorId, cutoff);
+    const notifFilter = this.buildNotifFilter(authorId, cutoff);
     const [assignments, totalNotifications] = await Promise.all([
       this.fetchAssignments(notifFilter),
       this.fetchNotificationCount(notifFilter),
@@ -56,13 +56,13 @@ export class DashboardRepository implements IDashboardRepository {
   }
 
   private buildNotifFilter(
-    sectorId?: string,
+    authorId?: string,
     cutoff?: Date,
   ): Record<string, any> {
     const filter: Record<string, any> = {};
 
-    if (sectorId) {
-      filter.OR = [{ sectorId }, { sectorId: null }];
+    if (authorId) {
+      filter.authorId = authorId;
     }
 
     if (cutoff) {
