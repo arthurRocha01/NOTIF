@@ -64,7 +64,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1421),
       resizeToAvoidBottomInset: false,
-      body: Stack(
+      body: SizedBox.expand(
+        child: Stack(
         children: [
           // Gradient background
           Positioned.fill(
@@ -140,7 +141,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 44),
 
                   // Card glass
-                  Container(
+                  Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                  child: Container(
                     padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.07),
@@ -233,12 +237,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                     ),
 
+                  )),
                   const SizedBox(height: 48),
                 ],
               ),
             ),
           ),
         ],
+        ),
       ),
     );
   }
