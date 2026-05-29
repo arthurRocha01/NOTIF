@@ -52,8 +52,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
         return all
             .where((a) =>
                 a.status == AssignmentStatus.pending ||
-                a.status == AssignmentStatus.viewed ||
-                a.status == AssignmentStatus.overdue)
+                a.status == AssignmentStatus.viewed)
             .toList()
           ..sort(_sortScore);
       case 'overdue':
@@ -64,6 +63,11 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
       case 'confirmed':
         return all
             .where((a) => a.status == AssignmentStatus.acknowledged)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case 'denied':
+        return all
+            .where((a) => a.status == AssignmentStatus.denied)
             .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       case 'critical':
@@ -186,8 +190,11 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
     final fullName = user?.name ?? 'Usuário';
     final assignments = widget.assignments;
     final filtered = _applyFilter(assignments);
-    final pendingCount =
-        assignments.where((a) => a.status != AssignmentStatus.acknowledged).length;
+    final pendingCount = assignments
+        .where((a) =>
+            a.status != AssignmentStatus.acknowledged &&
+            a.status != AssignmentStatus.denied)
+        .length;
     final unreadCount = _unreadCount(assignments);
     final criticalCount = _criticalCount(assignments);
     final blockingList = assignments.where((a) => a.isBlocking).toList();
@@ -199,6 +206,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
       'pending': 'Nenhuma notificação pendente',
       'overdue': 'Nenhum alerta atrasado',
       'confirmed': 'Nenhuma confirmação ainda',
+      'denied': 'Nenhum alerta negado',
       'critical': 'Nenhum alerta crítico ativo',
     };
 
@@ -480,6 +488,7 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
       ('pending', 'Pendente', null, null),
       ('overdue', 'Atrasado', null, null),
       ('confirmed', 'Confirmado', null, null),
+      ('denied', 'Negado', null, null),
     ];
 
     return SingleChildScrollView(
@@ -572,9 +581,11 @@ class _AssignmentsBodyState extends ConsumerState<AssignmentsBody> {
           Icon(
             _filter == 'confirmed'
                 ? LucideIcons.checkCircle2
-                : _filter == 'critical'
-                    ? LucideIcons.shieldCheck
-                    : LucideIcons.bellOff,
+                : _filter == 'denied'
+                    ? LucideIcons.xCircle
+                    : _filter == 'critical'
+                        ? LucideIcons.shieldCheck
+                        : LucideIcons.bellOff,
             size: 48,
             color: Colors.white.withValues(alpha: 0.45),
           ),

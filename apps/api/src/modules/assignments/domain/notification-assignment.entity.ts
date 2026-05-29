@@ -23,10 +23,12 @@ export class NotificationAssignment {
     notificationId: string,
     notificationLevel: NotificationLevel,
     requiresAcknowledge: boolean,
+    slaMinutes: number,
   ) {
     const id = randomUUID();
-    const createdat = new Date();
+    const createdAt = new Date();
     const status = AssignmentStatus.PENDING;
+    const dueAt = new Date(createdAt.getTime() + slaMinutes * 60000);
 
     return new NotificationAssignment(
       id,
@@ -35,8 +37,8 @@ export class NotificationAssignment {
       notificationLevel,
       requiresAcknowledge,
       status,
-      createdat,
-      null,
+      createdAt,
+      dueAt,
       null,
       null,
       null,
@@ -75,15 +77,12 @@ export class NotificationAssignment {
   }
 
   // Entrega
-  public markAsDelivered(notificationSlaMinutes: number): void {
+  public markAsDelivered(): void {
     if (this.deliveredAt) {
       return;
     }
 
     this.deliveredAt = new Date();
-    this.dueAt = new Date(
-      this.deliveredAt.getTime() + notificationSlaMinutes * 60000,
-    );
   }
 
   // Visualização

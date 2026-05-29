@@ -112,6 +112,8 @@ class _AlertConfirmationsScreenState
                     total: total,
                     progress: progress,
                     all: all,
+                    showDenied: widget.alert.requiresAcknowledgment &&
+                        widget.alert.level != AlertLevel.critical,
                   ),
 
                   const SizedBox(height: 16),
@@ -269,12 +271,14 @@ class _ProgressCard extends StatelessWidget {
   final int total;
   final double progress;
   final List<AssignmentModel> all;
+  final bool showDenied;
 
   const _ProgressCard({
     required this.confirmed,
     required this.total,
     required this.progress,
     required this.all,
+    this.showDenied = false,
   });
 
   Color get _progressColor {
@@ -292,6 +296,8 @@ class _ProgressCard extends StatelessWidget {
         .length;
     final overdue =
         all.where((a) => a.status == AssignmentStatus.overdue).length;
+    final denied =
+        all.where((a) => a.status == AssignmentStatus.denied).length;
 
     return Container(
           padding: const EdgeInsets.all(16),
@@ -406,6 +412,14 @@ class _ProgressCard extends StatelessWidget {
                     value: overdue,
                     color: const Color(0xFFDC2626),
                   ),
+                  if (showDenied) ...[
+                    const SizedBox(width: 8),
+                    _KpiChip(
+                      label: 'Negado',
+                      value: denied,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ],
                 ],
               ),
             ],

@@ -57,6 +57,7 @@ export class NotificationService {
           notificationId: newNotification.getId(),
           notificationLevel: newNotification.getLevel(),
           requiresAcknowledge: newNotification.getRequiresAcknowledgment(),
+          slaMinutes: newNotification.getSlaMinutes(),
         }),
       ),
     );

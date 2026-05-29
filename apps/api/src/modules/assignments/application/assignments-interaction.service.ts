@@ -33,7 +33,7 @@ export class AssignmentsInteractionService {
       );
 
       if (notification) {
-        assigment.markAsDelivered(notification.getSlaMinutes());
+        assigment.markAsDelivered();
         await this.assignmentRepo.update(assigment);
         syncedCount++;
       }

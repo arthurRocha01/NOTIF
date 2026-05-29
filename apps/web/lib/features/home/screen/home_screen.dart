@@ -147,20 +147,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  void _handleForegroundMessage(RemoteMessage message) {
+  void _handleForegroundMessage(RemoteMessage message) async {
     if (!mounted) return;
-    ref.read(alertProvider.notifier).loadAssignments();
+
+    await ref.read(alertProvider.notifier).loadAssignments();
+    if (!mounted) return;
+
     final level = AlertLevel.fromBackend(message.data['level']);
-    if (level != AlertLevel.critical) {
-      _playAlertSound();
-      _showBanner(message);
-      NotificationService().showLocalNotification(
-        title: message.notification?.title ?? message.data['title'] ?? 'Nova notificação',
-        body: message.notification?.body ?? message.data['message'],
-        id: message.hashCode,
-        level: message.data['level'] as String?,
-      );
-    }
+    if (level == AlertLevel.critical) return;
+
+    final notificationId = message.data['notificationId'] as String?;
+    if (notificationId == null) return;
+
+    final hasAssignment = ref
+        .read(alertProvider)
+        .assignments
+        .any((a) => a.notificationId == notificationId);
+
+    if (!hasAssignment) return;
+
+    _playAlertSound();
+    _showBanner(message);
+    NotificationService().showLocalNotification(
+      title: message.notification?.title ?? message.data['title'] ?? 'Nova notificação',
+      body: message.notification?.body ?? message.data['message'],
+      id: message.hashCode,
+      level: message.data['level'] as String?,
+    );
   }
 
   void _handleNotificationTap(RemoteMessage message) {

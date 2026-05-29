@@ -124,6 +124,7 @@ describe('AssignmentService', () => {
         notificationId: 'notif-1',
         notificationLevel: 'CRITICAL' as any,
         requiresAcknowledge: true,
+        slaMinutes: 60,
       };
 
       const result = await service.createAssignment(dto);

@@ -84,7 +84,7 @@ describe('AssignmentsInteractionService', () => {
 
       expect(assignmentRepo.findByUserId).toHaveBeenCalledWith('user-1');
       expect(notificationRepo.findById).toHaveBeenCalledWith('notif-1');
-      expect(mockAssignment.markAsDelivered).toHaveBeenCalledWith(60);
+      expect(mockAssignment.markAsDelivered).toHaveBeenCalledWith();
       expect(assignmentRepo.update).toHaveBeenCalled();
       expect(result).toBe(1);
     });

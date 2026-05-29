@@ -15,4 +15,6 @@ export class CreateAssignmentDto {
   notificationLevel: NotificationLevel;
 
   requiresAcknowledge: boolean;
+
+  slaMinutes: number;
 }

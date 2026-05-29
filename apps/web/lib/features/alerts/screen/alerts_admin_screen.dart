@@ -206,18 +206,6 @@ class _AlertAdminScreenState extends ConsumerState<AlertAdminScreen> {
               ],
             ),
           ),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.14)),
-            ),
-            child: Icon(LucideIcons.bell,
-                color: Colors.white.withValues(alpha: 0.70), size: 20),
-          ),
         ],
       ),
     );

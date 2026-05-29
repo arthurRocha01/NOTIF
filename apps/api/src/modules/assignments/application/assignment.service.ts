@@ -39,6 +39,7 @@ export class AssignmentService {
       dto.notificationId,
       dto.notificationLevel,
       dto.requiresAcknowledge,
+      dto.slaMinutes,
     );
 
     await this.assignmentRepo.save(assignment);
