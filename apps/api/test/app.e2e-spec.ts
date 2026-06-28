@@ -8,18 +8,13 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 
-describe('NOTIF Flow (e2e', () => {
+describe('NOTIF Flow (e2e)', () => {
   let app: INestApplication;
 
   const fcmToken =
     'cK138sjjpazI8uAZDYScy8:APA91bGBbsGYdeqNoZKaKdnjGWbWbko4adtH47nsFxU3SfKMl82ux8W7QrW04UsngEfF3w1uSqzq1yMViCHqo9nfe1JLdPSipjZ5T6a-Pr9dS4FhSildfzA';
   let response: request.Response;
-  let accessToken: string;
-  let sectorId: string;
-  let userId: string;
-  const userPassword = 'senha123';
-  let notificationId: string;
-  let assignmentId: string;
+  let supervisorToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -41,7 +36,7 @@ describe('NOTIF Flow (e2e', () => {
     await prisma.notificationAssignment.deleteMany();
 
     await app.init();
-  });
+  }, 15000);
 
   afterAll(async () => {
     await app.close();
@@ -49,77 +44,106 @@ describe('NOTIF Flow (e2e', () => {
   });
 
   it('Deve completar o ciclo de NOTIF completo', async () => {
-    response = await makePostRequest('/sectors', {
-      name: 'Tecnologia',
-    });
-    sectorId = response.body.id;
+    // ── Setup ──────────────────────────────────────────────
 
-    response = await makePostRequest('/users', {
-      name: 'Arthur Rocha',
-      email: 'arthur.rochaa@notif.com',
-      password: userPassword,
-      sectorId: sectorId,
-      role: 'EMPLOYEE',
-      fcmToken: fcmToken,
-    });
-    const userEmail = response.body.email;
-    userId = response.body.id;
+    // Criar setor
+    response = await request(app.getHttpServer())
+      .post('/sectors')
+      .send({ name: 'Tecnologia' })
+      .expect(201);
+    const sectorId: string = response.body.id;
 
-    response = await makePostRequest('/auth/login', {
-      email: userEmail,
-      password: userPassword,
-    });
-    accessToken = response.body.access_token; // mudar para camelCase
+    // Criar supervisor
+    response = await request(app.getHttpServer())
+      .post('/users')
+      .send({
+        name: 'Supervisor Teste',
+        email: 'supervisor@notif.com',
+        password: 'senha123',
+        sectorId,
+        role: 'SUPERVISOR',
+        fcmToken,
+      })
+      .expect(201);
+    const supervisorId: string = response.body.id;
 
-    await makePatchRequest(`/users/${userId}`, { fcmToken: fcmToken });
+    // Login supervisor
+    response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'supervisor@notif.com', password: 'senha123' })
+      .expect(201);
+    supervisorToken = response.body.access_token;
 
-    response = await makePostRequest('/notifications', {
-      title: 'Teste de Notificação',
-      message: 'Esta é uma notificação de teste',
-      level: 'MEDIUM',
-      slaMinutes: 60,
-      authorId: userId,
-      sectorId: sectorId,
-    });
-    notificationId = response.body.id;
+    // Criar employee
+    response = await request(app.getHttpServer())
+      .post('/users')
+      .send({
+        name: 'Employee Teste',
+        email: 'employee@notif.com',
+        password: 'senha123',
+        sectorId,
+        role: 'EMPLOYEE',
+        fcmToken,
+      })
+      .expect(201);
+    const employeeEmail: string = response.body.email;
 
-    response = await makePostRequest('/assignments', {
-      userId: userId,
-      notificationId: notificationId,
-      notificationLevel: 'MEDIUM',
-    });
-    assignmentId = response.body.id;
+    // Login employee
+    response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: employeeEmail, password: 'senha123' })
+      .expect(201);
+    const employeeToken: string = response.body.access_token;
 
-    console.log('Assignment criado:', response.body);
+    // ── Supervisor cria notificação ────────────────────────
+    response = await request(app.getHttpServer())
+      .post('/notifications')
+      .set('Authorization', `Bearer ${supervisorToken}`)
+      .send({
+        title: 'Teste de Notificação',
+        message: 'Esta é uma notificação de teste',
+        level: 'MEDIUM',
+        slaMinutes: 60,
+        sectorId,
+      })
+      .expect(201);
+    const notificationId: string = response.body.id;
 
-    await makePostRequest(`/assignments/sync/${userId}`);
-    await makePostRequest(`/assignments/${assignmentId}/view`);
-    await makePostRequest(`/assignments/${assignmentId}/acknowledge`);
+    // ── Employee: sincronizar e pegar assignment ───────────
+    response = await request(app.getHttpServer())
+      .post('/assignments/sync')
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .expect(201);
 
-    response = await makeGetRequest(`/assignments/${assignmentId}`);
+    // Listar assignments do employee
+    response = await request(app.getHttpServer())
+      .get('/assignments/mine')
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .expect(200);
+
+    const assignments = response.body as any[];
+    expect(assignments.length).toBeGreaterThan(0);
+    const assignmentId: string = assignments[0].id;
+
+    console.log('Assignment do employee:', assignmentId);
+
+    // ── Employee vê o assignment ───────────────────────────
+    response = await request(app.getHttpServer())
+      .post(`/assignments/${assignmentId}/view`)
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .expect(201);
+
+    // ── Employee confirma ciência ──────────────────────────
+    response = await request(app.getHttpServer())
+      .post(`/assignments/${assignmentId}/acknowledge`)
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .expect(201);
+
+    // ── Verificar estado final ─────────────────────────────
+    response = await request(app.getHttpServer())
+      .get(`/assignments/${assignmentId}`)
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .expect(200);
     console.log('Assignment Final: ', response.body);
   }, 30000);
-
-  const makePostRequest = async (url: string, body?: any) => {
-    return request(app.getHttpServer())
-      .post(url)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body)
-      .expect(201);
-  };
-
-  const makeGetRequest = async (url: string) => {
-    return request(app.getHttpServer())
-      .get(url)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
-  };
-
-  const makePatchRequest = async (url: string, body?: any) => {
-    return request(app.getHttpServer())
-      .patch(url)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body)
-      .expect(200);
-  };
 });
