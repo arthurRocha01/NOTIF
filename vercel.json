@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "apps/api/src/main.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["apps/api/notif-72c72-firebase-adminsdk-fbsvc-75966c08f3.json"]
-      }
+      "use": "@vercel/node"
     },
     {
       "src": "apps/web/build/web/**",

@@ -2,12 +2,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyCkWV-0nFVZR3J3zMxwBnzVab3WWB-FLZU',
-  authDomain: 'notif-72c72.firebaseapp.com',
-  projectId: 'notif-72c72',
-  storageBucket: 'notif-72c72.firebasestorage.app',
-  messagingSenderId: '25867044109',
-  appId: '1:25867044109:web:ac4f52a0a6f1587fd89c44',
+  apiKey: 'AIzaSyCPjYs7c-P_oHVSv1SWj4vsasGC-YK1Wo4',
+  authDomain: 'notif-cb096.firebaseapp.com',
+  projectId: 'notif-cb096',
+  storageBucket: 'notif-cb096.firebasestorage.app',
+  messagingSenderId: '296550981769',
+  appId: '1:296550981769:web:ccb4b716e64f58c5e06658',
 });
 
 const messaging = firebase.messaging();

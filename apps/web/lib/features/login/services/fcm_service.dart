@@ -21,7 +21,7 @@ class FcmService {
     if (!_supported) return null;
     return await FirebaseMessaging.instance.getToken(
       vapidKey: kIsWeb
-          ? 'BOcDeGoSA4d2YcuUxy72y200lq3v_BBAGf_UKE0RsrqmZX2LgkdpSiDVll66XIieTAExd2FGAjBQjg1l81N-arI'
+          ? 'BPbXsA5gRVU3BIt8HoNX0kMZLwohAbna0n5wjg59HgtmaUz1y6rrSafhHh3hGpEiZU6yJHpUFP0miPHM3hVwZRY'
           : null,
     );
   }
