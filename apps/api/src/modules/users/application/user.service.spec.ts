@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { UserRepository } from '../infrastructure/user.repository.impl';
 import { SectorRepository } from '../../sectors/infrastructure/sector.repository.impl';
+import { User } from '../domain/user.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('UserService', () => {
@@ -95,7 +96,7 @@ describe('UserService', () => {
 
   describe('getUserByEmail', () => {
     it('should return user by email', async () => {
-      repo.findByEmail.mockResolvedValue(mockUser);
+      repo.findByEmail.mockResolvedValue(mockUser as unknown as User);
 
       const result = await service.getUserByEmail('joao@test.com');
       expect(repo.findByEmail).toHaveBeenCalledWith('joao@test.com');
@@ -113,7 +114,7 @@ describe('UserService', () => {
     });
 
     it('should throw ConflictException when email already exists', async () => {
-      repo.findByEmail.mockResolvedValue(mockUser);
+      repo.findByEmail.mockResolvedValue(mockUser as unknown as User);
 
       await expect(service.createUser(baseDto)).rejects.toThrow(
         ConflictException,

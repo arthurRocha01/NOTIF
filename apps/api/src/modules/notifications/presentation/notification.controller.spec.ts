@@ -68,23 +68,41 @@ describe('NotificationController', () => {
 
   describe('findAll', () => {
     it('should return all notifications without filters', async () => {
-      const result = await controller.findAll();
+      const result = await controller.findAll(mockReq() as any);
 
       expect(service.listNotifications).toHaveBeenCalledWith(
         undefined,
         undefined,
+        'user-1',
       );
       expect(Array.isArray(result)).toBe(true);
     });
 
     it('should filter by level and sectorId', async () => {
-      const result = await controller.findAll('CRITICAL', 'sector-1');
+      const result = await controller.findAll(
+        mockReq() as any,
+        'CRITICAL',
+        'sector-1',
+      );
 
       expect(service.listNotifications).toHaveBeenCalledWith(
         'CRITICAL',
         'sector-1',
+        'user-1',
       );
       expect(Array.isArray(result)).toBe(true);
+    });
+
+    it('should not scope the listing to the author when the user is not a supervisor', async () => {
+      const employeeReq = mockReq({ role: 'EMPLOYEE' });
+
+      await controller.findAll(employeeReq as any);
+
+      expect(service.listNotifications).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+        undefined,
+      );
     });
   });
 

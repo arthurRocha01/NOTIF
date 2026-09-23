@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SectorService } from './sector.service';
 import { SectorRepository } from '../infrastructure/sector.repository.impl';
+import { Sector } from '../domain/sector.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('SectorService', () => {
@@ -69,7 +70,7 @@ describe('SectorService', () => {
     });
 
     it('should throw ConflictException when name already exists', async () => {
-      repo.findByName.mockResolvedValue(mockSector);
+      repo.findByName.mockResolvedValue(mockSector as unknown as Sector);
 
       await expect(service.createSector({ name: 'TI' })).rejects.toThrow(
         ConflictException,

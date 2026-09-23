@@ -7,6 +7,7 @@ import { AssignmentService } from '../../assignments/application/assignment.serv
 import { User } from '../../users/domain/user.entity';
 import { UserRole } from '../../users/domain/types';
 import { NotificationAssignment } from '../../assignments/domain/notification-assignment.entity';
+import { NotificationLevel } from '../domain/type';
 
 const makeUser = (fcmToken: string | null, id?: string) =>
   User.reconstitute(
@@ -29,6 +30,7 @@ const makeAssignment = (userId: string, assignmentId: string, level = 'HIGH') =>
     true,
     'PENDING' as any,
     new Date(),
+    null,
     null,
     null,
     null,
@@ -60,7 +62,7 @@ const mockAssignmentService = {
 const baseDto = {
   title: 'Título da notificação',
   message: 'Mensagem com mais de dez caracteres',
-  level: 'HIGH' as const,
+  level: NotificationLevel.HIGH,
   slaMinutes: 30,
   sectorId: 'sector-id',
   authorId: 'author-id',
