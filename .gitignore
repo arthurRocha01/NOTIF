@@ -38,3 +38,9 @@ Thumbs.db
 
 # ── Documentos internos ───────────────────────────────────────────────────────
 IDEIAS_FUNCIONALIDADES.md
+
+# ── Segredos (nunca versionar) ────────────────────────────────────────────────
+apps/api/.env
+apps/api/.env.local
+apps/api/.env.*.local
+apps/api/notif-*-firebase-adminsdk-*.json
