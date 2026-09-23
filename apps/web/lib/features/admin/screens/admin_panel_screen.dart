@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:notif_app/features/admin/modals/create_edit_sector_modal.dart';
 import 'package:notif_app/features/admin/modals/create_edit_user_modal.dart';
 import 'package:notif_app/features/admin/providers/admin_sector_provider.dart';

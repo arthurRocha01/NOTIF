@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:notif_app/core/constants/app_colors.dart';
 import 'package:notif_app/core/utils/date_formatter.dart';
 import 'package:notif_app/features/alerts/modals/create_alert_modal.dart';

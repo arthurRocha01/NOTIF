@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCkWV-0nFVZR3J3zMxwBnzVab3WWB-FLZU',
-    appId: '1:25867044109:web:ac4f52a0a6f1587fd89c44',
-    messagingSenderId: '25867044109',
-    projectId: 'notif-72c72',
-    authDomain: 'notif-72c72.firebaseapp.com',
-    storageBucket: 'notif-72c72.firebasestorage.app',
-    measurementId: 'G-ZMHQJ91ENM',
+    apiKey: 'AIzaSyCPjYs7c-P_oHVSv1SWj4vsasGC-YK1Wo4',
+    appId: '1:296550981769:web:ccb4b716e64f58c5e06658',
+    messagingSenderId: '296550981769',
+    projectId: 'notif-cb096',
+    authDomain: 'notif-cb096.firebaseapp.com',
+    storageBucket: 'notif-cb096.firebasestorage.app',
+    measurementId: 'G-MC6TRYY8GR',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
